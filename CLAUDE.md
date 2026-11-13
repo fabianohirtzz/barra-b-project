@@ -58,6 +58,8 @@ Referência: `E:\Clientes\Pereira Oliveira Turismo\po-tu-project` (ler o CLAUDE.
 - **WhatsApp:** API oficial da Meta em modo de coexistência (`whatsapp.php`, `wa-cron.php`,
   fluxo), igual à PO.
 - **Prévia:** GitHub Pages deste repo, sempre `noindex` (o PHP não roda lá).
+  Repo: https://github.com/fabianohirtzz/barra-b-project (público) ·
+  Prévia: https://fabianohirtzz.github.io/barra-b-project/
 - **Produção:** ErêHost, domínio barraboatfloripa.com.br (mantido).
 
 ## Escopo completo
