@@ -1,0 +1,2400 @@
+[
+  {
+    "id": 3383,
+    "nome": "Phantom 24 Horus",
+    "slug": "phantom-24-horus",
+    "url": "https://barraboatfloripa.com.br/lanchas/phantom-24-horus/",
+    "pes": "24",
+    "passageiros": "7",
+    "valor_exibido": null,
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "Lancha Phantom",
+      "Cabinada",
+      "Banheiro",
+      "Churrasqueira",
+      "Proa fechada",
+      "Churrasqueira",
+      "Tapete Flutuante"
+    ],
+    "descricao_longa": [],
+    "imagens": [
+      {
+        "id": 3394,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/Design-sem-nome.jpg",
+        "alt": "",
+        "nome": "Design sem nome",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 3391,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-25-at-15.24.57.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-25 at 15.24.57",
+        "largura": 1280,
+        "altura": 720
+      },
+      {
+        "id": 3392,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-25-at-15.24.56-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-25 at 15.24.56 (1)",
+        "largura": 1280,
+        "altura": 720
+      },
+      {
+        "id": 3393,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-25-at-15.24.56.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-25 at 15.24.56",
+        "largura": 1280,
+        "altura": 720
+      },
+      {
+        "id": 3389,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-25-at-15.24.58.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-25 at 15.24.58",
+        "largura": 1600,
+        "altura": 1200
+      },
+      {
+        "id": 3388,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-25-at-15.24.58-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-25 at 15.24.58 (1)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 3387,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-25-at-15.24.58-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-25 at 15.24.58 (2)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 3384,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-25-at-15.24.59-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-25 at 15.24.59 (1)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 3390,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-25-at-15.24.57-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-25 at 15.24.57 (1)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 3385,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-25-at-15.24.59.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-25 at 15.24.59",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 3386,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-25-at-15.24.58-3.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-25 at 15.24.58 (3)",
+        "largura": 1200,
+        "altura": 1600
+      }
+    ],
+    "seo_title": "Phantom 24 Horus - Barra Boat Floripa",
+    "meta_description": "Lancha Phantom / Cabinada / Banheiro / Churrasqueira / Proa fechada / Churrasqueira / Tapete Flutuante",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/Design-sem-nome.jpg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2025-12-27T02:47:20",
+    "modificado": "2025-12-27T02:50:09",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 3373,
+    "nome": "Cabrasmar 37",
+    "slug": "3373",
+    "url": "https://barraboatfloripa.com.br/lanchas/3373/",
+    "pes": "37",
+    "passageiros": "10",
+    "valor_exibido": null,
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "Cabrasmar 37 Pés",
+      "10 Passageiros",
+      "01 Marinheiro habilitado",
+      "Fly",
+      "Cabinada",
+      "Solarium espaçoso",
+      "Banheiro",
+      "Espaço Gourmet",
+      "Standup",
+      "tapete Flutuante",
+      "Oferecemos água e frutas a bordo!"
+    ],
+    "descricao_longa": [],
+    "imagens": [
+      {
+        "id": 3382,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/Sem-nome-900-x-900-px.jpg",
+        "alt": "",
+        "nome": "Sem nome (900 x 900 px)",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 3374,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-16-at-17.15.25.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-16 at 17.15.25",
+        "largura": 1280,
+        "altura": 718
+      },
+      {
+        "id": 3375,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-16-at-17.15.24-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-16 at 17.15.24 (2)",
+        "largura": 719,
+        "altura": 1280
+      },
+      {
+        "id": 3376,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-16-at-17.15.24-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-16 at 17.15.24 (1)",
+        "largura": 1280,
+        "altura": 719
+      },
+      {
+        "id": 3377,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-16-at-17.15.24.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-16 at 17.15.24",
+        "largura": 719,
+        "altura": 1280
+      },
+      {
+        "id": 3378,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-16-at-17.15.23-3.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-16 at 17.15.23 (3)",
+        "largura": 1280,
+        "altura": 719
+      },
+      {
+        "id": 3379,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-16-at-17.15.23-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-16 at 17.15.23 (2)",
+        "largura": 1280,
+        "altura": 719
+      },
+      {
+        "id": 3380,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-16-at-17.15.23-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-16 at 17.15.23 (1)",
+        "largura": 1280,
+        "altura": 718
+      },
+      {
+        "id": 3381,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-16-at-17.15.23.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-16 at 17.15.23",
+        "largura": 1202,
+        "altura": 675
+      }
+    ],
+    "seo_title": "Cabrasmar 37 - Barra Boat Floripa",
+    "meta_description": "Cabrasmar 37 Pés / 10 Passageiros / 01 Marinheiro habilitado / Fly / Cabinada / Solarium espaçoso / Banheiro / Espaço Gourmet / Standup / tapete Flutuante / Oferecemos água e frutas a bordo!",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/Sem-nome-900-x-900-px.jpg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2025-12-18T20:15:55",
+    "modificado": "2025-12-27T02:52:54",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 3363,
+    "nome": "My Nega 30 pés",
+    "slug": "3363",
+    "url": "https://barraboatfloripa.com.br/lanchas/3363/",
+    "pes": "30",
+    "passageiros": "10",
+    "valor_exibido": null,
+    "preco_woocommerce": "0",
+    "regiao_badge": "Norte da Ilha",
+    "categorias": [],
+    "tags": [
+      "norte da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "30 pés Top Line",
+      "11 Passageiros",
+      "Cabinada com Frigobar e acessórios",
+      "banheiro",
+      "Churrasqueira",
+      "Standup",
+      "Tapete Flutuante",
+      "Som Bluetooth",
+      "Espaço Gourmet",
+      "Quarto"
+    ],
+    "descricao_longa": [],
+    "imagens": [
+      {
+        "id": 3372,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/my-nega-900-x-900-px.jpg",
+        "alt": "",
+        "nome": "my nega (900 x 900 px)",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 3371,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/Captura-de-tela_18-12-2025_162949_.jpeg",
+        "alt": "",
+        "nome": "Captura de tela_18-12-2025_162949_",
+        "largura": 846,
+        "altura": 695
+      },
+      {
+        "id": 3364,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/Captura-de-tela_18-12-2025_163152_.jpeg",
+        "alt": "",
+        "nome": "Captura de tela_18-12-2025_163152_",
+        "largura": 849,
+        "altura": 688
+      },
+      {
+        "id": 3365,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/Captura-de-tela_18-12-2025_163139_.jpeg",
+        "alt": "",
+        "nome": "Captura de tela_18-12-2025_163139_",
+        "largura": 841,
+        "altura": 634
+      },
+      {
+        "id": 3366,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/Captura-de-tela_18-12-2025_163125_.jpeg",
+        "alt": "",
+        "nome": "Captura de tela_18-12-2025_163125_",
+        "largura": 840,
+        "altura": 690
+      },
+      {
+        "id": 3367,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/Captura-de-tela_18-12-2025_163112_.jpeg",
+        "alt": "",
+        "nome": "Captura de tela_18-12-2025_163112_",
+        "largura": 844,
+        "altura": 668
+      },
+      {
+        "id": 3368,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/Captura-de-tela_18-12-2025_163054_.jpeg",
+        "alt": "",
+        "nome": "Captura de tela_18-12-2025_163054_",
+        "largura": 841,
+        "altura": 686
+      },
+      {
+        "id": 3369,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/Captura-de-tela_18-12-2025_163043_.jpeg",
+        "alt": "",
+        "nome": "Captura de tela_18-12-2025_163043_",
+        "largura": 832,
+        "altura": 660
+      },
+      {
+        "id": 3370,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/Captura-de-tela_18-12-2025_163025_.jpeg",
+        "alt": "",
+        "nome": "Captura de tela_18-12-2025_163025_",
+        "largura": 838,
+        "altura": 689
+      }
+    ],
+    "seo_title": "My Nega 30 pés - Barra Boat Floripa",
+    "meta_description": "30 pés Top Line / 11 Passageiros / Cabinada com Frigobar e acessórios / banheiro / Churrasqueira / Standup / Tapete Flutuante / Som Bluetooth / Espaço Gourmet / Quarto",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2025/12/my-nega-900-x-900-px.jpg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2025-12-18T19:49:42",
+    "modificado": "2025-12-28T23:58:55",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 1715,
+    "nome": "FS230 PÉS",
+    "slug": "fs230-pes",
+    "url": "https://barraboatfloripa.com.br/lanchas/fs230-pes/",
+    "pes": "23",
+    "passageiros": "07",
+    "valor_exibido": "Sob Consulta",
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [
+      "Lancha"
+    ],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "Passageiros:",
+      "07 Ilha do Campeche",
+      "09 Costa da Lagoa e Lagoa da Conceição.",
+      "Itens:",
+      "Cabine",
+      "Banheiro",
+      "Solário de Proa e popa",
+      "Pia",
+      "Som Bluetooth",
+      "Churrasqueira",
+      "Tapete Flutuante",
+      "Carvão",
+      "Cooler com gelo",
+      "Água"
+    ],
+    "descricao_longa": [],
+    "imagens": [
+      {
+        "id": 1728,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/10/dayoffsite-pdf.jpg",
+        "alt": "",
+        "nome": "",
+        "largura": null,
+        "altura": null
+      },
+      {
+        "id": 1725,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/10/WhatsApp-Image-2025-10-24-at-20.40.21.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-24 at 20.40.21",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1726,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/10/WhatsApp-Image-2025-09-21-at-11.27.34.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-21 at 11.27.34",
+        "largura": 960,
+        "altura": 1280
+      },
+      {
+        "id": 1719,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/10/WhatsApp-Image-2025-10-24-at-20.40.23-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-24 at 20.40.23 (2)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1720,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/10/WhatsApp-Image-2025-10-24-at-20.40.23-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-24 at 20.40.23 (1)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1721,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/10/WhatsApp-Image-2025-10-24-at-20.40.23.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-24 at 20.40.23",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1716,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/10/WhatsApp-Image-2025-09-21-at-11.27.35.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-21 at 11.27.35",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1722,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/10/WhatsApp-Image-2025-10-24-at-20.40.22-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-24 at 20.40.22 (2)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1723,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/10/WhatsApp-Image-2025-10-24-at-20.40.22-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-24 at 20.40.22 (1)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1724,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/10/WhatsApp-Image-2025-10-24-at-20.40.21-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-24 at 20.40.21 (1)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1727,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/10/WhatsApp-Image-2025-09-21-at-11.27.35-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-21 at 11.27.35 (1)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1717,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/10/WhatsApp-Image-2025-10-24-at-20.40.24.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-24 at 20.40.24",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1718,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/10/WhatsApp-Image-2025-10-24-at-20.40.23-3.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-24 at 20.40.23 (3)",
+        "largura": 1200,
+        "altura": 1600
+      }
+    ],
+    "seo_title": "FS230 PÉS - Barra Boat Floripa",
+    "meta_description": "Passageiros: / 07 Ilha do Campeche / 09 Costa da Lagoa e Lagoa da Conceição. / Itens: / Cabine / Banheiro / Solário de Proa e popa / Pia / Som Bluetooth / Churrasqueira / Tapete Flutuante / Carvão / Cooler com gelo / Água",
+    "og_image": null,
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2025-10-29T02:51:06",
+    "modificado": "2025-11-05T12:55:44",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 1597,
+    "nome": "HD26 pés Lulu",
+    "slug": "hd26-lulu",
+    "url": "https://barraboatfloripa.com.br/lanchas/hd26-lulu/",
+    "pes": "26",
+    "passageiros": "09",
+    "valor_exibido": "Sob Consulta",
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [
+      "Lancha"
+    ],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "Cabine",
+      "Banheiro elétrico",
+      "Som Bluetooth",
+      "Churrasqueira a carvão",
+      "Sonda e GPS",
+      "Toldo e fechamento frontal e lateral",
+      "chuveiro de popa",
+      "Deck de proa",
+      "Piso antiderrapante",
+      "Cooler",
+      "Porta objetos",
+      "popa fechada",
+      "sistema de luz",
+      "Carregador 12v",
+      "Mesa",
+      "Kit de louça, copos e taças",
+      "Tapete flutuante",
+      "Marinheiro",
+      "Combustível"
+    ],
+    "descricao_longa": [],
+    "imagens": [
+      {
+        "id": 1599,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-19.42.27.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 19.42.27",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1607,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-19.42.30-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 19.42.30 (2)",
+        "largura": 1600,
+        "altura": 1201
+      },
+      {
+        "id": 1606,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-19.42.30-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 19.42.30 (1)",
+        "largura": 1201,
+        "altura": 1600
+      },
+      {
+        "id": 1600,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-19.42.28-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 19.42.28 (1)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1602,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-19.42.28-3.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 19.42.28 (3)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1604,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-19.42.29-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 19.42.29 (1)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1605,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-19.42.29-scaled.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 19.42.29",
+        "largura": 1440,
+        "altura": 2560
+      },
+      {
+        "id": 1601,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-19.42.28-2-scaled.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 19.42.28 (2)",
+        "largura": 2560,
+        "altura": 1920
+      }
+    ],
+    "seo_title": "HD26 pés Lulu - Barra Boat Floripa",
+    "meta_description": "Cabine / Banheiro elétrico / Som Bluetooth / Churrasqueira a carvão / Sonda e GPS / Toldo e fechamento frontal e lateral / chuveiro de popa / Deck de proa / Piso antiderrapante / Cooler / Porta objetos / popa fechada / sistema de luz / Carregador 12v / Mesa / Kit de louça, copos e taças / Tapete flutuante / Marinheiro / Combustível",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-19.42.27.jpeg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2025-09-02T22:52:17",
+    "modificado": "2025-11-05T13:04:14",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 1582,
+    "nome": "Focker24 Norte da Ilha e Leste",
+    "slug": "focker24d",
+    "url": "https://barraboatfloripa.com.br/lanchas/focker24d/",
+    "pes": "24",
+    "passageiros": "07",
+    "valor_exibido": "Sob Consulta",
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [
+      "Lancha"
+    ],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "Popa Aberta e espaçosa",
+      "banheiro",
+      "Som sistema Bluetooth",
+      "Churrasqueira a carvão",
+      "Toldo rebatível",
+      "Ducha de popa",
+      "Sistema de iluminação",
+      "Mesa",
+      "Geladeira Térmica",
+      "Pia com água doce",
+      "Incluso:",
+      "Marinheiro",
+      "Combustível",
+      "Boias flutuação"
+    ],
+    "descricao_longa": [],
+    "imagens": [
+      {
+        "id": 1596,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/capa-1.jpg",
+        "alt": "",
+        "nome": "capa",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1585,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-08-07-at-17.11.48.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-08-07 at 17.11.48",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1594,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-08-07-at-17.11.48-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-08-07 at 17.11.48 (2)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1584,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-08-07-at-17.11.47.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-08-07 at 17.11.47",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1586,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-08-07-at-17.11.49-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-08-07 at 17.11.49 (2)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1587,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-08-07-at-17.11.50-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-08-07 at 17.11.50 (1)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1588,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-08-07-at-17.11.50-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-08-07 at 17.11.50 (2)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1589,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-08-07-at-17.11.50-3.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-08-07 at 17.11.50 (3)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1590,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-08-07-at-17.11.51-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-08-07 at 17.11.51 (1)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1591,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-08-07-at-17.11.51.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-08-07 at 17.11.51",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1592,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-17.12.27-3.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 17.12.27 (3)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1593,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-17.12.26.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 17.12.26",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1595,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-08-07-at-17.11.49.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-08-07 at 17.11.49",
+        "largura": 1200,
+        "altura": 1600
+      }
+    ],
+    "seo_title": "Focker24 Norte da Ilha e Leste - Barra Boat Floripa",
+    "meta_description": "Popa Aberta e espaçosa / banheiro / Som sistema Bluetooth / Churrasqueira a carvão / Toldo rebatível / Ducha de popa / Sistema de iluminação / Mesa / Geladeira Térmica / Pia com água doce / Incluso: / Marinheiro / Combustível / Boias flutuação",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/capa-1.jpg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2025-09-02T22:30:22",
+    "modificado": "2025-12-17T22:49:00",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 1564,
+    "nome": "Phantom 36 pés",
+    "slug": "1564",
+    "url": "https://barraboatfloripa.com.br/lanchas/1564/",
+    "pes": "36",
+    "passageiros": "13",
+    "valor_exibido": "Sob Consulta",
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [
+      "Lancha"
+    ],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "Cabine com cama de casal e sofá",
+      "Banheiro com ducha quente",
+      "Vaso sanitário elétrico",
+      "Gerador",
+      "Geleira externa e cooler extra",
+      "Cockpit amplo",
+      "Solário estofado",
+      "Som potente com conexão Bluetooth",
+      "Churrasqueira a carvão",
+      "2 motores Volvo Penta",
+      "*Kit diversão*",
+      "1 Stand Up Padle",
+      "1 Boia Splash Deck",
+      "Bóias tipo espaguete",
+      "Coletes para banho adulto e infantil.",
+      "*Kit de Segurança*",
+      "Coletes salva-vidas homologados para mar aberto",
+      "Boia circular para resgate",
+      "Extintor de incêndio",
+      "Kit pirotécnico",
+      "Kit Primeiros Socorro"
+    ],
+    "descricao_longa": [],
+    "imagens": [
+      {
+        "id": 1566,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-18.35.40.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 18.35.40",
+        "largura": 1320,
+        "altura": 1320
+      },
+      {
+        "id": 1567,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/cockpit.jpeg",
+        "alt": "",
+        "nome": "cockpit",
+        "largura": 867,
+        "altura": 1156
+      },
+      {
+        "id": 1577,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-18.59.45-2-scaled.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 18.59.45 (2)",
+        "largura": 1920,
+        "altura": 2560
+      },
+      {
+        "id": 1570,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-01-at-16.00.10.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-01 at 16.00.10",
+        "largura": 867,
+        "altura": 1156
+      },
+      {
+        "id": 1576,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-18.59.45-1-scaled.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 18.59.45 (1)",
+        "largura": 1920,
+        "altura": 2560
+      },
+      {
+        "id": 1578,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-18.59.45-3-scaled.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 18.59.45 (3)",
+        "largura": 1920,
+        "altura": 2560
+      },
+      {
+        "id": 1569,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-01-at-16.00.10-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-01 at 16.00.10 (2)",
+        "largura": 960,
+        "altura": 1280
+      },
+      {
+        "id": 1580,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-18.59.46-1-scaled.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 18.59.46 (1)",
+        "largura": 1920,
+        "altura": 2560
+      },
+      {
+        "id": 1571,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-01-at-16.00.11.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-01 at 16.00.11",
+        "largura": 867,
+        "altura": 1156
+      },
+      {
+        "id": 1579,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-18.59.45-scaled.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-02 at 18.59.45",
+        "largura": 1920,
+        "altura": 2560
+      }
+    ],
+    "seo_title": "Phantom 36 pés - Barra Boat Floripa",
+    "meta_description": "Cabine com cama de casal e sofá / Banheiro com ducha quente / Vaso sanitário elétrico / Gerador / Geleira externa e cooler extra / Cockpit amplo / Solário estofado / Som potente com conexão Bluetooth / Churrasqueira a carvão / 2 motores Volvo Penta / *Kit diversão* / 1 Stand Up Padle / 1 Boia Splash Deck / Bóias tipo espaguete / Coletes para banho adulto e infantil. / *Kit de Segurança* / Coletes salva-vidas homologados para mar aberto / Boia circular para resgate / Extintor de incêndio / Kit pirotécnico / Kit Primeiros Socorro",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-02-at-18.35.40.jpeg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2025-09-02T22:05:17",
+    "modificado": "2025-12-17T22:53:11",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 1556,
+    "nome": "Phantom29G",
+    "slug": "phantom29g",
+    "url": "https://barraboatfloripa.com.br/lanchas/phantom29g/",
+    "pes": "29",
+    "passageiros": "09",
+    "valor_exibido": "Sob Consulta",
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [
+      "Lancha"
+    ],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "Cabinada e espaçosa",
+      "9 passageiros",
+      "Banheiro elétrico",
+      "Deck de popa",
+      "Solarium na proa",
+      "Som bluetooth",
+      "Churrasqueira a carvão",
+      "Kit de salvatagem",
+      "Kit com Louças e Taças",
+      "Piso antiderrapante",
+      "Toldo e fechamento frontal e lateral",
+      "Cooler",
+      "Geladeira térmica",
+      "Incluso:",
+      "* Marinheiro",
+      "* Combustível",
+      "* Carvão e sal para o churrasco",
+      "* Boias tipo espaguete",
+      "* 1 Stand Up Paddle",
+      "* 1 Tapete Flutuante",
+      "* Máscara de mergulho"
+    ],
+    "descricao_longa": [],
+    "imagens": [
+      {
+        "id": 1557,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/graciosasite.jpg",
+        "alt": "",
+        "nome": "graciosasite",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1558,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-01-at-16.00.07.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-01 at 16.00.07",
+        "largura": 960,
+        "altura": 1280
+      },
+      {
+        "id": 1559,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-01-at-16.00.08-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-01 at 16.00.08 (1)",
+        "largura": 521,
+        "altura": 1156
+      },
+      {
+        "id": 1560,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-01-at-16.00.08-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-01 at 16.00.08 (2)",
+        "largura": 960,
+        "altura": 1280
+      },
+      {
+        "id": 1561,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-01-at-16.00.08-3.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-01 at 16.00.08 (3)",
+        "largura": 867,
+        "altura": 1156
+      },
+      {
+        "id": 1562,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-01-at-16.00.08.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-01 at 16.00.08",
+        "largura": 521,
+        "altura": 1156
+      },
+      {
+        "id": 1563,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-01-at-16.00.09.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-09-01 at 16.00.09",
+        "largura": 1600,
+        "altura": 900
+      }
+    ],
+    "seo_title": "Phantom29G - Barra Boat Floripa",
+    "meta_description": "Cabinada e espaçosa / 9 passageiros / Banheiro elétrico / Deck de popa / Solarium na proa / Som bluetooth / Churrasqueira a carvão / Kit de salvatagem / Kit com Louças e Taças / Piso antiderrapante / Toldo e fechamento frontal e lateral / Cooler / Geladeira térmica / Incluso: / * Marinheiro / * Combustível / * Carvão e sal para o churrasco / * Boias tipo espaguete / * 1 Stand Up Paddle / * 1 Tapete Flutuante / * Máscara de mergulho",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2025/09/graciosasite.jpg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2025-09-02T20:23:20",
+    "modificado": "2025-11-05T13:05:03",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 1399,
+    "nome": "Phantom 36c",
+    "slug": "phantom-36c",
+    "url": "https://barraboatfloripa.com.br/lanchas/phantom-36c/",
+    "pes": "36",
+    "passageiros": "11",
+    "valor_exibido": "Sob Consulta",
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [
+      "Lancha"
+    ],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "Phantom 36 pés",
+      "11 Passageiros",
+      "Cabine espaçosa",
+      "Quarto",
+      "Banheiro elétrico",
+      "Piso em E.V.A",
+      "Som bluetooth",
+      "Iluminação",
+      "Sonda, GPS e rádio VHF",
+      "Churrasqueira a carvão",
+      "Cooler",
+      "Geladeira térmica",
+      "Chaise",
+      "Mesa",
+      "Deck de popa aberto",
+      "Proa com estofamento",
+      "Carregador 12v",
+      "Fechamento frontal e lateral",
+      "Toldo",
+      "Cristaleira com copos e taças",
+      "Pia com água doce",
+      "Kit salvatagem",
+      "Boias macarrão"
+    ],
+    "descricao_longa": [],
+    "imagens": [
+      {
+        "id": 3405,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/capasite.jpg",
+        "alt": "",
+        "nome": "capasite",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 3396,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/WhatsApp-Image-2025-12-28-at-15.26.09-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-28 at 15.26.09 (1)",
+        "largura": 1600,
+        "altura": 1200
+      },
+      {
+        "id": 3398,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/WhatsApp-Image-2025-12-28-at-15.26.09.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-28 at 15.26.09",
+        "largura": 1600,
+        "altura": 1200
+      },
+      {
+        "id": 3399,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/WhatsApp-Image-2025-12-28-at-15.26.10-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-28 at 15.26.10 (1)",
+        "largura": 1600,
+        "altura": 1200
+      },
+      {
+        "id": 3401,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/WhatsApp-Image-2025-12-28-at-15.26.10-3.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-28 at 15.26.10 (3)",
+        "largura": 1600,
+        "altura": 1200
+      },
+      {
+        "id": 3400,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/WhatsApp-Image-2025-12-28-at-15.26.10-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-12-28 at 15.26.10 (2)",
+        "largura": 1600,
+        "altura": 1200
+      },
+      {
+        "id": 1440,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/7.jpg",
+        "alt": "",
+        "nome": "7",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1441,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/6.jpg",
+        "alt": "",
+        "nome": "6",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1439,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/8.jpg",
+        "alt": "",
+        "nome": "8",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1434,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/14.jpg",
+        "alt": "",
+        "nome": "14",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1437,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/10.jpg",
+        "alt": "",
+        "nome": "10",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1443,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/4.jpg",
+        "alt": "",
+        "nome": "4",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1438,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/9.jpg",
+        "alt": "",
+        "nome": "9",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1436,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/12.jpg",
+        "alt": "",
+        "nome": "12",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1435,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/13.jpg",
+        "alt": "",
+        "nome": "13",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1430,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/18.jpg",
+        "alt": "LANCHA PHANTOM 36 PÉS PARA 11 PASSAGEIROS",
+        "nome": "PHANTOM36",
+        "largura": 900,
+        "altura": 900
+      }
+    ],
+    "seo_title": "Phantom 36c - Barra Boat Floripa",
+    "meta_description": "Phantom 36 pés / 11 Passageiros / Cabine espaçosa / Quarto / Banheiro elétrico / Piso em E.V.A / Som bluetooth / Iluminação / Sonda, GPS e rádio VHF / Churrasqueira a carvão / Cooler / Geladeira térmica / Chaise / Mesa / Deck de popa aberto / Proa com estofamento / Carregador 12v / Fechamento frontal e lateral / Toldo / Cristaleira com copos e taças / Pia com água doce / Kit salvatagem / Boias macarrão",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2025/08/capasite.jpg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2025-08-26T22:36:36",
+    "modificado": "2025-12-28T23:57:52",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 1295,
+    "nome": "HD 26 PÉS LANAI",
+    "slug": "hd-26-pes-lanai",
+    "url": "https://barraboatfloripa.com.br/lanchas/hd-26-pes-lanai/",
+    "pes": "26",
+    "passageiros": "9",
+    "valor_exibido": "Sob Consulta",
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [
+      "Lancha"
+    ],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "Cabine",
+      "Banheiro elétrico",
+      "Som Bluetooth",
+      "Churrasqueira a carvão",
+      "Sonda e GPS",
+      "Toldo",
+      "chuveiro de popa",
+      "Deck de proa",
+      "Piso antiderrapante",
+      "Cooler",
+      "Porta objetos",
+      "popa fechada",
+      "sistema de luz",
+      "Carregador 12v",
+      "Mesa",
+      "Kit churrasco",
+      "Aluguel de Tapete flutuante",
+      "Marinheiro",
+      "Combustível"
+    ],
+    "descricao_longa": [],
+    "imagens": [
+      {
+        "id": 1300,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/11/WhatsApp-Image-2024-11-27-at-15.21.52-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2024-11-27 at 15.21.52",
+        "largura": 590,
+        "altura": 590
+      },
+      {
+        "id": 1299,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/11/WhatsApp-Image-2024-11-27-at-15.21.52.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2024-11-27 at 15.21.52",
+        "largura": 590,
+        "altura": 1280
+      },
+      {
+        "id": 1296,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/11/WhatsApp-Image-2024-11-27-at-15.21.51-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2024-11-27 at 15.21.51 (1)",
+        "largura": 1280,
+        "altura": 960
+      },
+      {
+        "id": 1298,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/11/WhatsApp-Image-2024-11-27-at-15.21.51.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2024-11-27 at 15.21.51",
+        "largura": 1280,
+        "altura": 960
+      },
+      {
+        "id": 1297,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/11/WhatsApp-Image-2024-11-27-at-15.21.51-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2024-11-27 at 15.21.51 (2)",
+        "largura": 960,
+        "altura": 1280
+      }
+    ],
+    "seo_title": "HD 26 PÉS LANAI - Barra Boat Floripa",
+    "meta_description": "Cabine / Banheiro elétrico / Som Bluetooth / Churrasqueira a carvão / Sonda e GPS / Toldo / chuveiro de popa / Deck de proa / Piso antiderrapante / Cooler / Porta objetos / popa fechada / sistema de luz / Carregador 12v / Mesa / Kit churrasco / Aluguel de Tapete flutuante / Marinheiro / Combustível",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2024/11/WhatsApp-Image-2024-11-27-at-15.21.52-1.jpeg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2024-11-27T19:20:14",
+    "modificado": "2025-11-05T13:05:50",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 1090,
+    "nome": "Phantom30 pés BB",
+    "slug": "phantom30bb",
+    "url": "https://barraboatfloripa.com.br/lanchas/phantom30bb/",
+    "pes": "29",
+    "passageiros": "12",
+    "valor_exibido": "Sob Consulta",
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [
+      "Lancha"
+    ],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "Cabine espaçosa",
+      "Quarto com ventiladores",
+      "Banheiro elétrico",
+      "Piso em E.V.A",
+      "Som bluetooth JBL",
+      "Iluminação",
+      "Sonda, GPS e rádio VHF",
+      "Churrasqueira a carvão",
+      "Cooler",
+      "Geladeira térmica",
+      "Chaise",
+      "Mesa",
+      "Deck de popa aberto e alongado",
+      "Proa com estofamento",
+      "Carregador 12v",
+      "Fechamento frontal e lateral",
+      "Toldo",
+      "Cristaleira com copos e taças",
+      "Pia com água doce",
+      "Cafeteira",
+      "Kit salvatagem",
+      "Prancha stand up",
+      "Boias macarrão",
+      "Tapete flutuante",
+      "Stand Up"
+    ],
+    "descricao_longa": [],
+    "imagens": [
+      {
+        "id": 1309,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/phantom2.jpg",
+        "alt": "",
+        "nome": "phantom2",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1344,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/Imagem-do-WhatsApp-de-2025-01-16-as-12.32.54_d347028b-1.jpg",
+        "alt": "",
+        "nome": "Imagem-do-WhatsApp-de-2025-01-16-as-12.32.54_d347028b",
+        "largura": 960,
+        "altura": 1280
+      },
+      {
+        "id": 1132,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/Imagem-do-WhatsApp-de-2024-09-26-as-23.38.19_0ebe40c2.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-09-26 à(s) 23.38.19_0ebe40c2",
+        "largura": 1042,
+        "altura": 1600
+      },
+      {
+        "id": 1131,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/Imagem-do-WhatsApp-de-2024-09-26-as-23.38.18_e4f8b374.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-09-26 à(s) 23.38.18_e4f8b374",
+        "largura": 862,
+        "altura": 1280
+      },
+      {
+        "id": 1733,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/WhatsApp-Image-2025-10-28-at-23.14.26-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-28 at 23.14.26 (1)",
+        "largura": 987,
+        "altura": 1280
+      },
+      {
+        "id": 1734,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/WhatsApp-Image-2025-10-28-at-23.14.26-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-28 at 23.14.26 (2)",
+        "largura": 1000,
+        "altura": 780
+      },
+      {
+        "id": 1133,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/Imagem-do-WhatsApp-de-2024-09-26-as-23.38.19_8a8e94dc.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-09-26 à(s) 23.38.19_8a8e94dc",
+        "largura": 858,
+        "altura": 1280
+      },
+      {
+        "id": 1115,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/Imagem-do-WhatsApp-de-2024-08-26-as-17.16.46_ce8815cf.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-08-26 à(s) 17.16.46_ce8815cf",
+        "largura": 960,
+        "altura": 1280
+      },
+      {
+        "id": 1130,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/Imagem-do-WhatsApp-de-2024-09-26-as-23.38.18_c8f4e19d.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-09-26 à(s) 23.38.18_c8f4e19d",
+        "largura": 1256,
+        "altura": 1267
+      },
+      {
+        "id": 1129,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/Imagem-do-WhatsApp-de-2024-09-26-as-23.38.18_522dc0aa.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-09-26 à(s) 23.38.18_522dc0aa",
+        "largura": 850,
+        "altura": 1280
+      },
+      {
+        "id": 1101,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/Imagem-do-WhatsApp-de-2024-08-26-as-17.16.46_6f323466.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-08-26 à(s) 17.16.46_6f323466",
+        "largura": 1280,
+        "altura": 960
+      },
+      {
+        "id": 1097,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/Imagem-do-WhatsApp-de-2024-08-26-as-17.16.46_3ed74382.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-08-26 à(s) 17.16.46_3ed74382",
+        "largura": 960,
+        "altura": 1280
+      },
+      {
+        "id": 1121,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/Imagem-do-WhatsApp-de-2024-08-26-as-17.16.46_878a6ffe-1.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-08-26 à(s) 17.16.46_878a6ffe",
+        "largura": 1280,
+        "altura": 960
+      },
+      {
+        "id": 1731,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/WhatsApp-Image-2025-10-28-at-23.14.25-3.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-28 at 23.14.25 (3)",
+        "largura": 1000,
+        "altura": 562
+      },
+      {
+        "id": 1096,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/Imagem-do-WhatsApp-de-2024-08-26-as-17.16.46_2f260f66.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-08-26 à(s) 17.16.46_2f260f66",
+        "largura": 1280,
+        "altura": 960
+      },
+      {
+        "id": 1119,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/Imagem-do-WhatsApp-de-2024-08-26-as-17.16.46_22a62d13-1.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-08-26 à(s) 17.16.46_22a62d13",
+        "largura": 960,
+        "altura": 1280
+      },
+      {
+        "id": 1114,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/Imagem-do-WhatsApp-de-2024-08-26-as-17.16.46_caaf76f3.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-08-26 à(s) 17.16.46_caaf76f3",
+        "largura": 960,
+        "altura": 1280
+      },
+      {
+        "id": 1109,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/Imagem-do-WhatsApp-de-2024-08-26-as-17.16.46_4417eaa9.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-08-26 à(s) 17.16.46_4417eaa9",
+        "largura": 1280,
+        "altura": 960
+      },
+      {
+        "id": 1735,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/WhatsApp-Image-2025-10-28-at-23.14.26.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-28 at 23.14.26",
+        "largura": 1000,
+        "altura": 562
+      }
+    ],
+    "seo_title": "Phantom30 pés BB - Barra Boat Floripa",
+    "meta_description": "Cabine espaçosa / Quarto com ventiladores / Banheiro elétrico / Piso em E.V.A / Som bluetooth JBL / Iluminação / Sonda, GPS e rádio VHF / Churrasqueira a carvão / Cooler / Geladeira térmica / Chaise / Mesa / Deck de popa aberto e alongado / Proa com estofamento / Carregador 12v / Fechamento frontal e lateral / Toldo / Cristaleira com copos e taças / Pia com água doce / Cafeteira / Kit salvatagem / Prancha stand up / Boias macarrão / Tapete flutuante / Stand Up",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2024/09/phantom2.jpg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2024-09-27T02:01:19",
+    "modificado": "2025-11-05T13:06:14",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 583,
+    "nome": "Phantom 23.5 M",
+    "slug": "phantom-23-5-maninha",
+    "url": "https://barraboatfloripa.com.br/lanchas/phantom-23-5-maninha/",
+    "pes": "23.5",
+    "passageiros": "7",
+    "valor_exibido": "Sob Consulta",
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [
+      "Lancha"
+    ],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "Popa Aberta e espaçosa",
+      "banheiro",
+      "Som sistema Bluetooth",
+      "Churrasqueira a carvão",
+      "Toldo rebatível com fechamento frontal e lateral",
+      "Ducha de popa",
+      "Sistema de iluminação",
+      "Carregador 12v para celular",
+      "Mesa",
+      "Geladeira Térmica",
+      "Pia com água doce",
+      "Utensílios para o churrasco solicitar ao marinheiro após a reserva da embarcação."
+    ],
+    "descricao_longa": [
+      "Lancha Phantom 23,5 pés",
+      "*Lancha Maninha*",
+      "-Modelo: PHANTOM 7+1",
+      "– Tamanho: 23.5 pés",
+      "– Tipo: Proa aberta",
+      "– Capacidade: 7 passageiros + 1 marinheiro",
+      "– Banheiros: 1",
+      "– Som sistema Bluetooth",
+      "– Churrasqueira a carvão",
+      "– Sonda",
+      "– Toldo rebatível com fechamento frontal e lateral",
+      "– ducha de popa",
+      "– sistema de iluminação",
+      "– carregador 12v para celular",
+      "– Mesa",
+      "– Geladeira Térmica",
+      "– Pia com água doce"
+    ],
+    "imagens": [
+      {
+        "id": 587,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_51.jpg",
+        "alt": "",
+        "nome": "Screenshot_51",
+        "largura": 730,
+        "altura": 730
+      },
+      {
+        "id": 588,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_47.jpg",
+        "alt": "",
+        "nome": "Screenshot_47",
+        "largura": 738,
+        "altura": 738
+      },
+      {
+        "id": 1072,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Imagem-do-WhatsApp-de-2024-09-26-as-17.47.25_eb8dff73.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-09-26 à(s) 17.47.25_eb8dff73",
+        "largura": 1600,
+        "altura": 1154
+      },
+      {
+        "id": 590,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_49.jpg",
+        "alt": "",
+        "nome": "Screenshot_49",
+        "largura": 610,
+        "altura": 610
+      },
+      {
+        "id": 1062,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/churrasco.jpg",
+        "alt": "",
+        "nome": "churrasco",
+        "largura": 1079,
+        "altura": 1074
+      },
+      {
+        "id": 1073,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Imagem-do-WhatsApp-de-2024-09-26-as-17.47.26_6bae815a.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-09-26 à(s) 17.47.26_6bae815a",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1074,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Imagem-do-WhatsApp-de-2024-09-26-as-17.47.26_7214fdf6.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-09-26 à(s) 17.47.26_7214fdf6",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1075,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Imagem-do-WhatsApp-de-2024-09-26-as-17.47.27_4ac878b9.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-09-26 à(s) 17.47.27_4ac878b9",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1076,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Imagem-do-WhatsApp-de-2024-09-26-as-17.47.27_822895ea.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-09-26 à(s) 17.47.27_822895ea",
+        "largura": 1600,
+        "altura": 1082
+      }
+    ],
+    "seo_title": "Phantom 23.5 M - Barra Boat Floripa",
+    "meta_description": "Popa Aberta e espaçosa / banheiro / Som sistema Bluetooth / Churrasqueira a carvão / Toldo rebatível com fechamento frontal e lateral / Ducha de popa / Sistema de iluminação / Carregador 12v para celular / Mesa / Geladeira Térmica / Pia com água doce / Utensílios para o churrasco solicitar ao marinheiro após a reserva da embarcação.",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_51.jpg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2024-03-21T04:41:38",
+    "modificado": "2025-11-05T13:06:24",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 552,
+    "nome": "Phantom 30 Pés C",
+    "slug": "phantom-30",
+    "url": "https://barraboatfloripa.com.br/lanchas/phantom-30/",
+    "pes": "30",
+    "passageiros": "11",
+    "valor_exibido": "Sob Consulta",
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [
+      "Lancha"
+    ],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "Cabinada e espaçosa",
+      "Banheiro elétrico",
+      "Deck de popa",
+      "Solarium na proa",
+      "Som bluetooth",
+      "Churrasqueira a carvão",
+      "Kit de salvatagem",
+      "Kit com Louças e Taças",
+      "Piso antiderrapante",
+      "Toldo e fechamento frontal e lateral",
+      "Cooler",
+      "Geladeira térmica",
+      "Combustível",
+      "Marinheiro"
+    ],
+    "descricao_longa": [
+      "Phantom 30 pés até 11 pessoas",
+      "11 Passageiros",
+      "Cabinada",
+      "01 Marinheiro habilitado",
+      "Banheiro",
+      "Deck de popa aberto",
+      "Solarium na proa",
+      "Som",
+      "Churrasqueira",
+      "Teka",
+      "Toldo",
+      "Tapete Flutuante",
+      "Standup"
+    ],
+    "imagens": [
+      {
+        "id": 1148,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/phantom30.jpg",
+        "alt": "",
+        "nome": "phantom30",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1083,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Imagem-do-WhatsApp-de-2024-09-26-as-21.12.48_83f0da61-e1727397596232.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-09-26 à(s) 21.12.48_83f0da61",
+        "largura": 877,
+        "altura": 493
+      },
+      {
+        "id": 1078,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Imagem-do-WhatsApp-de-2024-09-26-as-21.12.19_63bf1f60-e1727397650862.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-09-26 à(s) 21.12.19_63bf1f60",
+        "largura": 639,
+        "altura": 570
+      },
+      {
+        "id": 562,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_31.jpg",
+        "alt": "",
+        "nome": "Screenshot_31",
+        "largura": 733,
+        "altura": 733
+      },
+      {
+        "id": 1081,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Imagem-do-WhatsApp-de-2024-09-26-as-21.12.20_88bebf07.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-09-26 à(s) 21.12.20_88bebf07",
+        "largura": 960,
+        "altura": 1280
+      },
+      {
+        "id": 563,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_30.jpg",
+        "alt": "",
+        "nome": "Screenshot_30",
+        "largura": 731,
+        "altura": 731
+      },
+      {
+        "id": 1080,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Imagem-do-WhatsApp-de-2024-09-26-as-21.12.20_04d940d2.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-09-26 à(s) 21.12.20_04d940d2",
+        "largura": 960,
+        "altura": 1280
+      },
+      {
+        "id": 1213,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/IMG-20240926-WA0058.jpg",
+        "alt": "",
+        "nome": "IMG-20240926-WA0058",
+        "largura": 960,
+        "altura": 1280
+      },
+      {
+        "id": 3360,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/WhatsApp-Image-2025-11-19-at-19.19.02-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-11-19 at 19.19.02 (1)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 3359,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/WhatsApp-Image-2025-11-19-at-19.19.02-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-11-19 at 19.19.02 (2)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 3358,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/WhatsApp-Image-2025-11-19-at-19.19.02-3.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-11-19 at 19.19.02 (3)",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 3357,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/WhatsApp-Image-2025-11-19-at-19.19.02-4.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-11-19 at 19.19.02 (4)",
+        "largura": 1200,
+        "altura": 1600
+      }
+    ],
+    "seo_title": "Phantom 30 Pés C - Barra Boat Floripa",
+    "meta_description": "Cabinada e espaçosa / Banheiro elétrico / Deck de popa / Solarium na proa / Som bluetooth / Churrasqueira a carvão / Kit de salvatagem / Kit com Louças e Taças / Piso antiderrapante / Toldo e fechamento frontal e lateral / Cooler / Geladeira térmica / Combustível / Marinheiro",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/phantom30.jpg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2024-03-21T04:27:28",
+    "modificado": "2025-12-18T19:05:44",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 544,
+    "nome": "Phantom 29 pés My Girls",
+    "slug": "phantom-29-my-girl",
+    "url": "https://barraboatfloripa.com.br/lanchas/phantom-29-my-girl/",
+    "pes": "29",
+    "passageiros": "9",
+    "valor_exibido": "Sob Consulta",
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [
+      "Lancha"
+    ],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "Cabinada e espaçosa",
+      "Banheiro elétrico",
+      "Deck de popa",
+      "Solarium na proa",
+      "Som bluetooth",
+      "Churrasqueira a carvão",
+      "Kit de salvatagem",
+      "Kit com Louças",
+      "Piso antiderrapante",
+      "Toldo e fechamento frontal e lateral",
+      "Cooler",
+      "Geladeira térmica",
+      "Combustível",
+      "Marinheiro"
+    ],
+    "descricao_longa": [
+      "Cabinada e espaçosa",
+      "Banheiro elétrico",
+      "Deck de popa",
+      "Solarium na proa",
+      "Som bluetooth",
+      "Churrasqueira a carvão",
+      "Kit de salvatagem",
+      "Kit com Louças e Taças",
+      "Piso antiderrapante",
+      "Toldo e fechamento frontal e lateral",
+      "Cooler",
+      "Geladeira térmica",
+      "Tapete Flutuante",
+      "Combustível",
+      "Marinheiro"
+    ],
+    "imagens": [
+      {
+        "id": 1220,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Imagem-do-WhatsApp-de-2024-10-10-as-15.57.58_71f004f4-e1732752346872.jpg",
+        "alt": "",
+        "nome": "Imagem do WhatsApp de 2024-10-10 à(s) 15.57.58_71f004f4",
+        "largura": 1147,
+        "altura": 1147
+      },
+      {
+        "id": 549,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_20.jpg",
+        "alt": "",
+        "nome": "Screenshot_20",
+        "largura": 612,
+        "altura": 612
+      },
+      {
+        "id": 548,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_18-e1727398450700.jpg",
+        "alt": "",
+        "nome": "Screenshot_18",
+        "largura": 537,
+        "altura": 434
+      },
+      {
+        "id": 547,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_21-e1727398370433.jpg",
+        "alt": "",
+        "nome": "Screenshot_21",
+        "largura": 701,
+        "altura": 536
+      },
+      {
+        "id": 546,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_19.jpg",
+        "alt": "",
+        "nome": "Screenshot_19",
+        "largura": 612,
+        "altura": 612
+      }
+    ],
+    "seo_title": "Phantom 29 pés My Girls - Barra Boat Floripa",
+    "meta_description": "Cabinada e espaçosa / Banheiro elétrico / Deck de popa / Solarium na proa / Som bluetooth / Churrasqueira a carvão / Kit de salvatagem / Kit com Louças / Piso antiderrapante / Toldo e fechamento frontal e lateral / Cooler / Geladeira térmica / Combustível / Marinheiro",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Imagem-do-WhatsApp-de-2024-10-10-as-15.57.58_71f004f4-e1732752346872.jpg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2024-03-21T04:19:16",
+    "modificado": "2025-11-05T13:07:21",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 538,
+    "nome": "Phantom 23.5 Pés G",
+    "slug": "phantom-23-5",
+    "url": "https://barraboatfloripa.com.br/lanchas/phantom-23-5/",
+    "pes": "23.5",
+    "passageiros": "7",
+    "valor_exibido": "Sob Consulta",
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [
+      "Lancha"
+    ],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "Popa Aberta e espaçosa",
+      "banheiro",
+      "Som sistema Bluetooth",
+      "Churrasqueira a carvão",
+      "Toldo rebatível com fechamento frontal e lateral",
+      "Ducha de popa",
+      "Sistema de iluminação",
+      "Carregador 12v para celular",
+      "Mesa",
+      "Geladeira Térmica",
+      "Tapete Flutuante",
+      "Pia com água doce",
+      "Tapete Flutuante",
+      "Marinheiro",
+      "Combustível"
+    ],
+    "descricao_longa": [],
+    "imagens": [
+      {
+        "id": 1304,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/3056eb75-72a4-4a55-bac2-1c2b333e9eb4-e1732752128392.jpg",
+        "alt": "",
+        "nome": "3056eb75-72a4-4a55-bac2-1c2b333e9eb4",
+        "largura": 853,
+        "altura": 853
+      },
+      {
+        "id": 1305,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/92755c50-f137-469f-b784-1f20e33a274f.jpg",
+        "alt": "",
+        "nome": "92755c50-f137-469f-b784-1f20e33a274f",
+        "largura": 1280,
+        "altura": 853
+      },
+      {
+        "id": 540,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_7-3.jpg",
+        "alt": "",
+        "nome": "Screenshot_7",
+        "largura": 418,
+        "altura": 418
+      },
+      {
+        "id": 542,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_8-3.jpg",
+        "alt": "",
+        "nome": "Screenshot_8",
+        "largura": 417,
+        "altura": 417
+      },
+      {
+        "id": 541,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_10-2.jpg",
+        "alt": "",
+        "nome": "Screenshot_10",
+        "largura": 416,
+        "altura": 416
+      },
+      {
+        "id": 543,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_9-2.jpg",
+        "alt": "",
+        "nome": "Screenshot_9",
+        "largura": 416,
+        "altura": 416
+      },
+      {
+        "id": 1303,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/0736e9f2-ef45-4c12-a3f7-b5bdd630faaf.jpg",
+        "alt": "",
+        "nome": "0736e9f2-ef45-4c12-a3f7-b5bdd630faaf",
+        "largura": 1600,
+        "altura": 1066
+      },
+      {
+        "id": 1306,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/fe2623d4-4c05-4145-920b-735c99b9f80d.jpg",
+        "alt": "",
+        "nome": "fe2623d4-4c05-4145-920b-735c99b9f80d",
+        "largura": 1600,
+        "altura": 1066
+      },
+      {
+        "id": 517,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_10-1.jpg",
+        "alt": "",
+        "nome": "Screenshot_10",
+        "largura": 405,
+        "altura": 405
+      }
+    ],
+    "seo_title": "Phantom 23.5 Pés G - Barra Boat Floripa",
+    "meta_description": "Popa Aberta e espaçosa / banheiro / Som sistema Bluetooth / Churrasqueira a carvão / Toldo rebatível com fechamento frontal e lateral / Ducha de popa / Sistema de iluminação / Carregador 12v para celular / Mesa / Geladeira Térmica / Tapete Flutuante / Pia com água doce / Tapete Flutuante / Marinheiro / Combustível",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/3056eb75-72a4-4a55-bac2-1c2b333e9eb4-e1732752128392.jpg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2024-03-21T04:14:38",
+    "modificado": "2025-11-05T13:07:30",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 518,
+    "nome": "HD 26 pés Caluga",
+    "slug": "hd-26-caluga",
+    "url": "https://barraboatfloripa.com.br/lanchas/hd-26-caluga/",
+    "pes": "26",
+    "passageiros": "9",
+    "valor_exibido": "Sob Consulta",
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [
+      "Lancha"
+    ],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [],
+    "taxonomia_passageiro": [],
+    "taxonomia_valor": [],
+    "descricao_curta_itens": [
+      "Cabine",
+      "Banheiro elétrico",
+      "Som Bluetooth",
+      "Churrasqueira a carvão",
+      "Sonda e GPS",
+      "Toldo",
+      "chuveiro de popa",
+      "Deck de proa",
+      "Piso antiderrapante",
+      "Cooler",
+      "Porta objetos",
+      "popa fechada",
+      "sistema de luz",
+      "Carregador 12v",
+      "Mesa",
+      "Kit de louça, copos e taças",
+      "Tapete flutuante",
+      "Marinheiro",
+      "Combustível"
+    ],
+    "descricao_longa": [
+      "Lancha HD 26 pés",
+      "Caluga",
+      "Modelo: HD MARINE 7.9",
+      "Tipo: Cabine",
+      "Tamanho: 26 pés",
+      "Capacidade: 9 passageiros + 1 marinheiro",
+      "Cabines: 1",
+      "Banheiros: 1",
+      "Som Pionner com sub e sistema Bluetooth",
+      "Churrasqueira a carvão",
+      "Sonda",
+      "Toldo dobrável",
+      "chuveiro de popa",
+      "Deck de proa",
+      "Piso teka",
+      "Cooler",
+      "popa fechada",
+      "sistema de luz",
+      "Carregador 12v para celular",
+      "Mesa",
+      "Tapete flutuante"
+    ],
+    "imagens": [
+      {
+        "id": 1742,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/capahd.jpg",
+        "alt": "",
+        "nome": "capahd",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1739,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/WhatsApp-Image-2025-10-28-at-23.14.25-2.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-28 at 23.14.25 (2)",
+        "largura": 1000,
+        "altura": 1066
+      },
+      {
+        "id": 1738,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/WhatsApp-Image-2025-10-28-at-23.14.25-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-28 at 23.14.25 (1)",
+        "largura": 1000,
+        "altura": 574
+      },
+      {
+        "id": 1087,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/IMG-20240131-WA0049-e1727399946362.jpg",
+        "alt": "",
+        "nome": "IMG-20240131-WA0049",
+        "largura": 994,
+        "altura": 960
+      },
+      {
+        "id": 521,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_17.jpg",
+        "alt": "",
+        "nome": "Screenshot_17",
+        "largura": 614,
+        "altura": 614
+      },
+      {
+        "id": 1736,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/WhatsApp-Image-2025-10-28-at-23.14.24-1.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-28 at 23.14.24 (1)",
+        "largura": 1000,
+        "altura": 562
+      },
+      {
+        "id": 1737,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/WhatsApp-Image-2025-10-28-at-23.14.24.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-28 at 23.14.24",
+        "largura": 1000,
+        "altura": 562
+      },
+      {
+        "id": 524,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_16.jpg",
+        "alt": "",
+        "nome": "Screenshot_16",
+        "largura": 608,
+        "altura": 608
+      },
+      {
+        "id": 1740,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/WhatsApp-Image-2025-10-28-at-23.14.25.jpeg",
+        "alt": "",
+        "nome": "WhatsApp Image 2025-10-28 at 23.14.25",
+        "largura": 1000,
+        "altura": 806
+      },
+      {
+        "id": 1088,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/IMG-20240131-WA0036.jpg",
+        "alt": "",
+        "nome": "IMG-20240131-WA0036",
+        "largura": 1512,
+        "altura": 332
+      },
+      {
+        "id": 1089,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/IMG-20231230-WA0255.jpg",
+        "alt": "",
+        "nome": "IMG-20231230-WA0255",
+        "largura": 1200,
+        "altura": 1600
+      },
+      {
+        "id": 1004,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/04/IMG-20200625-WA0101.jpg",
+        "alt": "",
+        "nome": "IMG-20200625-WA0101",
+        "largura": 600,
+        "altura": 450
+      },
+      {
+        "id": 986,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/04/IMG-20200625-WA0069.jpg",
+        "alt": "",
+        "nome": "IMG-20200625-WA0069",
+        "largura": 338,
+        "altura": 450
+      },
+      {
+        "id": 989,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/04/IMG-20200625-WA0036.jpg",
+        "alt": "",
+        "nome": "IMG-20200625-WA0036",
+        "largura": 450,
+        "altura": 450
+      }
+    ],
+    "seo_title": "HD 26 pés Caluga - Barra Boat Floripa",
+    "meta_description": "Cabine / Banheiro elétrico / Som Bluetooth / Churrasqueira a carvão / Sonda e GPS / Toldo / chuveiro de popa / Deck de proa / Piso antiderrapante / Cooler / Porta objetos / popa fechada / sistema de luz / Carregador 12v / Mesa / Kit de louça, copos e taças / Tapete flutuante / Marinheiro / Combustível",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/capahd.jpg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2024-03-21T03:58:39",
+    "modificado": "2025-11-05T13:07:45",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  },
+  {
+    "id": 362,
+    "nome": "Phantom 29 Pés Bravo",
+    "slug": "phantom-29",
+    "url": "https://barraboatfloripa.com.br/lanchas/phantom-29/",
+    "pes": "29",
+    "passageiros": "9",
+    "valor_exibido": "Sob Consulta",
+    "preco_woocommerce": "0",
+    "regiao_badge": "Leste da Ilha",
+    "categorias": [
+      "Lancha"
+    ],
+    "tags": [
+      "leste da ilha"
+    ],
+    "taxonomia_pes": [
+      "29"
+    ],
+    "taxonomia_passageiro": [
+      "9"
+    ],
+    "taxonomia_valor": [
+      "De R$ 1.500 à R$ 2.500"
+    ],
+    "descricao_curta_itens": [
+      "Cabinada e espaçosa",
+      "Banheiro elétrico",
+      "Deck de popa",
+      "Solarium na proa",
+      "Som bluetooth",
+      "Iluminação e luz subaquática",
+      "Churrasqueira a carvão",
+      "Kit de salvatagem",
+      "Kit com Louças",
+      "Piso antiderrapante",
+      "Toldo e fechamento frontal e lateral",
+      "Cooler",
+      "Geladeira térmica",
+      "tapete Flutuante",
+      "Combustível",
+      "Marinheiro"
+    ],
+    "descricao_longa": [
+      "9 convidados + 1 marinheiro"
+    ],
+    "imagens": [
+      {
+        "id": 1313,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/phantom29bravo.jpg",
+        "alt": "",
+        "nome": "phantom29bravo",
+        "largura": 900,
+        "altura": 900
+      },
+      {
+        "id": 1230,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/IMG-20241001-WA0011.jpg",
+        "alt": "",
+        "nome": "IMG-20241001-WA0011",
+        "largura": 1280,
+        "altura": 960
+      },
+      {
+        "id": 380,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_13.jpg",
+        "alt": "",
+        "nome": "Screenshot_13",
+        "largura": 713,
+        "altura": 713
+      },
+      {
+        "id": 379,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_12.jpg",
+        "alt": "",
+        "nome": "Screenshot_12",
+        "largura": 713,
+        "altura": 713
+      },
+      {
+        "id": 377,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_10.jpg",
+        "alt": "",
+        "nome": "Screenshot_10",
+        "largura": 422,
+        "altura": 422
+      },
+      {
+        "id": 378,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_11.jpg",
+        "alt": "",
+        "nome": "Screenshot_11",
+        "largura": 713,
+        "altura": 713
+      },
+      {
+        "id": 374,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/Screenshot_7-e1727400530781.jpg",
+        "alt": "",
+        "nome": "Screenshot_7",
+        "largura": 751,
+        "altura": 619
+      },
+      {
+        "id": 1223,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/IMG-20241001-WA0004.jpg",
+        "alt": "",
+        "nome": "IMG-20241001-WA0004",
+        "largura": 1280,
+        "altura": 720
+      },
+      {
+        "id": 1224,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/IMG-20241001-WA0005.jpg",
+        "alt": "",
+        "nome": "IMG-20241001-WA0005",
+        "largura": 1600,
+        "altura": 900
+      },
+      {
+        "id": 1228,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/IMG-20241001-WA0009-e1732752953221.jpg",
+        "alt": "",
+        "nome": "IMG-20241001-WA0009",
+        "largura": 1033,
+        "altura": 720
+      },
+      {
+        "id": 1232,
+        "url": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/IMG-20241001-WA0016.jpg",
+        "alt": "",
+        "nome": "IMG-20241001-WA0016",
+        "largura": 1600,
+        "altura": 900
+      }
+    ],
+    "seo_title": "Phantom 29 Pés Bravo - Barra Boat Floripa",
+    "meta_description": "Cabinada e espaçosa / Banheiro elétrico / Deck de popa / Solarium na proa / Som bluetooth / Iluminação e luz subaquática / Churrasqueira a carvão / Kit de salvatagem / Kit com Louças / Piso antiderrapante / Toldo e fechamento frontal e lateral / Cooler / Geladeira térmica / tapete Flutuante / Combustível / Marinheiro",
+    "og_image": "https://barraboatfloripa.com.br/wp-content/uploads/2024/03/phantom29bravo.jpg",
+    "roteiros_exibidos_na_pagina": [
+      "Ilha do Campeche",
+      "Costa da Lagoa"
+    ],
+    "publicado": "2024-03-21T02:08:49",
+    "modificado": "2025-11-05T13:07:55",
+    "template_comum_identico": true,
+    "nota": "preço não cadastrado no WooCommerce (0); valor_exibido null = campo Valor não aparece na página; descricao_curta_itens = itens a bordo/inclusos como cadastrados"
+  }
+]
