@@ -81,6 +81,19 @@ Ver `docs/funcionalidades.md` (lista fechada com o Fabiano em 2026-11-12) e
 - Azul / gradiente da marca nos botões e em cards estratégicos.
 - Avaliações: galeria em destaque com a nota 4,8 do Google.
 
+## Imagens melhoradas com IA (mesmo método da Panifran)
+
+- **Modelo:** Real-ESRGAN x4plus em ONNX (Qualcomm AI Hub, `real_esrgan_x4plus-onnx-float`, v0.66.0),
+  rodando local no `onnxruntime` (CPU), entrada fixa 128×128 processada em blocos sobrepostos
+  (12 px) com costura em rampa. ~70–90 s por foto no CPU.
+- **Regra:** foto com lado maior ≥ 1600 px não passa na IA (só redimensiona). Menor que isso:
+  reduz a entrada para no máx. 560 px, aplica 4x e reduz a saída para no máx. 1600 px.
+- **Onde fica:** `E:\Clientes\Barra Boat Floripa\Site\imagens-site-antigo\` com `originais/`
+  (download fiel do WordPress), `melhoradas-ia/` (JPG q92) e `manifesto.json` (URL de origem →
+  arquivos, tamanhos, método e em qual lancha/página a foto é usada). Fora do Git.
+- **No site:** WebP gerados a partir de `melhoradas-ia/` (capas de lancha 900 px, fotos 1400 px).
+  As galerias das páginas de lancha devem sair do mesmo `melhoradas-ia/`.
+
 ## Regras de copy (Freela)
 
 Português. Sem travessões, sem emojis. Números concretos. Nunca falar preço.
