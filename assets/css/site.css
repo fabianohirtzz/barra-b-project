@@ -252,7 +252,7 @@ body.menu-aberto{overflow:hidden}
 .secao__cabeca--linha > div{max-width:640px}
 
 /* ---------- roteiros ---------- */
-.roteiros__grade{display:grid;grid-template-columns:1.15fr 1fr;gap:clamp(18px,2.5vw,32px)}
+.roteiros__grade{display:grid;grid-template-columns:1fr 1fr;gap:clamp(18px,2.5vw,32px)}
 .roteiro{display:grid;grid-template-rows:auto 1fr;background:#fff;border-radius:var(--r-grande);overflow:hidden;box-shadow:var(--sombra)}
 .roteiro__foto{display:block;aspect-ratio:16/9;overflow:hidden}
 .roteiro__foto img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--suave-saida)}
