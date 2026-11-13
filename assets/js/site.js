@@ -250,8 +250,10 @@
     function navegaAte(parada) {
       paradas.forEach((p) => p.classList.toggle('is-foco', p === parada));
       const link = parada.querySelector('a');
-      const y = link.getBoundingClientRect().top - trilha.getBoundingClientRect().top + link.offsetHeight / 2 - 17;
-      barco.style.setProperty('--barco-y', Math.max(0, y) + 'px');
+      const y = Math.max(0, link.getBoundingClientRect().top - trilha.getBoundingClientRect().top + link.offsetHeight / 2 - 23);
+      const antes = parseFloat(barco.style.getPropertyValue('--barco-y')) || 0;
+      if (Math.abs(y - antes) > 4) barco.classList.toggle('is-subindo', y < antes); // a proa aponta para onde ela vai
+      barco.style.setProperty('--barco-y', y + 'px');
     }
     paradas.forEach((p) => {
       p.addEventListener('mouseenter', () => navegaAte(p));
