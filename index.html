@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,300..800;1,62..125,500..900&display=swap" rel="stylesheet">
   <link rel="preload" as="image" href="assets/img/fotos/hero.webp" fetchpriority="high">
-  <link rel="stylesheet" href="assets/css/site.css?v=1">
+  <link rel="stylesheet" href="assets/css/site.css?v=4">
 
   <script type="application/ld+json">
   {
@@ -140,7 +140,7 @@
 
   <!-- ===================== MENU: A ROTA ===================== -->
   <div class="rota" id="rota" role="dialog" aria-modal="true" aria-label="Menu" hidden data-rota>
-    <div class="rota__fundo" aria-hidden="true"></div>
+    <div class="rota__fundo" aria-hidden="true"><canvas class="rota__ondas"></canvas></div>
     <button class="rota__fechar" type="button" data-fecha-menu aria-label="Fechar menu">
       <svg aria-hidden="true"><use href="#i-fechar"/></svg>
     </button>
@@ -610,24 +610,23 @@
         <g clip-path="url(#abaixo)" filter="url(#ondular)">
           <text class="dagua__txt dagua__txt--submerso" x="600" y="170" text-anchor="middle" textLength="1110" lengthAdjust="spacingAndGlyphs">BARRA BOAT</text>
         </g>
-        <path class="dagua__linha" d="M0 128 Q 50 122 100 128 T 200 128 T 300 128 T 400 128 T 500 128 T 600 128 T 700 128 T 800 128 T 900 128 T 1000 128 T 1100 128 T 1200 128 T 1300 128 T 1400 128"/>
       </svg>
+      <span class="dagua__superficie"></span>
     </div>
 
     <div class="rodape__legal">
       <p>© <span data-ano>2026</span> Barra Boat Floripa. Todos os direitos reservados.</p>
       <p class="rodape__politicas"><a href="politica-de-cancelamento/">Cancelamento e reembolso</a><a href="politica-de-privacidade/">Privacidade</a></p>
-      <a class="assinatura" href="https://www.freelainhome.com.br/" target="_blank" rel="noopener">
-        <span class="assinatura__frase">Feito para navegar sem enjoo,</span>
-        <span class="assinatura__linha">desenvolvido pela
-          <span class="assinatura__marca">Freela In Home
-            <svg class="assinatura__rosto" viewBox="0 0 140 34" aria-hidden="true">
-              <circle class="assinatura__olho" cx="50" cy="5" r="3.4"/>
-              <circle class="assinatura__olho assinatura__olho--d" cx="90" cy="5" r="3.4"/>
-              <path class="assinatura__sorriso" pathLength="1" d="M8 16 C 40 34, 100 34, 132 16"/>
-            </svg>
+    </div>
+
+    <div class="rodape__assina">
+      <a class="assinatura" href="https://www.freelainhome.com.br/" target="_blank" rel="noopener" aria-label="Site desenvolvido pela Freela In Home">
+        <span class="assinatura__mar" aria-hidden="true">
+          <span class="assinatura__lancha">
+            <svg viewBox="0 0 34 17"><path class="assinatura__casco" d="M1 10.5h23.5l8.5-3.6-4.6 7.6c-.5.8-1.3 1.3-2.2 1.3H4.6c-1 0-1.9-.6-2.3-1.5Z"/><path class="assinatura__cabine" d="M8 10.5 11.6 5h7.6l4.3 5.5Z"/><path class="assinatura__vidro" d="M17.2 6.2h1.6l3 3.6h-4.6Z"/></svg>
           </span>
         </span>
+        <span class="assinatura__txt"><b>Freela In Home</b><span>Desenvolvimento do site</span></span>
       </a>
     </div>
   </footer>
@@ -636,6 +635,6 @@
     <svg aria-hidden="true"><use href="#i-wa"/></svg><span>Reservar</span>
   </a>
 
-  <script src="assets/js/site.js?v=1" defer></script>
+  <script src="assets/js/site.js?v=4" defer></script>
 </body>
 </html>

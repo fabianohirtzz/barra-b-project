@@ -50,139 +50,151 @@
   $$('[data-ano]').forEach((el) => { el.textContent = new Date().getFullYear(); });
 
   /* =========================================================
-     MAR: carta de profundidade + lancha cruzando
+     MAR: ondas em traço fino + uma lancha cruzando de vez em quando
      ========================================================= */
   const canvas = $('.mar');
   if (canvas) {
     const ctx = canvas.getContext('2d');
-    const carta = document.createElement('canvas');
-    const cctx = carta.getContext('2d');
+    const fundo = document.createElement('canvas');
+    const fctx = fundo.getContext('2d');
     let W = 0, H = 0, dpr = 1;
 
-    // aleatório determinístico: a carta é sempre a mesma
-    const semente = (n) => { const x = Math.sin(n * 9301 + 49297) * 233280; return x - Math.floor(x); };
+    // aleatório determinístico: o mar desenhado é sempre o mesmo
+    let sem = 7;
+    const rnd = () => { sem = (sem * 16807) % 2147483647; return (sem - 1) / 2147483646; };
 
-    function desenhaCarta() {
+    function desenhaMar() {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       W = window.innerWidth; H = window.innerHeight;
-      [canvas, carta].forEach((c) => { c.width = W * dpr; c.height = H * dpr; });
+      [canvas, fundo].forEach((c) => { c.width = W * dpr; c.height = H * dpr; });
       canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-      cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      cctx.clearRect(0, 0, W, H);
-
-      const passo = W < 700 ? 58 : 46;
-      const linhas = Math.ceil(H / passo) + 4;
-      for (let i = -2; i < linhas; i++) {
-        const mestra = i % 4 === 0;
-        cctx.beginPath();
-        cctx.lineWidth = mestra ? 1.1 : .8;
-        cctx.strokeStyle = mestra ? 'rgba(24,96,140,.085)' : 'rgba(24,96,140,.05)';
-        for (let x = -20; x <= W + 20; x += 8) {
-          const y = i * passo
-            + Math.sin(x * .0042 + i * .55) * 26
-            + Math.sin(x * .011 + i * 1.3) * 9
-            + Math.sin(x * .0016 - i * .3) * 40;
-          x === -20 ? cctx.moveTo(x, y) : cctx.lineTo(x, y);
+      fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      fctx.clearRect(0, 0, W, H);
+      sem = 7;
+      const passo = W < 700 ? 64 : 72;
+      fctx.lineCap = 'round';
+      for (let y = passo * .6; y < H + passo; y += passo) {
+        const lambda = 120 + rnd() * 70;       // comprimento da onda
+        const amp = 2.6 + rnd() * 2.2;         // altura da onda
+        const fase = rnd() * Math.PI * 2;
+        const yy = y + (rnd() - .5) * 18;
+        // a linha vem quebrada em trechos, como mar desenhado à mão
+        let x = -40 + rnd() * 120;
+        while (x < W + 40) {
+          const trecho = 90 + rnd() * 380;
+          const forte = rnd() > .82;
+          fctx.beginPath();
+          for (let xi = x; xi <= x + trecho; xi += 4) {
+            const yi = yy + Math.sin((xi / lambda) * Math.PI * 2 + fase) * amp;
+            xi === x ? fctx.moveTo(xi, yi) : fctx.lineTo(xi, yi);
+          }
+          fctx.strokeStyle = forte ? 'rgba(24,96,140,.11)' : 'rgba(24,96,140,.065)';
+          fctx.lineWidth = forte ? 1.3 : 1;
+          fctx.stroke();
+          x += trecho + 50 + rnd() * 260;
         }
-        cctx.stroke();
       }
-      // sondagens: as profundidades soltas de uma carta náutica
-      cctx.font = '500 10px Archivo, sans-serif';
-      cctx.fillStyle = 'rgba(24,96,140,.16)';
-      const qtd = Math.round((W * H) / 52000);
-      for (let k = 0; k < qtd; k++) {
-        const prof = 4 + Math.floor(semente(k + 3) * 34);
-        cctx.fillText(String(prof), semente(k) * W, semente(k + 101) * H);
-      }
+      pinta();
+    }
+    function pinta() {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(carta, 0, 0);
+      ctx.drawImage(fundo, 0, 0);
     }
 
-    /* a lancha: cruza a tela de vez em quando, como a estrela cadente */
+    /* a lancha vista de cima: proa à direita (+x) */
+    function casco(c) {
+      c.beginPath();
+      c.moveTo(19, 0);
+      c.bezierCurveTo(14, -5.6, 6, -7, -2, -7);
+      c.lineTo(-16.5, -6.6);
+      c.quadraticCurveTo(-19, -6.6, -19, -4.4);
+      c.lineTo(-19, 4.4);
+      c.quadraticCurveTo(-19, 6.6, -16.5, 6.6);
+      c.lineTo(-2, 7);
+      c.bezierCurveTo(6, 7, 14, 5.6, 19, 0);
+      c.closePath();
+      c.fillStyle = 'rgba(255,255,255,.95)'; c.fill();
+      c.strokeStyle = 'rgba(8,51,89,.5)'; c.lineWidth = 1; c.stroke();
+      // vinco da proa
+      c.beginPath(); c.moveTo(17.5, 0); c.lineTo(5, 0);
+      c.strokeStyle = 'rgba(8,51,89,.22)'; c.lineWidth = .8; c.stroke();
+      // cockpit
+      c.beginPath(); c.roundRect(-14.5, -4.6, 14, 9.2, 2.6);
+      c.fillStyle = 'rgba(24,96,140,.22)'; c.fill();
+      // para-brisa
+      c.beginPath(); c.moveTo(1.5, -5.6); c.quadraticCurveTo(6.5, 0, 1.5, 5.6);
+      c.strokeStyle = 'rgba(8,51,89,.6)'; c.lineWidth = 1.6; c.stroke();
+      // motor de popa
+      c.beginPath(); c.roundRect(-23, -2.3, 4, 4.6, 1);
+      c.fillStyle = 'rgba(8,51,89,.55)'; c.fill();
+    }
+
     let viagem = null;
+    const VIDA = 4200; // quanto tempo a esteira leva para sumir
     function novaViagem() {
       const daEsquerda = Math.random() > .5;
-      const y0 = H * (.15 + Math.random() * .7);
-      const y1 = y0 + (Math.random() - .5) * H * .35;
+      const y0 = H * (.18 + Math.random() * .64);
       viagem = {
         x0: daEsquerda ? -60 : W + 60, x1: daEsquerda ? W + 60 : -60,
-        y0, y1, curva: (Math.random() - .5) * 140,
-        inicio: performance.now(), dur: 10000 + Math.random() * 4000,
+        y0, y1: y0 + (Math.random() - .5) * H * .25, curva: (Math.random() - .5) * 90,
+        inicio: performance.now(), dur: (W + 120) / (85 + Math.random() * 25) * 1000,
         rastro: [], fim: null,
       };
       requestAnimationFrame(quadro);
     }
-    function posicao(v, t) {
-      const e = t; // velocidade constante, como cruzeiro
-      const x = v.x0 + (v.x1 - v.x0) * e;
-      const y = v.y0 + (v.y1 - v.y0) * e + Math.sin(e * Math.PI) * v.curva;
-      return { x, y };
-    }
+    const ponto = (v, t) => ({
+      x: v.x0 + (v.x1 - v.x0) * t,
+      y: v.y0 + (v.y1 - v.y0) * t + Math.sin(t * Math.PI) * v.curva,
+    });
+
     function quadro(agora) {
-      if (!viagem) return;
-      const v = viagem;
+      const v = viagem; if (!v) return;
       const t = Math.min((agora - v.inicio) / v.dur, 1);
-      const p = posicao(v, t);
-      if (t < 1) v.rastro.push({ ...p, t: agora });
-      else if (!v.fim) v.fim = agora;
-      // a esteira dura ~3,2 s
-      while (v.rastro.length && agora - v.rastro[0].t > 3200) v.rastro.shift();
+      const p = ponto(v, t), q = ponto(v, Math.min(t + .003, 1));
+      const ang = Math.atan2(q.y - p.y, q.x - p.x);
+      // a esteira nasce na popa, não no meio do barco
+      const popa = { x: p.x - Math.cos(ang) * 22, y: p.y - Math.sin(ang) * 22, ang, t: agora };
+      if (t < 1) v.rastro.push(popa); else if (!v.fim) v.fim = agora;
+      while (v.rastro.length && agora - v.rastro[0].t > VIDA) v.rastro.shift();
 
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(carta, 0, 0);
+      pinta();
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
+      ctx.lineCap = 'round';
       const R = v.rastro;
-      if (R.length > 2) {
-        // esteira em V: abre com a idade de cada ponto
+      for (let i = 1; i < R.length; i++) {
+        const a = R[i - 1], b = R[i];
+        const idade = (agora - b.t) / VIDA;      // 0 = recém deixado, 1 = sumindo
+        const alfa = Math.pow(1 - idade, 1.6);
+        // espuma do motor: larga e clara perto da popa, afina com a idade
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = `rgba(255,255,255,${.75 * alfa})`;
+        ctx.lineWidth = 5.5 * (1 - idade) + 1; ctx.stroke();
+        ctx.strokeStyle = `rgba(24,96,140,${.16 * alfa})`;
+        ctx.lineWidth = 1; ctx.stroke();
+        // as duas ondas laterais: abrem pouco, como esteira de lancha
+        const abre = 5 + idade * 26;
         for (const lado of [-1, 1]) {
+          const nx = Math.cos(b.ang + Math.PI / 2) * lado, ny = Math.sin(b.ang + Math.PI / 2) * lado;
+          const ma = Math.cos(a.ang + Math.PI / 2) * lado, mb = Math.sin(a.ang + Math.PI / 2) * lado;
+          const abreA = 5 + ((agora - a.t) / VIDA) * 26;
           ctx.beginPath();
-          for (let i = 0; i < R.length - 1; i++) {
-            const a = R[i], b = R[i + 1];
-            const idade = (agora - a.t) / 3200;
-            const ang = Math.atan2(b.y - a.y, b.x - a.x) + Math.PI / 2;
-            const abre = 4 + idade * 70;
-            const x = a.x + Math.cos(ang) * abre * lado, y = a.y + Math.sin(ang) * abre * lado;
-            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-          }
-          const g = ctx.createLinearGradient(R[0].x, R[0].y, R[R.length - 1].x, R[R.length - 1].y);
-          g.addColorStop(0, 'rgba(24,96,140,0)');
-          g.addColorStop(1, 'rgba(24,96,140,.22)');
-          ctx.strokeStyle = g; ctx.lineWidth = 1; ctx.stroke();
+          ctx.moveTo(a.x + ma * abreA, a.y + mb * abreA);
+          ctx.lineTo(b.x + nx * abre, b.y + ny * abre);
+          ctx.strokeStyle = `rgba(24,96,140,${.2 * alfa})`;
+          ctx.lineWidth = 1; ctx.stroke();
         }
-        // espuma central
-        ctx.beginPath();
-        R.forEach((a, i) => (i ? ctx.lineTo(a.x, a.y) : ctx.moveTo(a.x, a.y)));
-        const g2 = ctx.createLinearGradient(R[0].x, R[0].y, R[R.length - 1].x, R[R.length - 1].y);
-        g2.addColorStop(0, 'rgba(24,96,140,0)');
-        g2.addColorStop(1, 'rgba(24,96,140,.3)');
-        ctx.strokeStyle = g2; ctx.lineWidth = 1.6; ctx.stroke();
       }
       if (t < 1) {
-        // o casco visto de cima
-        const q = posicao(v, Math.min(t + .002, 1));
-        const ang = Math.atan2(q.y - p.y, q.x - p.x);
         ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(ang);
-        ctx.beginPath();
-        ctx.moveTo(15, 0);
-        ctx.bezierCurveTo(9, -6, -4, -6.5, -12, -5.5);
-        ctx.lineTo(-12, 5.5);
-        ctx.bezierCurveTo(-4, 6.5, 9, 6, 15, 0);
-        ctx.fillStyle = 'rgba(8,51,89,.32)'; ctx.fill();
-        ctx.fillStyle = 'rgba(243,247,250,.7)';
-        ctx.fillRect(-5, -2.6, 6, 5.2);
+        // marola da proa
+        ctx.beginPath(); ctx.moveTo(23, 0); ctx.quadraticCurveTo(12, -11, 2, -11.5);
+        ctx.moveTo(23, 0); ctx.quadraticCurveTo(12, 11, 2, 11.5);
+        ctx.strokeStyle = 'rgba(24,96,140,.18)'; ctx.lineWidth = 1; ctx.stroke();
+        casco(ctx);
         ctx.restore();
       }
-      if (v.fim && agora - v.fim > 3300) {
-        viagem = null;
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(carta, 0, 0);
-        agenda();
-        return;
-      }
+      if (v.fim && agora - v.fim > VIDA + 100) { viagem = null; pinta(); agenda(); return; }
       requestAnimationFrame(quadro);
     }
     function agenda(primeira) {
@@ -190,12 +202,15 @@
       setTimeout(() => {
         if (document.hidden || document.body.classList.contains('menu-aberto')) return agenda();
         novaViagem();
-      }, primeira ? 3500 : 14000 + Math.random() * 12000);
+      }, primeira ? 2500 : 12000 + Math.random() * 12000);
     }
 
     let espera;
-    window.addEventListener('resize', () => { clearTimeout(espera); espera = setTimeout(desenhaCarta, 150); });
-    (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { desenhaCarta(); agenda(true); });
+    window.addEventListener('resize', () => {
+      clearTimeout(espera);
+      espera = setTimeout(() => { if (Math.abs(window.innerWidth - W) > 2 || Math.abs(window.innerHeight - H) > 120) desenhaMar(); }, 150);
+    });
+    desenhaMar(); agenda(true);
   }
 
   /* =========================================================
@@ -204,17 +219,20 @@
   const topo = $('[data-topo]');
   const hero = $('.hero');
   const flutuante = $('.wa-flutuante');
-  let ultimoY = window.scrollY;
+  let ancora = window.scrollY;   // ponto onde a direção mudou pela última vez
+  let escondido = false;
   function aoRolar() {
     const y = window.scrollY;
     const limite = hero ? Math.min(hero.offsetHeight * .55, 520) : 80;
     topo.classList.toggle('is-solido', y > limite);
     if (!document.body.classList.contains('menu-aberto')) {
-      topo.classList.toggle('is-escondido', y > 600 && y > ultimoY + 4);
-      if (y < ultimoY - 4) topo.classList.remove('is-escondido');
+      if (y < 600) { escondido = false; ancora = y; }
+      else if (!escondido && y - ancora > 60) { escondido = true; ancora = y; }    // desceu 60px: some
+      else if (escondido && ancora - y > 30) { escondido = false; ancora = y; }    // subiu 30px: volta
+      else if ((escondido && y > ancora) || (!escondido && y < ancora)) ancora = y; // segue a mesma direção
+      topo.classList.toggle('is-escondido', escondido);
     }
-    if (flutuante) flutuante.classList.toggle('is-oculto', hero && y < hero.offsetHeight * .7);
-    ultimoY = y;
+    if (flutuante) flutuante.classList.toggle('is-oculto', !!hero && y < hero.offsetHeight * .7);
   }
   window.addEventListener('scroll', aoRolar, { passive: true });
   aoRolar();
@@ -240,25 +258,70 @@
       p.addEventListener('focusin', () => navegaAte(p));
     });
 
+    /* ondas do fundo do menu: linhas inteiras, de borda a borda, ondulando devagar */
+    const cv = $('.rota__ondas', rota);
+    const oc = cv.getContext('2d');
+    let rodando = false, linhas = [];
+    function preparaOndas() {
+      const d = Math.min(window.devicePixelRatio || 1, 2);
+      cv.width = innerWidth * d; cv.height = innerHeight * d;
+      oc.setTransform(d, 0, 0, d, 0, 0);
+      linhas = [];
+      const passo = innerWidth < 700 ? 46 : 54;
+      for (let y = 30, k = 0; y < innerHeight + 40; y += passo, k++) {
+        linhas.push({ y, k, lambda: 260 + (k % 3) * 70, amp: 7 + (k % 4) * 2.5, vel: .00018 + (k % 5) * .00004 });
+      }
+    }
+    function desenhaOndas(t) {
+      const w = innerWidth, h = innerHeight;
+      oc.clearRect(0, 0, w, h);
+      oc.lineWidth = 1;
+      for (const L of linhas) {
+        oc.beginPath();
+        for (let x = 0; x <= w; x += 6) {
+          // a altura da onda cresce e diminui ao longo da linha (envelope), como mar de verdade
+          const env = .55 + .45 * Math.sin(x / (w * .9) * Math.PI * 1.3 + L.k * .7);
+          const y = L.y
+            + Math.sin((x / L.lambda) * Math.PI * 2 + t * L.vel * 6 + L.k) * L.amp * env
+            + Math.sin((x / (L.lambda * 2.7)) * Math.PI * 2 - t * L.vel * 3) * 4;
+          x === 0 ? oc.moveTo(x, y) : oc.lineTo(x, y);
+        }
+        oc.strokeStyle = L.k % 4 === 0 ? 'rgba(143,198,227,.22)' : 'rgba(143,198,227,.11)';
+        oc.stroke();
+      }
+    }
+    function animaOndas(t) {
+      if (!rodando) return;
+      desenhaOndas(t);
+      if (!reduz) requestAnimationFrame(animaOndas);
+    }
+    window.addEventListener('resize', () => { if (rodando) { preparaOndas(); desenhaOndas(performance.now()); } });
+
+    let viaTeclado = false;
+    rota.tabIndex = -1;
+    abre.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') viaTeclado = true; });
+    abre.addEventListener('pointerdown', () => { viaTeclado = false; });
     function abrir() {
       const r = abre.getBoundingClientRect();
       rota.style.setProperty('--ox', r.left + r.width / 2 + 'px');
       rota.style.setProperty('--oy', r.top + r.height / 2 + 'px');
       rota.hidden = false;
+      preparaOndas(); rodando = true; requestAnimationFrame(animaOndas);
       document.body.classList.add('menu-aberto');
       abre.setAttribute('aria-expanded', 'true');
       requestAnimationFrame(() => requestAnimationFrame(() => {
         rota.classList.add('is-aberta');
         const atual = paradas.find((p) => p.querySelector('[aria-current]')) || paradas[0];
         setTimeout(() => navegaAte(atual), 60);
-        rota.querySelector('.rota__parada a').focus({ preventScroll: true });
+        // com teclado o foco vai para o primeiro link; com mouse, para o próprio painel (sem contorno)
+        (viaTeclado ? rota.querySelector('.rota__parada a') : rota).focus({ preventScroll: true });
       }));
     }
     function fechar() {
       rota.classList.remove('is-aberta');
       abre.setAttribute('aria-expanded', 'false');
       document.body.classList.remove('menu-aberto');
-      setTimeout(() => { rota.hidden = true; }, reduz ? 0 : 650);
+      setTimeout(() => { rota.hidden = true; rodando = false; }, reduz ? 0 : 650);
       abre.focus({ preventScroll: true });
     }
     abre.addEventListener('click', abrir);
