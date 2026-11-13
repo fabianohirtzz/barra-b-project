@@ -94,6 +94,10 @@ Ver `docs/funcionalidades.md` (lista fechada com o Fabiano em 2026-11-12) e
 - **No site:** WebP gerados a partir de `melhoradas-ia/` (capas de lancha 900 px, fotos 1400 px).
   As galerias das páginas de lancha devem sair do mesmo `melhoradas-ia/`.
 
+- **No painel (combinado com a Michele):** ao importar foto de lancha, o painel trata sozinho
+  (IA se precisar, recorte quadrado, compressão WebP); ao importar vídeo do Instagram, comprime
+  sem perder resolução. Ela não edita nada à mão. Detalhes em `docs/funcionalidades.md`.
+
 ## Regras de copy (Freela)
 
 Português. Sem travessões, sem emojis. Números concretos. Nunca falar preço.

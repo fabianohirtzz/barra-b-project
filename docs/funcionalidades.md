@@ -27,10 +27,12 @@ Base: proposta de 20/10/2026 + ajustes do Fabiano nesta data.
 ## Painel (estrutura da PO Turismo)
 
 15. **Lanchas:** cadastrar, editar, excluir, ocultar do site; fotos, pés, passageiros, região,
-    itens a bordo, dono (próprio ou parceiro), cor no calendário.
+    itens a bordo, dono (próprio ou parceiro), cor no calendário. Fotos passam pelo
+    **tratamento automático na importação** (ver abaixo).
 16. **Roteiros:** cadastrar, editar, excluir, ocultar do site; paradas, distância, tempos, fotos.
 17. **Avaliações:** escolher quais aparecem; começa com as do Google.
-18. **Instagram:** escolher e ordenar os vídeos.
+18. **Instagram:** escolher e ordenar os vídeos. Vídeos passam pela **compressão automática
+    na importação** (ver abaixo).
 19. **Leads e funil** em 5 etapas (contato feito, qualificado, proposta enviada, contrato
     assinado, perdido), com **gaveta do lead**: histórico da conversa, lancha, roteiro, data,
     pessoas, **valor orçado, valor fechado**, custos do passeio, sinal e saldo, motivo de perda.
@@ -49,6 +51,32 @@ Base: proposta de 20/10/2026 + ajustes do Fabiano nesta data.
 27. **Transmissão / campanha** para a base, com prévia de quantas pessoas e custo antes de enviar.
 28. **Textos do robô:** saudações e respostas por palavra-chave editáveis.
 29. **Contrato preenchido sozinho** com os dados da conversa e do painel.
+
+## Importação de mídia sem trabalho manual (combinado com a Michele, 2026-11-13)
+
+A Michele não tem experiência em recortar, tratar ou comprimir imagens. O painel faz tudo
+sozinho na hora em que ela importa: ela só escolhe o arquivo (do celular ou do computador).
+
+**Fotos das lanchas (e dos roteiros):**
+1. **Melhoria com IA** quando a foto é pequena ou borrada (mesmo método usado nas fotos do
+   site antigo: Real-ESRGAN x4plus). Foto com lado maior a partir de 1600 px não precisa.
+2. **Recorte quadrado** quando a foto não é quadrada, centralizado na lancha. Ela vê a prévia
+   e pode arrastar o enquadramento se quiser; se não mexer, vale o recorte automático.
+3. **Compressão** para WebP no tamanho que o site usa (capa 900 px, galeria 1400 px).
+   O original fica guardado, para refazer o tratamento se um dia precisar.
+
+**Vídeos do Instagram:**
+- **Compressão na importação**: reduz o peso **sem perder resolução** (mantém largura e altura
+  originais; só recodifica em H.264/MP4 com qualidade constante e `faststart` para começar a
+  tocar antes de baixar inteiro). Gera também a capa (primeiro quadro) em WebP.
+- Mostra o antes e depois do peso (ex.: 48 MB para 9 MB) para ela saber que deu certo.
+
+**Onde roda (a confirmar no build):** a hospedagem compartilhada da ErêHost não aguenta IA
+nem ffmpeg no PHP. O tratamento roda **no navegador** de quem importa: IA com
+`onnxruntime-web` (WebGPU, com WASM de reserva), recorte e WebP no canvas, vídeo com
+`ffmpeg.wasm` ou WebCodecs. O PHP só recebe o arquivo pronto e salva. Se o aparelho for
+fraco demais para a IA, a foto sobe só com recorte e compressão e fica marcada para
+reprocessar depois.
 
 ## WhatsApp (API oficial da Meta, coexistência)
 
