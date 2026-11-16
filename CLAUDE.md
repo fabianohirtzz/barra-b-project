@@ -106,10 +106,24 @@ Português. Sem travessões, sem emojis. Números concretos. Nunca falar preço.
 
 ## Estado atual
 
-**Fase 3 — Design da home (2026-11-12).** Briefing fechado, conteúdo do site atual extraído,
-assets otimizados em `assets/img/`. Construindo `index.html` com cabeçalho, rodapé e fundo
-náutico para alinhar o layout. Depois: páginas internas (lanchas, lancha, roteiros, roteiro,
-sobre, contato, políticas), i18n, painel, WhatsApp.
+**Fase 4 — Páginas internas (2026-11-16).** Home aprovada pela cliente. Páginas geradas:
+`lanchas/` (grade com filtro), `lanchas/<slug>/` x17 (galeria, itens a bordo, calendário de datas
+livres), `roteiros/`, `ilha-do-campeche/`, `costa-da-lagoa/`, `sobre/`, `contato/` (formulário que
+abre o WhatsApp), `politica-de-cancelamento/`, `politica-de-privacidade/`, `404.html`, `sitemap.xml`,
+`robots.txt`, `llms.txt`. Próximo: i18n, painel, PHP/Supabase, WhatsApp.
+
+**Como as páginas internas são feitas (prévia estática):**
+- `python tools/gerar_paginas.py` gera todas a partir do `index.html` (cabeçalho, menu, rodapé e
+  ícones são copiados de lá, com caminhos relativos ajustados à profundidade). Editou o cabeçalho
+  ou o rodapé da home? Rode o gerador de novo. Nunca editar as páginas geradas à mão.
+- `python tools/gerar_imagens.py` gera galerias (`assets/img/lanchas/<slug>/NN.webp` e `NN-p.webp`)
+  e fotos de páginas (`assets/img/paginas/`) a partir de `melhoradas-ia/`.
+- Capas das páginas (`assets/img/capas/`) são fotos de drone da cliente melhoradas com IA na
+  resolução cheia.
+- `assets/data/disponibilidade.json` tem **datas de exemplo** (só para a prévia). Na produção o PHP
+  entrega as datas reservadas do painel no mesmo formato (`ocupadas: {slug: [AAAA-MM-DD]}`).
+- CSS das páginas internas em `assets/css/paginas.css`; JS da lancha em `assets/js/lancha.js`,
+  do contato em `assets/js/contato.js`, reels da home em `assets/js/reels.js`.
 
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.

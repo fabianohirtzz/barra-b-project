@@ -217,14 +217,14 @@
      CABEÇALHO
      ========================================================= */
   const topo = $('[data-topo]');
-  const hero = $('.hero');
+  const hero = $('.hero, .capa');   // páginas sem capa escura já abrem com o cabeçalho sólido
   const flutuante = $('.wa-flutuante');
   let ancora = window.scrollY;   // ponto onde a direção mudou pela última vez
   let escondido = false;
   function aoRolar() {
     const y = window.scrollY;
     const limite = hero ? Math.min(hero.offsetHeight * .55, 520) : 80;
-    topo.classList.toggle('is-solido', y > limite);
+    topo.classList.toggle('is-solido', !hero || y > limite);
     if (!document.body.classList.contains('menu-aberto')) {
       if (y < 600) { escondido = false; ancora = y; }
       else if (!escondido && y - ancora > 60) { escondido = true; ancora = y; }    // desceu 60px: some
@@ -370,31 +370,41 @@
      LANCHAS: filtro por grupo + setas do trilho
      ========================================================= */
   const trilho = $('[data-trilho]');
-  if (trilho) {
-    const cards = $$('.lancha', trilho);
-    const volta = $('[data-trilho-volta]');
-    const vai = $('[data-trilho-vai]');
-    const setas = () => {
-      volta.disabled = trilho.scrollLeft < 8;
-      vai.disabled = trilho.scrollLeft + trilho.clientWidth > trilho.scrollWidth - 8;
-    };
-    const anda = (dir) => {
-      const c = cards.find((x) => !x.hidden);
-      const w = c ? c.offsetWidth + 20 : 300;
-      trilho.scrollBy({ left: dir * w * 2, behavior: reduz ? 'auto' : 'smooth' });
-    };
-    volta.addEventListener('click', () => anda(-1));
-    vai.addEventListener('click', () => anda(1));
-    trilho.addEventListener('scroll', setas, { passive: true });
-    window.addEventListener('resize', setas);
-    setas();
+  const grade = $('[data-grade-lanchas]');   // página /lanchas/: mesma lista em grade
+  const caixa = trilho || grade;
+  if (caixa) {
+    const cards = $$('.lancha', caixa);
+    let setas = () => {};
+    if (trilho) {
+      const volta = $('[data-trilho-volta]');
+      const vai = $('[data-trilho-vai]');
+      setas = () => {
+        volta.disabled = trilho.scrollLeft < 8;
+        vai.disabled = trilho.scrollLeft + trilho.clientWidth > trilho.scrollWidth - 8;
+      };
+      const anda = (dir) => {
+        const c = cards.find((x) => !x.hidden);
+        const w = c ? c.offsetWidth + 20 : 300;
+        trilho.scrollBy({ left: dir * w * 2, behavior: reduz ? 'auto' : 'smooth' });
+      };
+      volta.addEventListener('click', () => anda(-1));
+      vai.addEventListener('click', () => anda(1));
+      trilho.addEventListener('scroll', setas, { passive: true });
+      window.addEventListener('resize', setas);
+      setas();
+    }
 
     const faixas = { 0: [1, 99], 7: [1, 7], 10: [8, 10], 13: [11, 13] };
+    const contagem = $('[data-contagem]');
     $$('[data-filtro] button').forEach((b) => b.addEventListener('click', () => {
       $$('[data-filtro] button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
       const [min, max] = faixas[b.dataset.pax];
       cards.forEach((c) => { const p = +c.dataset.pax; c.hidden = p < min || p > max; });
-      trilho.scrollTo({ left: 0 });
+      if (contagem) {
+        const n = cards.filter((c) => !c.hidden).length;
+        contagem.textContent = n === 1 ? '1 lancha' : n + ' lanchas';
+      }
+      if (trilho) trilho.scrollTo({ left: 0 });
       setas();
     }));
   }
