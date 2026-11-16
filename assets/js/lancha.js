@@ -99,7 +99,7 @@
     cta.href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent(texto);
     ctaTxt.textContent = 'Consultar o dia ' + br(data).slice(0, 5);
     aviso.hidden = false;
-    aviso.textContent = 'Dia ' + br(data) + ' livre no calendário. A Michele confirma a reserva pelo WhatsApp.';
+    aviso.textContent = 'Dia ' + br(data) + ' livre no calendário. A nossa equipe confirma a reserva pelo WhatsApp.';
     desenha();
   }
 

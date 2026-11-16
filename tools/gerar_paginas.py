@@ -14,7 +14,7 @@ WA = '5548991153172'
 INDEX = open(os.path.join(PROJ, 'index.html'), encoding='utf-8').read()
 L_JSON = {l['slug']: l for l in json.load(open(os.path.join(PROJ, 'docs/conteudo-site-atual/lanchas.json'), encoding='utf-8'))}
 IMGS = json.load(open(os.path.join(PROJ, 'tools/imagens.json'), encoding='utf-8'))
-V_CSS, V_JS = '9', '7'
+V_CSS, V_JS = '10', '8'
 e = html.escape
 
 
@@ -185,12 +185,19 @@ ATUAL = ' aria-current="true"'
 def sem_acento(s):
     return ''.join(c for c in unicodedata.normalize('NFD', s.lower()) if unicodedata.category(c) != 'Mn')
 
-ICONE = [(r'cabin|cabine|quarto|cama', 'cabine'), (r'banheiro|vaso', 'banheiro'), (r'churras|carvao', 'grelha'),
+# A ordem importa: a primeira regra que casar define o ícone (ex.: "Banheiro com ducha" é banheiro).
+ICONE = [(r'cabin|cabine|quarto|cama', 'cabine'), (r'banheiro|vaso', 'banheiro'),
+         (r'^carvao', 'fogo'), (r'churras', 'grelha'),
          (r'\bsom\b|bluetooth|jbl', 'som'), (r'tapete', 'tapete'), (r'stand ?up|padle|paddle', 'standup'),
          (r'geladeira|cooler|geleira|frigobar', 'gelo'), (r'ducha|chuveiro', 'ducha'), (r'toldo|fechamento', 'toldo'),
-         (r'mergulho|mascara', 'mergulho'), (r'mesa|louca|tacas|copos|cristaleira|cafeteira|pia', 'prato'),
-         (r'salvatagem|colete|seguranca|extintor|pirotecnico|socorro|boia circular', 'escudo'),
-         (r'boia|espaguete|macarrao|splash', 'boia'), (r'gps|sonda|radio|vhf|motor|gerador', 'leme')]
+         (r'mergulho|mascara', 'mergulho'), (r'cafeteira', 'cafe'), (r'\bpia\b', 'pia'), (r'\bmesa\b', 'mesa'),
+         (r'louca|tacas|copos|cristaleira', 'taca'), (r'gourmet', 'talher'),
+         (r'colete', 'colete'), (r'extintor', 'extintor'), (r'socorro', 'socorro'), (r'pirotecnico', 'sinalizador'),
+         (r'salvatagem|boia circular', 'boia'), (r'boia|espaguete|macarrao|splash', 'espaguete'),
+         (r'carregador', 'carregador'), (r'ilumina|\bluz\b', 'luz'), (r'piso', 'piso'), (r'porta objetos', 'gaveta'),
+         (r'solari|chaise|estofad|estofamento', 'solario'), (r'\bfly\b', 'escada'),
+         (r'deck|popa|proa|cockpit', 'conves'), (r'^agua$', 'agua'), (r'motor', 'helice'),
+         (r'gps|sonda|radio|vhf', 'sonda'), (r'gerador', 'energia')]
 FORA = r'^(passageiros:?|itens:?|incluso:?|lancha phantom|\d+ passageiros|\d+ ?p[eé]s|\*?kit (diversao|de seguranca)\*?|oferecemos agua e frutas a bordo!?)$'
 
 
@@ -265,7 +272,7 @@ corpo = capa_faixa('Aluguel de lancha em Florianópolis: escolha a sua',
       <div class="duas-colunas">
         <div>
           <h2 id="como-escolher" class="titulo">Como escolher a lancha</h2>
-          <p class="secao__intro">Três perguntas resolvem quase tudo. Se ficar em dúvida, a Michele indica a melhor opção para a sua data.</p>
+          <p class="secao__intro">Três perguntas resolvem quase tudo. Se ficar em dúvida, a nossa equipe indica a melhor opção para a sua data.</p>
         </div>
         <ol class="lista-passos">
           <li><b>Quantas pessoas vão?</b><span>Conte todo mundo, inclusive crianças e bebês. A lancha nunca leva mais gente do que a capacidade permite.</span></li>
@@ -274,7 +281,7 @@ corpo = capa_faixa('Aluguel de lancha em Florianópolis: escolha a sua',
         </ol>
       </div>
     </section>
-''' + chamada('Não sabe qual lancha escolher?', 'Diga a data e quantas pessoas vão. A Michele responde com as lanchas livres e os valores.',
+''' + chamada('Não sabe qual lancha escolher?', 'Diga a data e quantas pessoas vão. A nossa equipe responde pelo WhatsApp com as lanchas livres e os valores.',
               'Pedir uma indicação', 'Olá! Vim pelo site da Barra Boat. Quero ajuda para escolher a lancha. Data: . Somos  pessoas.')
 ld = [ld_m, {'@type': 'ItemList', 'name': 'Lanchas para aluguel em Florianópolis', 'numberOfItems': 17,
              'itemListElement': [{'@type': 'ListItem', 'position': i + 1, 'url': f'{DOM}lanchas/{s}/', 'name': CARDS[s]['nome']} for i, s in enumerate(ORDEM)]}]
@@ -345,7 +352,7 @@ for s in ORDEM:
           </div>
 
           <a class="botao botao--mar botao--cheio botao--grande" href="https://wa.me/{WA}?text={e(wa_texto)}" target="_blank" rel="noopener" data-agenda-cta data-wa-base="{e(wa_texto)}"><svg aria-hidden="true"><use href="#i-wa"/></svg><span data-agenda-cta-txt>Consultar valores no WhatsApp</span></a>
-          <p class="ficha__nota">Valor por lancha, não por pessoa. Você fala direto com a Michele.</p>
+          <p class="ficha__nota">Valor por lancha, não por pessoa. Você fala direto com a nossa equipe pelo WhatsApp.</p>
         </aside>
       </div>
     </div>
@@ -389,7 +396,7 @@ for s in ORDEM:
         <div>
           <h2 id="outras-titulo" class="titulo">Lanchas para grupos parecidos</h2>
         </div>
-        <a class="link-forte" href="lanchas/">Ver as 17 lanchas</a>
+        <a class="botao botao--contorno" href="lanchas/"><span>Ver as 17 lanchas</span><svg aria-hidden="true"><use href="#i-seta"/></svg></a>
       </div>
 {grade_lanchas(parecidas)}
     </section>
@@ -404,7 +411,7 @@ for s in ORDEM:
     gerados.append(pagina(f'lanchas/{s}/', f'{nome}: lancha para {pax} pessoas em Florianópolis | Barra Boat Floripa',
                           f'Aluguel da lancha {nome}, {pes} pés, até {pax} pessoas, com marinheiro e combustível inclusos. Veja fotos, itens a bordo e as datas livres.',
                           corpo, [ld_m, ld_prod], og_img=f'assets/img/lanchas/{s}/01.webp',
-                          js_extra=f'\n  <script src="{{pre}}assets/js/lancha.js?v=1" defer></script>'))
+                          js_extra=f'\n  <script src="{{pre}}assets/js/lancha.js?v=2" defer></script>'))
 
 # ---------------------------------------------------------------- /roteiros/
 migs, ld_m = migalhas([('Início', './'), ('Roteiros', None)])
@@ -429,7 +436,7 @@ corpo = capa_foto('roteiros', 'Lanchas ancoradas em frente a uma praia de areia 
             </dl>
             <p>Água cristalina e areia branca, tapete flutuante, stand up e mergulho com snorkel. Churrasco a bordo com a ilha na frente.</p>
             <p class="comparar__ideal"><b>Ideal para</b> quem quer praia de água clara e não enjoa no mar aberto.</p>
-            <a class="link-forte" href="ilha-do-campeche/">Ver o roteiro completo</a>
+            <a class="botao botao--contorno" href="ilha-do-campeche/"><span>Ver o roteiro completo</span><svg aria-hidden="true"><use href="#i-seta"/></svg></a>
           </div>
         </article>
         <article class="comparar__card">
@@ -445,7 +452,7 @@ corpo = capa_foto('roteiros', 'Lanchas ancoradas em frente a uma praia de areia 
             </dl>
             <p>Castelinho, Praia do Saquinho, cachoeira, Pedra do Navio e restaurantes de frutos do mar à beira da água.</p>
             <p class="comparar__ideal"><b>Ideal para</b> famílias com crianças, idosos e quem enjoa com facilidade.</p>
-            <a class="link-forte" href="costa-da-lagoa/">Ver o roteiro completo</a>
+            <a class="botao botao--contorno" href="costa-da-lagoa/"><span>Ver o roteiro completo</span><svg aria-hidden="true"><use href="#i-seta"/></svg></a>
           </div>
         </article>
       </div>
@@ -465,7 +472,7 @@ corpo = capa_foto('roteiros', 'Lanchas ancoradas em frente a uma praia de areia 
         </ol>
       </div>
     </section>
-''' + chamada('Já sabe o roteiro?', 'Mande a data e quantas pessoas vão. A Michele responde com as lanchas livres.', 'Consultar uma data',
+''' + chamada('Já sabe o roteiro?', 'Mande a data e quantas pessoas vão. A nossa equipe responde pelo WhatsApp com as lanchas livres.', 'Consultar uma data',
               'Olá! Vim pelo site da Barra Boat. Quero consultar um passeio de lancha.')
 ld = [ld_m]
 gerados.append(pagina('roteiros/', 'Roteiros de lancha em Florianópolis: Campeche e Costa da Lagoa | Barra Boat Floripa',
@@ -475,10 +482,14 @@ gerados.append(pagina('roteiros/', 'Roteiros de lancha em Florianópolis: Campec
 
 # ---------------------------------------------------------------- páginas de roteiro
 def paradas_html(paradas):
+    """Cada parada: (nome, texto, foto, alt). A foto fica ao lado do texto (embaixo no celular)."""
     return '\n'.join(f'''          <li class="rota-v__parada">
             <span class="rota-v__n">{i + 1}</span>
-            <div><h3>{e(n)}</h3><p>{t}</p></div>
-          </li>''' for i, (n, t) in enumerate(paradas))
+            <div class="rota-v__corpo">
+              <div><h3>{e(n)}</h3><p>{t}</p></div>
+              <img class="rota-v__foto" src="{foto}" alt="{e(alt)}" width="1400" height="1050" loading="lazy">
+            </div>
+          </li>''' for i, (n, t, foto, alt) in enumerate(paradas))
 
 
 def fotos_html(fotos):
@@ -488,6 +499,12 @@ def fotos_html(fotos):
 
 def pagina_roteiro(slug, nome, capa_html, dados, paradas, fotos, blocos, regras, wa, titulo_seo, desc_seo, ld_trip, og):
     migs, ld_m = migalhas([('Início', './'), ('Roteiros', 'roteiros/'), (nome, None)])
+    mosaico = f'''
+    <section class="secao" aria-label="Fotos do roteiro">
+      <div class="mosaico">
+{fotos_html(fotos)}
+      </div>
+    </section>''' if fotos else ''
     corpo = capa_html(migs, dados) + f'''
     <section class="secao" aria-labelledby="rota-titulo">
       <div class="duas-colunas duas-colunas--topo">
@@ -500,12 +517,7 @@ def pagina_roteiro(slug, nome, capa_html, dados, paradas, fotos, blocos, regras,
         </ol>
       </div>
     </section>
-
-    <section class="secao" aria-label="Fotos do roteiro">
-      <div class="mosaico">
-{fotos_html(fotos)}
-      </div>
-    </section>
+{mosaico}
 {blocos}{regras}
     <section class="secao" aria-labelledby="escolha-titulo">
       <div class="secao__cabeca secao__cabeca--linha">
@@ -513,11 +525,11 @@ def pagina_roteiro(slug, nome, capa_html, dados, paradas, fotos, blocos, regras,
           <h2 id="escolha-titulo" class="titulo">Escolha a lancha para este roteiro</h2>
           <p class="secao__intro">Todas as 17 lanchas fazem o roteiro. Veja algumas por tamanho de grupo.</p>
         </div>
-        <a class="link-forte" href="lanchas/">Ver as 17 lanchas</a>
+        <a class="botao botao--contorno" href="lanchas/"><span>Ver as 17 lanchas</span><svg aria-hidden="true"><use href="#i-seta"/></svg></a>
       </div>
 {grade_lanchas([ORDEM[0], ORDEM[3], ORDEM[8], ORDEM[-1]])}
     </section>
-''' + chamada(f'Quer fazer o roteiro {nome}?', 'Mande a data e quantas pessoas vão. A Michele responde com as lanchas livres e os valores.', 'Consultar uma data', wa)
+''' + chamada(f'Quer fazer o roteiro {nome}?', 'Mande a data e quantas pessoas vão. A nossa equipe responde pelo WhatsApp com as lanchas livres e os valores.', 'Consultar uma data', wa)
     gerados.append(pagina(f'{slug}/', titulo_seo, desc_seo, corpo, [ld_m, ld_trip], og_img=og))
 
 
@@ -532,17 +544,23 @@ pagina_roteiro(
                               'Passeio de lancha para a Ilha do Campeche',
                               'O roteiro mais pedido da Barra Boat: água cristalina e areia branca, no lugar que muita gente chama de Caribe brasileiro.', migs, d),
     dados_html([('Distância', '10,4 milhas'), ('Cada trajeto', '30 a 40 min'), ('Diária', '8 horas'), ('Saída', 'Canal da Barra')]),
-    [('Canal da Barra da Lagoa', 'Embarque no canal, ao lado da ponte pênsil. Daqui a lancha sai para o mar aberto.'),
-     ('Prainha da Barra', 'Vista panorâmica da Prainha logo na saída do canal.'),
-     ('Piscinas naturais da Barra', 'Piscinas de água salgada formadas entre as pedras, no costão.'),
-     ('Praia da Galheta', 'Praia de natureza preservada, sem acesso de carro, entre a Mole e a Barra.'),
-     ('Ponta do Gravatá', 'Costão com trilhas e mirantes, já na direção do Campeche.'),
-     ('Ilha do Campeche', 'A lancha fica ancorada em frente à ilha. Dia de banho, mergulho com snorkel, tapete flutuante e churrasco a bordo.')],
-    [('assets/img/paginas/sobre-06.webp', 'Ilha do Campeche vista do alto, com a faixa de areia branca e lanchas ancoradas', 'A Ilha do Campeche vista do alto'),
+    [('Canal da Barra da Lagoa', 'Embarque no canal, ao lado da ponte pênsil. Daqui a lancha sai para o mar aberto.',
+      'assets/img/fotos/pet.webp', 'Lancha passando pelo Canal da Barra da Lagoa, com as casas e os barcos de pesca na margem'),
+     ('Prainha da Barra', 'Vista panorâmica da Prainha logo na saída do canal.',
+      'assets/img/paginas/campeche-rota.webp', 'Prainha da Barra e a saída do canal vistas do alto, com uma lancha indo para o mar'),
+     ('Piscinas naturais da Barra', 'Piscinas de água salgada formadas entre as pedras, no costão.',
+      'assets/img/paginas/sobre-11.webp', 'Costão de pedras da Barra da Lagoa com a água entrando entre as rochas'),
+     ('Praia da Galheta', 'Praia de natureza preservada, sem acesso de carro, entre a Mole e a Barra.',
+      'assets/img/paginas/sobre-07.webp', 'Praia da Galheta com o costão de pedras em primeiro plano'),
+     ('Ponta do Gravatá', 'Costão com trilhas e mirantes, já na direção do Campeche.',
+      'assets/img/fotos/campeche-pedras.webp', 'Lancha navegando perto de um costão de pedras no caminho para o Campeche'),
+     ('Ilha do Campeche', 'A lancha fica ancorada em frente à ilha. Dia de banho, mergulho com snorkel, tapete flutuante e churrasco a bordo.',
+      'assets/img/paginas/sobre-06.webp', 'Ilha do Campeche vista do alto, com a faixa de areia branca e lanchas ancoradas')],
+    [('assets/img/paginas/campeche-ilha.webp', 'Faixa de areia branca da Ilha do Campeche com a água cristalina', 'A areia branca do Campeche'),
      ('assets/img/fotos/campeche-mergulho.webp', 'Pessoa mergulhando com snorkel em água transparente', 'Snorkel na água transparente'),
-     ('assets/img/paginas/sobre-07.webp', 'Praia da Galheta com o costão de pedras em primeiro plano', 'Praia da Galheta, no caminho'),
+     ('assets/img/paginas/sobre-02.webp', 'Grupo de amigos brindando a bordo da lancha', 'O grupo a bordo'),
      ('assets/img/fotos/tapete.webp', 'Grupo sentado no tapete flutuante ao lado da lancha', 'Tapete flutuante'),
-     ('assets/img/paginas/campeche-rota.webp', 'Canal da Barra da Lagoa visto do alto, com uma lancha saindo para o mar', 'A saída pelo Canal da Barra')],
+     ('assets/img/paginas/sobre-10.webp', 'Mergulhadora nadando sobre o fundo de areia clara', 'Mergulho no fundo de areia')],
     '''
     <section class="secao" aria-labelledby="bordo-titulo">
       <div class="lado-a-lado">
@@ -601,16 +619,17 @@ def capa_costa(migs, d):
 pagina_roteiro(
     'costa-da-lagoa', 'Costa da Lagoa', capa_costa,
     dados_html([('Mar', 'Águas calmas'), ('Saída', 'Barra ou Lagoa'), ('Paradas', '5'), ('Diária', '6 horas')]),
-    [('Castelinho', 'Construção histórica à beira da Lagoa, ligada aos primeiros moradores da região.'),
-     ('Praia do Saquinho', 'Prainha de areia clara e água tranquila para banho.'),
-     ('Cachoeira da Costa', 'Queda alta com uma piscina natural embaixo. Não é permitido subir até o topo; o banho é na piscina.'),
-     ('Pedra do Navio', 'Canto da Lagoa da Conceição também chamado de Bia Funda, bom para parar e nadar.'),
-     ('Restaurantes da Costa', 'Vários restaurantes à beira da água. A dica da casa: sequência de frutos do mar e caipirinha de pitanga.')],
-    [('assets/img/paginas/costa-cachoeira.webp', 'Cachoeira da Costa da Lagoa caindo entre as pedras e a mata', 'A cachoeira da Costa'),
-     ('assets/img/paginas/costa-saquinho.webp', 'Praia do Saquinho vista do alto, com a água calma da Lagoa', 'Praia do Saquinho'),
-     ('assets/img/paginas/costa-castelinho.webp', 'Castelinho de pedra entre as árvores da Costa da Lagoa', 'O Castelinho'),
-     ('assets/img/paginas/costa-gastronomia.webp', 'Mesa com frutos do mar em um restaurante à beira da Lagoa', 'Frutos do mar à beira da água'),
-     ('assets/img/paginas/costa-lagoa.webp', 'Lagoa da Conceição cercada de morros e mata', 'A Lagoa da Conceição')],
+    [('Castelinho', 'Construção histórica à beira da Lagoa, ligada aos primeiros moradores da região.',
+      'assets/img/paginas/costa-castelinho.webp', 'Castelinho de pedra entre as árvores da Costa da Lagoa'),
+     ('Praia do Saquinho', 'Prainha de areia clara e água tranquila para banho.',
+      'assets/img/paginas/costa-saquinho.webp', 'Praia do Saquinho vista do alto, com a água calma da Lagoa'),
+     ('Cachoeira da Costa', 'Queda alta com uma piscina natural embaixo. Não é permitido subir até o topo; o banho é na piscina.',
+      'assets/img/paginas/costa-cachoeira.webp', 'Cachoeira da Costa da Lagoa caindo entre as pedras e a mata'),
+     ('Pedra do Navio', 'Canto da Lagoa da Conceição também chamado de Bia Funda, bom para parar e nadar.',
+      'assets/img/paginas/costa-lagoa.webp', 'Lagoa da Conceição cercada de morros e mata'),
+     ('Restaurantes da Costa', 'Vários restaurantes à beira da água. A dica da casa: sequência de frutos do mar e caipirinha de pitanga.',
+      'assets/img/paginas/costa-gastronomia.webp', 'Mesa com frutos do mar em um restaurante à beira da Lagoa')],
+    [],  # as fotos do site antigo já estão nas paradas
     '''
     <section class="secao" aria-labelledby="calmo-titulo">
       <div class="lado-a-lado">
@@ -647,7 +666,7 @@ corpo = capa_foto('sobre', 'Lancha navegando entre as casas coloridas e os barco
         <div>
           <h2 id="historia-titulo" class="titulo">Um pouco da nossa história</h2>
           <p>A Barra Boat Floripa nasceu da paixão pelo mar de Neto Linhares, nativo da Ilha, marinheiro, velejador e mecânico náutico com mais de 30 anos de experiência. Ele criou a empresa para mostrar as praias e ilhas de Florianópolis do jeito que só se vê de barco.</p>
-          <p>No atendimento, na venda, na recepção e no preparo das lanchas, quem conversa com você é a Michele. É ela que responde o WhatsApp, indica a lancha certa para o seu grupo e confere cada detalhe antes do embarque.</p>
+          <p>Hoje é uma equipe pequena e próxima que cuida de tudo: do atendimento no WhatsApp à recepção no Canal da Barra e ao preparo das lanchas. Quem fala com você indica a lancha certa para o seu grupo e confere cada detalhe antes do embarque.</p>
         </div>
         <ul class="numeros">
           <li><b>2010</b><span>o ano em que começamos</span></li>
@@ -686,18 +705,18 @@ corpo = capa_foto('sobre', 'Lancha navegando entre as casas coloridas e os barco
           <h2 id="cadastur-titulo">Empresa cadastrada no Ministério do Turismo</h2>
           <p>A Barra Boat Floripa tem cadastro ativo no Cadastur, o sistema oficial de prestadores de serviços turísticos do Governo Federal.</p>
         </div>
-        <a class="link-forte" href="https://cadastur.turismo.gov.br/" target="_blank" rel="noopener">Consultar no Cadastur</a>
+        <a class="botao botao--contorno" href="https://cadastur.turismo.gov.br/" target="_blank" rel="noopener"><span>Consultar no Cadastur</span><svg aria-hidden="true"><use href="#i-seta"/></svg></a>
       </div>
     </section>
-''' + chamada('Vamos para o mar?', 'Conte a data e quantas pessoas vão. A Michele responde com as lanchas livres.', 'Falar com a Michele',
-              'Olá, Michele! Vim pelo site da Barra Boat e quero consultar um passeio.')
+''' + chamada('Vamos para o mar?', 'Conte a data e quantas pessoas vão. A nossa equipe responde pelo WhatsApp com as lanchas livres.', 'Falar com a equipe',
+              'Olá! Vim pelo site da Barra Boat e quero consultar um passeio.')
 gerados.append(pagina('sobre/', 'Sobre a Barra Boat Floripa: aluguel de lanchas desde 2010',
-                      'Empresa familiar de aluguel de lanchas na Barra da Lagoa desde 2010, fundada por Neto Linhares, marinheiro com mais de 30 anos de mar. Atendimento da Michele.',
+                      'Empresa familiar de aluguel de lanchas na Barra da Lagoa desde 2010, fundada por Neto Linhares, marinheiro com mais de 30 anos de mar.',
                       corpo, [ld_m, {'@type': 'AboutPage', 'url': DOM + 'sobre/', 'about': EMPRESA_REF}], og_img='assets/img/capas/sobre.webp'))
 
 # ---------------------------------------------------------------- /contato/
 migs, ld_m = migalhas([('Início', './'), ('Contato', None)])
-corpo = capa_faixa('Fale com a Barra Boat', 'Atendimento 24 horas pelo WhatsApp. Quem responde é a Michele.', migs) + f'''
+corpo = capa_faixa('Fale com a Barra Boat', 'Atendimento 24 horas pelo WhatsApp. Você fala direto com a nossa equipe.', migs) + f'''
     <section class="secao" aria-label="Formas de contato">
       <div class="contato">
         <div class="contato__canais">
@@ -733,7 +752,7 @@ corpo = capa_faixa('Fale com a Barra Boat', 'Atendimento 24 horas pelo WhatsApp.
             </select>
           </label>
           <label class="campo">Mensagem<textarea name="mensagem" rows="3" placeholder="Alguma dúvida ou pedido especial?"></textarea></label>
-          <p class="form-contato__erro" data-form-erro hidden>Escreva o seu nome para a Michele saber com quem está falando.</p>
+          <p class="form-contato__erro" data-form-erro hidden>Escreva o seu nome para a nossa equipe saber com quem está falando.</p>
           <button class="botao botao--mar botao--cheio botao--grande" type="submit"><svg aria-hidden="true"><use href="#i-wa"/></svg><span>Enviar pelo WhatsApp</span></button>
         </form>
       </div>

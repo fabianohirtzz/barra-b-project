@@ -101,6 +101,7 @@ Ver `docs/funcionalidades.md` (lista fechada com o Fabiano em 2026-11-12) e
 ## Regras de copy (Freela)
 
 Português. Sem travessões, sem emojis. Números concretos. Nunca falar preço.
+No site, quem atende é "a nossa equipe" (nunca citar a Michele pelo nome; só nas avaliações reais do Google).
 
 ---
 
@@ -122,6 +123,10 @@ abre o WhatsApp), `politica-de-cancelamento/`, `politica-de-privacidade/`, `404.
   resolução cheia.
 - `assets/data/disponibilidade.json` tem **datas de exemplo** (só para a prévia). Na produção o PHP
   entrega as datas reservadas do painel no mesmo formato (`ocupadas: {slug: [AAAA-MM-DD]}`).
+- Ícones dos itens a bordo: regras `ICONE` em `tools/gerar_paginas.py` (a primeira que casar vence); os
+  desenhos ficam no sprite do `index.html`. Item novo sem ícone cai em `i-lancha`: criar um ícone próprio.
+- Paradas dos roteiros levam uma foto cada (nome, texto, foto, alt) em `pagina_roteiro`.
+- Formulário da home: lista das lanchas com o limite de pessoas; se o grupo passar, avisa e oferece a orientação da equipe.
 - CSS das páginas internas em `assets/css/paginas.css`; JS da lancha em `assets/js/lancha.js`,
   do contato em `assets/js/contato.js`, reels da home em `assets/js/reels.js`.
 

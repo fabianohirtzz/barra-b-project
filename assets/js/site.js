@@ -349,18 +349,33 @@
     const hoje = new Date(); hoje.setMinutes(hoje.getMinutes() - hoje.getTimezoneOffset());
     data.min = hoje.toISOString().slice(0, 10);
     let n = 6;
-    const muda = (d) => { n = Math.min(13, Math.max(1, n + d)); out.textContent = n; };
+    // Lancha escolhida: se o grupo passar do limite dela, avisa e oferece a orientação da equipe.
+    const sel = $('[data-lancha]', plan);
+    const limite = $('[data-limite]', plan);
+    const limiteTxt = $('[data-limite-txt]', plan);
+    const confere = () => {
+      const op = sel.selectedOptions[0];
+      const max = Number(op.dataset.pax);
+      const passou = sel.value && n > max;
+      limite.hidden = !passou;
+      if (passou) limiteTxt.textContent = `A ${sel.value} leva até ${max} pessoas, e o seu grupo tem ${n}. Escolha outra lancha ou peça uma indicação para a nossa equipe.`;
+    };
+    const muda = (d) => { n = Math.min(13, Math.max(1, n + d)); out.textContent = n; confere(); };
     $('[data-menos]', plan).addEventListener('click', () => muda(-1));
     $('[data-mais]', plan).addEventListener('click', () => muda(1));
+    sel.addEventListener('change', confere);
+    $('[data-limite-ajuda]', plan).addEventListener('click', () => { sel.value = ''; confere(); sel.focus(); });
     plan.addEventListener('submit', (e) => {
       e.preventDefault();
+      if (!limite.hidden) { limite.classList.remove('is-chamando'); void limite.offsetWidth; limite.classList.add('is-chamando'); return; }
       const roteiro = plan.roteiro.value;
       const dia = data.value ? data.value.split('-').reverse().join('/') : null;
       const pessoas = n === 1 ? '1 pessoa' : `${n} pessoas`;
       const trecho = roteiro === 'ainda não sei'
         ? 'Ainda não escolhi o roteiro.'
         : `Quero consultar um passeio para a ${roteiro === 'Costa da Lagoa' ? 'Costa da Lagoa' : 'Ilha do Campeche'}.`;
-      const texto = `Olá! Vim pelo site da Barra Boat. ${trecho} Data: ${dia || 'ainda a definir'}. Somos ${pessoas}.`;
+      const barco = sel.value ? `Lancha: ${sel.value}.` : 'Quero ajuda da equipe para escolher a lancha.';
+      const texto = `Olá! Vim pelo site da Barra Boat. ${trecho} ${barco} Data: ${dia || 'ainda a definir'}. Somos ${pessoas}.`;
       (window.dataLayer = window.dataLayer || []).push({ event: 'clique_whatsapp', origem, pagina: location.pathname, formulario: 'planejar' });
       window.open(linkWa(texto), '_blank', 'noopener');
     });
