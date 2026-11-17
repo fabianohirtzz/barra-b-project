@@ -16,8 +16,8 @@ policies têm o prefixo `bb_`. O bucket de recibos se chama `bb-recibos`.
    select id, 'Michele', 'dona' from auth.users where email = '<email dela>';
    ```
    Os outros acessos (atendente, parceiro, marinheiro) a dona cadastra pelo painel.
-3. Carregue as 17 lanchas e os roteiros com o script de carga, que ainda vai ser escrito a partir
-   de `docs/conteudo-site-atual/`.
+3. Rode `seed/01-lanchas-roteiros.sql` (17 lanchas e 2 roteiros, iguais ao site). Ele é gerado por
+   `python tools/gerar_carga.py` e não sobrescreve o que já foi editado no painel.
 
 ## Modelo de segurança
 

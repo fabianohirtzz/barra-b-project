@@ -259,5 +259,5 @@ create policy bb_registro_dona on public.bb_registro for select to authenticated
 -- Parceiro e marinheiro NÃO têm policy em bb_lanchas de propósito: uma policy de
 -- select entrega a linha inteira, inclusive agenda_url (o endereço secreto da
 -- agenda de outro dono), e no Supabase revogar coluna não adianta porque o grant
--- é da tabela (lição da PO). Eles leem só pelas funções da migration 02
--- (bb_disponibilidade_parceiro, bb_meus_passeios), que devolvem colunas escolhidas.
+-- é da tabela (lição da PO). Eles leem só pelas funções das migrations 03 e 04
+-- (bb_disponibilidade_parceiro, bb_meus_passeios, bb_minhas_comissoes), que devolvem colunas escolhidas.
