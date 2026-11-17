@@ -137,6 +137,10 @@ gaveta do cliente, anotar despesa, relatório com gráficos, lancha com "Conecta
 Depois de aprovado: migrações `bb_` (aplicar no Supabase do HD360 só com ok do Fabiano), login,
 e trocar os dados de exemplo pelos reais. Gráficos: série 2026 `#1A6FA8`, 2025 `#C97A2A`
 (validados para daltonismo); barras de uma série só em `#1A6FA8`.
+Protótipo aprovado em 17/11 (com "Fechar a agenda por um período"). Migrações escritas em
+`supabase/migrations/2026-11-17-0[1-5]-*.sql`, **não aplicadas** (aguardam ok do Fabiano). Segurança
+por papel em `bb_equipe` (dona/atendente/parceiro/marinheiro), nunca `authenticated using (true)`
+porque o projeto é compartilhado; anon sem policy (site lê pelo PHP com service_role). Ver `supabase/README.md`.
 
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.
