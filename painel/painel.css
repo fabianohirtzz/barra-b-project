@@ -126,6 +126,16 @@ h1,h2,h3{color:var(--tinta);margin:0;line-height:1.15}
 .amostra--dono{background:#8A9AAB;border-color:#8A9AAB}
 .amostra--bloqueio{background:repeating-linear-gradient(135deg,#E3E8EE 0 4px,#fff 4px 8px)}
 .amostra--livre{background:#fff}
+.amostra--fechado{background:repeating-linear-gradient(135deg,#083359 0 4px,#2C5378 4px 8px);border-color:#083359}
+.periodos{margin-bottom:18px}
+.periodos h2{font-size:1.05rem;margin:0 0 8px}
+.periodos ul{list-style:none;margin:0;padding:0}
+.periodos li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--linha)}
+.periodos li:first-child{border-top:0}
+.periodos li > span{display:grid;gap:2px}
+.periodos small{color:var(--suave)}
+.periodo-datas{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.periodo-datas{grid-template-columns:1fr}}
 .agenda-grade{overflow-x:auto;background:#fff;border-radius:var(--r);box-shadow:var(--sombra)}
 .agenda-grade table{border-collapse:separate;border-spacing:0;min-width:100%}
 .agenda-grade th,.agenda-grade td{padding:0;border-bottom:1px solid var(--linha)}
@@ -140,6 +150,7 @@ h1,h2,h3{color:var(--tinta);margin:0;line-height:1.15}
 .dia--reservada span{background:var(--serie1);color:#fff}
 .dia--dono span{background:#8A9AAB;color:#fff}
 .dia--bloqueio span{background:repeating-linear-gradient(135deg,#E3E8EE 0 4px,#fff 4px 8px);color:var(--texto)}
+.dia--fechado span{background:repeating-linear-gradient(135deg,#083359 0 5px,#2C5378 5px 10px);color:#fff}
 .dia--livre span{color:transparent}
 .dia--livre:hover span{background:rgba(143,198,227,.25);color:var(--canal)}
 

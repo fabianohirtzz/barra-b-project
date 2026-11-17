@@ -177,6 +177,19 @@
   }
 
   /* ================= AGENDA ================= */
+  // períodos em que a empresa não atende (férias, feriado, empresa fechada)
+  let PERIODOS = [{ ini: '2026-11-28', fim: '2026-11-29', motivo: 'Empresa fechada', lancha: null }];
+  const MOTIVOS = ['Empresa fechada', 'Férias', 'Feriado', 'Manutenção', 'Outro'];
+  const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const deIso = (s) => { const [a, m, d] = s.split('-').map(Number); return new Date(a, m - 1, d); };
+  const diaLongo = (d) => `${d.getDate()} de ${MESES_LONGOS[d.getMonth()]}`;
+  const faixa = (p) => {
+    const a = deIso(p.ini), b = deIso(p.fim);
+    if (p.ini === p.fim) return `Dia ${diaLongo(a)}`;
+    return a.getMonth() === b.getMonth() ? `De ${a.getDate()} a ${diaLongo(b)}` : `De ${diaLongo(a)} a ${diaLongo(b)}`;
+  };
+  const periodoDe = (id, d) => { const s = iso(d); return PERIODOS.find((p) => (!p.lancha || p.lancha === id) && s >= p.ini && s <= p.fim); };
+
   function telaAgenda() {
     const dias = Array.from({ length: 14 }, (_, i) => somaDias(HOJE, i));
     const cab = dias.map((d, i) => `<th scope="col" class="${i === 0 ? 'is-hoje' : ''} ${d.getDay() % 6 === 0 ? 'is-fds' : ''}">${DIAS[d.getDay()]}<b>${d.getDate()}</b></th>`).join('');
@@ -184,6 +197,7 @@
       const cel = dias.map((d, i) => {
         const r = (RESERVAS[l.id] || {})[i];
         const quando = `${DIAS[d.getDay()]} ${dd(d)}`;
+        if (!r && periodoDe(l.id, d)) return `<td><button class="dia dia--fechado" type="button" data-dia="${l.id}|${i}" aria-label="${esc(l.nome)}, ${quando}, agenda fechada"><span>fech.</span></button></td>`;
         if (!r) return `<td><button class="dia dia--livre" type="button" data-dia="${l.id}|${i}" aria-label="${esc(l.nome)}, ${quando}, livre"><span>livre</span></button></td>`;
         if (r === 'dono') return `<td><button class="dia dia--dono" type="button" data-dia="${l.id}|${i}" aria-label="${esc(l.nome)}, ${quando}, ocupada na agenda do dono"><span>dono</span></button></td>`;
         if (r === 'bloqueio') return `<td><button class="dia dia--bloqueio" type="button" data-dia="${l.id}|${i}" aria-label="${esc(l.nome)}, ${quando}, manutenção"><span>manut.</span></button></td>`;
@@ -192,15 +206,85 @@
       return `<tr><th scope="row"><i class="bolinha" style="background:${COR_DONO[l.dono]}"></i> ${esc(l.nome)}<small>${l.pax} pessoas · ${esc(l.dono)}</small></th>${cel}</tr>`;
     }).join('');
     tela.innerHTML = `
-      <header class="cab"><div><h1>Agenda</h1><p>Próximas duas semanas, lancha por lancha. Toque num dia para ver ou marcar.</p></div></header>
+      <header class="cab"><div><h1>Agenda</h1><p>Próximas duas semanas, lancha por lancha. Toque num dia para ver ou marcar.</p></div>
+        <button class="botao botao--principal" type="button" data-fechar-periodo><svg aria-hidden="true"><use href="#p-agenda"/></svg>Fechar a agenda por um período</button></header>
+      ${PERIODOS.length ? `<section class="cartao periodos"><h2>Dias em que a agenda está fechada</h2>
+        <ul>${PERIODOS.map((p, n) => `<li><span><b>${faixa(p)}</b><small>${esc(p.motivo)}, ${p.lancha ? esc(lancha(p.lancha).nome) : 'todas as lanchas'}</small></span>
+          <button class="botao botao--leve botao--pequeno" type="button" data-reabrir="${n}">Reabrir</button></li>`).join('')}</ul></section>` : ''}
       <ul class="agenda-legenda">
         <li><i class="amostra amostra--reservada"></i>Reservada por você</li>
         <li><i class="amostra amostra--dono"></i>Ocupada na agenda do dono</li>
         <li><i class="amostra amostra--bloqueio"></i>Manutenção</li>
+        <li><i class="amostra amostra--fechado"></i>Agenda fechada</li>
         <li><i class="amostra amostra--livre"></i>Livre</li>
       </ul>
       <div class="agenda-grade"><table><thead><tr><th scope="col" class="sr">Lancha</th>${cab}</tr></thead><tbody>${linhas}</tbody></table></div>
       <p class="ajuda" style="margin-top:14px">O que está aqui aparece no calendário do site como livre ou ocupado. O cliente nunca vê nomes nem valores.</p>`;
+    tela.querySelector('[data-fechar-periodo]').addEventListener('click', fecharPeriodo);
+    tela.querySelectorAll('[data-reabrir]').forEach((b) => b.addEventListener('click', () => {
+      const p = PERIODOS[Number(b.dataset.reabrir)];
+      PERIODOS = PERIODOS.filter((x) => x !== p);
+      telaAgenda(); avisa(`Agenda reaberta: ${faixa(p).toLowerCase()}.`);
+    }));
+  }
+
+  function fecharPeriodo() {
+    const hoje = iso(HOJE);
+    abreGaveta('Fechar a agenda por um período', `
+      <p class="ajuda" style="margin-top:0">Para férias, feriado ou quando a empresa não vai atender. Nesses dias o site mostra tudo ocupado e nenhum passeio novo entra.</p>
+      <div class="periodo-datas">
+        <label class="campo"><span>Do dia</span><input type="date" data-ini min="${hoje}"></label>
+        <label class="campo"><span>Até o dia</span><input type="date" data-fim min="${hoje}"></label>
+      </div>
+      <div class="campo"><span>Por quê?</span><div class="chips">${MOTIVOS.map((m, n) => `<button class="chip" type="button" aria-pressed="${n === 0}" data-motivo="${esc(m)}">${esc(m)}</button>`).join('')}</div>
+        <small>Só você vê o motivo.</small></div>
+      <label class="campo"><span>Quais lanchas?</span><select data-qual><option value="">Todas as lanchas</option>${LANCHAS.map((l) => `<option value="${l.id}">Só a ${esc(l.nome)}</option>`).join('')}</select></label>
+      <div class="estado estado--sem" data-resumo hidden></div>
+      <div class="alerta" data-conflito hidden><span><b>Já tem passeio marcado nesses dias</b><p data-conflito-txt></p></span></div>
+      <p class="selo selo--alerta" data-erro hidden style="margin:0 0 12px"></p>
+      <button class="botao botao--principal botao--cheio" type="button" data-salvar>Fechar a agenda</button>`, (c) => {
+      const ini = c.querySelector('[data-ini]'), fim = c.querySelector('[data-fim]'), qual = c.querySelector('[data-qual]');
+      let motivo = MOTIVOS[0];
+      c.querySelectorAll('[data-motivo]').forEach((b) => b.addEventListener('click', () => {
+        c.querySelectorAll('[data-motivo]').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true'); motivo = b.dataset.motivo;
+      }));
+      const conflitos = () => {
+        const out = [];
+        for (let i = 0; i < 14; i++) {
+          const s = iso(somaDias(HOJE, i));
+          if (s < ini.value || s > fim.value) continue;
+          LANCHAS.forEach((l) => {
+            if (qual.value && qual.value !== l.id) return;
+            const r = (RESERVAS[l.id] || {})[i];
+            if (r && r !== 'dono' && r !== 'bloqueio') out.push(`${r} (${l.nome}, ${dd(somaDias(HOJE, i))})`);
+          });
+        }
+        return out;
+      };
+      const atualiza = () => {
+        if (ini.value) fim.min = ini.value;
+        if (ini.value && !fim.value) fim.value = ini.value;
+        const res = c.querySelector('[data-resumo]'), conf = c.querySelector('[data-conflito]');
+        if (!ini.value || !fim.value || fim.value < ini.value) { res.hidden = true; conf.hidden = true; return; }
+        const n = Math.round((deIso(fim.value) - deIso(ini.value)) / 864e5) + 1;
+        const quais = qual.value ? `na ${lancha(qual.value).nome}` : 'em todas as lanchas';
+        res.textContent = `${faixa({ ini: ini.value, fim: fim.value })}: ${n} ${n === 1 ? 'dia fechado' : 'dias fechados'} ${quais}.`;
+        res.hidden = false;
+        const cs = conflitos();
+        conf.hidden = !cs.length;
+        if (cs.length) c.querySelector('[data-conflito-txt]').textContent = `${cs.join('; ')}. ${cs.length === 1 ? 'Esse passeio continua marcado' : 'Esses passeios continuam marcados'}. Se for preciso, fale com o cliente pelo WhatsApp.`;
+      };
+      [ini, fim, qual].forEach((x) => x.addEventListener('change', atualiza));
+      c.querySelector('[data-salvar]').addEventListener('click', () => {
+        const erro = c.querySelector('[data-erro]');
+        if (!ini.value || !fim.value) { erro.textContent = 'Escolha o primeiro e o último dia.'; erro.hidden = false; return; }
+        if (fim.value < ini.value) { erro.textContent = 'O último dia precisa ser depois do primeiro.'; erro.hidden = false; return; }
+        const p = { ini: ini.value, fim: fim.value, motivo, lancha: qual.value || null };
+        PERIODOS = [...PERIODOS, p].sort((a, b) => a.ini.localeCompare(b.ini));
+        fechaGaveta(); telaAgenda(); avisa(`Agenda fechada: ${faixa(p).toLowerCase()}.`);
+      });
+    });
   }
 
   function abreDia(id, i) {
@@ -208,13 +292,23 @@
     const d = somaDias(HOJE, Number(i));
     const r = (RESERVAS[id] || {})[i];
     const titulo = `${l.nome}, ${DIAS[d.getDay()]} ${dd(d)}`;
+    const p = !r && periodoDe(id, d);
+    if (p) {
+      abreGaveta(titulo, `<div class="estado estado--sem">Agenda fechada. ${esc(faixa(p))}, ${esc(p.motivo.toLowerCase())}, ${p.lancha ? 'só nesta lancha' : 'todas as lanchas'}.</div>
+        <button class="botao botao--leve botao--cheio" type="button" data-reabrir-p>Reabrir este período</button>`, (c) => {
+        c.querySelector('[data-reabrir-p]').addEventListener('click', () => { PERIODOS = PERIODOS.filter((x) => x !== p); fechaGaveta(); telaAgenda(); avisa('Período reaberto.'); });
+      });
+      return;
+    }
     if (!r) {
       abreGaveta(titulo, `
         <div class="estado estado--sem">Este dia está livre.</div>
         <div class="escolhas">
           <button class="escolha" type="button" data-acao="marcar"><span class="linha__icone"><svg><use href="#p-agenda"/></svg></span><span><b>Marcar um passeio</b><span>Escolha o cliente e o dia fica reservado.</span></span></button>
           <button class="escolha" type="button" data-acao="bloquear"><span class="linha__icone"><svg><use href="#p-lancha"/></svg></span><span><b>Bloquear para manutenção</b><span>O site mostra o dia como ocupado.</span></span></button>
+          <button class="escolha" type="button" data-acao="periodo"><span class="linha__icone"><svg><use href="#p-relogio"/></svg></span><span><b>Fechar a agenda de vários dias</b><span>Férias, feriado ou empresa fechada.</span></span></button>
         </div>`, (c) => {
+        c.querySelector('[data-acao="periodo"]').addEventListener('click', () => { fecharPeriodo(); const x = document.querySelector('#gaveta [data-ini]'); x.value = iso(d); x.dispatchEvent(new Event('change')); });
         c.querySelector('[data-acao="marcar"]').addEventListener('click', () => { fechaGaveta(); avisa('No painel de verdade, aqui você escolhe o cliente.'); });
         c.querySelector('[data-acao="bloquear"]').addEventListener('click', () => { RESERVAS[id][i] = 'bloqueio'; fechaGaveta(); telaAgenda(); avisa('Dia bloqueado para manutenção.'); });
       });

@@ -145,3 +145,12 @@ para 500 contatos na temporada).
 
 **Sem pet:** a Barra Boat não leva animais (a Ilha do Campeche proíbe animais na praia e eles
 teriam de ficar na lancha). Nenhuma menção a pet no site, no robô ou nos textos.
+
+## Decisão de 2026-11-17 (protótipo aprovado)
+
+- Protótipo do painel aprovado pelo Fabiano. Ajuste pedido: **fechar a agenda por um período**
+  (do dia X ao dia Y) para férias, feriado ou empresa fechada. Vale para todas as lanchas ou só
+  uma; motivo só a dona vê; o site mostra os dias como ocupados e nenhum passeio novo entra
+  (nem pelo site nem pelo robô). Passeios já marcados no período continuam e o painel avisa
+  quais são. Lista dos períodos fechados no topo da Agenda, com "Reabrir".
+  Tabela prevista: `bb_periodos_fechados (inicio, fim, motivo, lancha_id null = todas)`.
