@@ -91,3 +91,46 @@ reprocessar depois.
 
 Pagamento/reserva automática no site, custo das campanhas (Meta), impressos, remoção de
 avaliações do Google, assinatura eletrônica com validade jurídica.
+
+## Decisões de 2026-11-16 (Fabiano)
+
+**Princípio do painel:** a Michele tem muita dificuldade com tecnologia. O painel precisa ser
+simples a ponto de ela usar sem treinamento: poucas telas, botões grandes com texto (nada de
+ícone sozinho), uma ação principal por tela, linguagem do dia a dia dela ("Quem vai no passeio",
+não "lead"), nada de configuração técnica exposta, e ajuda curta na própria tela. Somente em
+português (o site continua multi-idioma, como no Encanto da Ponte).
+
+**Aprovados (entram no escopo):**
+36. Lembrete automático na véspera (horário, endereço com mapa, o que levar, saldo a pagar).
+37. Pedido de avaliação no Google automático no dia seguinte ao passeio.
+38. Alerta de clima: vento e chuva previstos para os passeios dos próximos 3 dias.
+39. Escala de marinheiros: quem vai em cada passeio; cada marinheiro vê a própria agenda.
+40. Bloqueio de datas por manutenção e vencimentos da lancha (seguro, documentação, revisão),
+    com aviso antes de vencer.
+41. Notificação no celular quando chega lead novo; painel instalável como aplicativo (PWA).
+42. Textos do site editáveis: FAQ, chamadas da home, selo Cadastur.
+43. Usuários e permissões: dona, atendente, parceiro, marinheiro; registro de quem alterou o quê.
+44. Modelos da Meta no painel (necessário para lembrete, avaliação e campanha fora da janela de 24 h).
+45. **Despesas (o "caderno" da Michele):** lançar gasto em 3 toques (valor, categoria, data;
+    foto do recibo opcional; lancha ou passeio opcional). Categorias prontas: combustível,
+    marinheiro, gelo/carvão/frutas, manutenção, marina/vaga, seguro, documentação, anúncios,
+    repasse a parceiro, comissão, outros. Despesa fixa mensal se repete sozinha. Resumo do mês
+    por categoria.
+46. **Ticket médio** de venda: bruto (valor fechado) e líquido (bruto menos custos do passeio,
+    repasses, comissões e a parte das despesas). Também por lancha, roteiro e mês.
+47. **Relatórios com gráficos simples:** cada número importante com um gráfico fácil de ler
+    (barras por mês, linha comparando com o ano anterior, rosca de despesas por categoria,
+    barras de ocupação por lancha), uma frase explicando o que o gráfico mostra e comparação
+    com o mês anterior em texto ("12% a mais que outubro").
+48. **Agenda do parceiro conectada na própria aba da lancha**, sem depender do Fabiano:
+    botão "Conectar agenda do dono", com três caminhos: Google Agenda (o parceiro manda o
+    "endereço secreto no formato iCal" e ela cola), planilha do Google (link de publicação) ou
+    lançamento manual. O painel testa o link na hora e mostra "Conectada: X dias ocupados nos
+    próximos 90 dias"; depois lê sozinho a cada 15 min. Botão "Mandar instruções ao parceiro"
+    abre o WhatsApp com o passo a passo pronto e o link de um **vídeo curto** (feito no
+    videos-project) mostrando onde o parceiro acha esse endereço no Google Agenda.
+
+**Fora:** pagamento online (continua fora do escopo).
+
+**A decidir:** lista de passageiros (item 8 da sugestão); editor visual do fluxo, simulador do
+robô e aba Clientes (como na PO); robô com IA (Claude) ou só por palavra-chave.
