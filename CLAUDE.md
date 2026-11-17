@@ -131,5 +131,12 @@ abre o WhatsApp), `politica-de-cancelamento/`, `politica-de-privacidade/`, `404.
 - CSS das páginas internas em `assets/css/paginas.css`; JS da lancha em `assets/js/lancha.js`,
   do contato em `assets/js/contato.js`, reels da home em `assets/js/reels.js`.
 
+**Fase 5 — Painel (2026-11-17).** Protótipo clicável em `painel/` (`prototipo.js` com dados de
+exemplo, nada salvo) para a Michele aprovar o jeito: menu Hoje, Agenda, Clientes, Dinheiro, Mais;
+gaveta do cliente, anotar despesa, relatório com gráficos, lancha com "Conectar agenda do dono".
+Depois de aprovado: migrações `bb_` (aplicar no Supabase do HD360 só com ok do Fabiano), login,
+e trocar os dados de exemplo pelos reais. Gráficos: série 2026 `#1A6FA8`, 2025 `#C97A2A`
+(validados para daltonismo); barras de uma série só em `#1A6FA8`.
+
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.
