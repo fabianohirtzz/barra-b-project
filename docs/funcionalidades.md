@@ -132,5 +132,16 @@ português (o site continua multi-idioma, como no Encanto da Ponte).
 
 **Fora:** pagamento online (continua fora do escopo).
 
-**A decidir:** lista de passageiros (item 8 da sugestão); editor visual do fluxo, simulador do
-robô e aba Clientes (como na PO); robô com IA (Claude) ou só por palavra-chave.
+**Aprovados também (2026-11-16, segunda rodada):**
+49. Lista de passageiros: o cliente preenche nomes e documentos por um link antes do embarque;
+    o marinheiro recebe a lista do passeio.
+50. Tudo o que o painel da PO já tem: editor visual do fluxo do robô, simulador do robô (testar
+    sem mandar mensagem), modelos da Meta e aba Clientes (a pessoa, juntando todos os pedidos).
+    Reaproveitar o código da PO.
+
+**Robô:** por palavra-chave e fluxo, como na PO. Agente de IA (Claude) fica em espera: o
+Fabiano está avaliando com a Michele (estimativa feita: Sonnet 5.5 em torno de US$ 90 a 130/mês
+para 500 contatos na temporada).
+
+**Sem pet:** a Barra Boat não leva animais (a Ilha do Campeche proíbe animais na praia e eles
+teriam de ficar na lancha). Nenhuma menção a pet no site, no robô ou nos textos.

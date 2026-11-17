@@ -101,6 +101,7 @@ Ver `docs/funcionalidades.md` (lista fechada com o Fabiano em 2026-11-12) e
 ## Regras de copy (Freela)
 
 Português. Sem travessões, sem emojis. Números concretos. Nunca falar preço.
+Sem pet: nunca mencionar animais a bordo (decisão da Michele, 2026-11-16).
 No site, quem atende é "a nossa equipe" (nunca citar a Michele pelo nome; só nas avaliações reais do Google).
 
 ---

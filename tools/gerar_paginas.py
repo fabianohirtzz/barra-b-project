@@ -545,7 +545,7 @@ pagina_roteiro(
                               'O roteiro mais pedido da Barra Boat: água cristalina e areia branca, no lugar que muita gente chama de Caribe brasileiro.', migs, d),
     dados_html([('Distância', '10,4 milhas'), ('Cada trajeto', '30 a 40 min'), ('Diária', '8 horas'), ('Saída', 'Canal da Barra')]),
     [('Canal da Barra da Lagoa', 'Embarque no canal, ao lado da ponte pênsil. Daqui a lancha sai para o mar aberto.',
-      'assets/img/fotos/pet.webp', 'Lancha passando pelo Canal da Barra da Lagoa, com as casas e os barcos de pesca na margem'),
+      'assets/img/fotos/canal-barra.webp', 'Lancha passando pelo Canal da Barra da Lagoa, com as casas e os barcos de pesca na margem'),
      ('Prainha da Barra', 'Vista panorâmica da Prainha logo na saída do canal.',
       'assets/img/paginas/campeche-rota.webp', 'Prainha da Barra e a saída do canal vistas do alto, com uma lancha indo para o mar'),
      ('Piscinas naturais da Barra', 'Piscinas de água salgada formadas entre as pedras, no costão.',
@@ -581,8 +581,7 @@ pagina_roteiro(
         <p class="secao__intro">A ilha é tombada como patrimônio e tem regras de visitação. Valem para todos os passeios.</p>
         <ul>
           <li>Não é permitido alimentar os quatis.</li>
-          <li>Animais não desembarcam na ilha, exceto cães-guia.</li>
-          <li>Não é permitido levar nem retirar plantas ou animais.</li>
+          <li>Não é permitido retirar plantas, conchas ou pedras da ilha.</li>
           <li>Churrasco e acampamento são proibidos na praia e no interior da ilha. O churrasco é feito a bordo.</li>
           <li>Trilhas e costões só com monitores credenciados.</li>
           <li>Sem som alto e sem cadeiras na areia.</li>
@@ -633,7 +632,7 @@ pagina_roteiro(
     '''
     <section class="secao" aria-labelledby="calmo-titulo">
       <div class="lado-a-lado">
-        <img src="assets/img/fotos/standup-pet.webp" alt="Stand up paddle com cachorro na água calma" width="1400" height="1050" loading="lazy">
+        <img src="assets/img/paginas/sobre-03.webp" alt="Mulher no stand up paddle na água calma, perto da praia" width="1400" height="1050" loading="lazy">
         <div>
           <h2 id="calmo-titulo" class="titulo">Por que escolher a Costa da Lagoa</h2>
           <p>A Lagoa da Conceição não tem ondas de mar aberto. É o roteiro indicado para famílias com crianças pequenas, pessoas mais velhas e quem enjoa com facilidade.</p>
