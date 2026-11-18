@@ -3,7 +3,10 @@
 Usa o projeto **compartilhado do HD360** (`euzmbswywwhmicjlszqw`). Todas as tabelas, funções e
 policies têm o prefixo `bb_`. O bucket de recibos se chama `bb-recibos`.
 
-**Status:** escritas em 2026-11-17 e **ainda não aplicadas**. Elas só entram no banco com o ok do Fabiano.
+**Status:** escritas em 2026-11-17, **aplicadas em 2026-11-18** pelo SQL Editor (01 a 05 e a carga),
+com a dona já cadastrada em `bb_equipe`. O conector MCP do Supabase recusa escrita nesta máquina
+(pede confirmação que a sessão não mostra): mudanças novas de banco vão como arquivo para o SQL Editor,
+e a conferência é feita por leitura.
 
 ## Como aplicar
 

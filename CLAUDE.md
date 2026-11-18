@@ -137,8 +137,11 @@ gaveta do cliente, anotar despesa, relatório com gráficos, lancha com "Conecta
 Depois de aprovado: migrações `bb_` (aplicar no Supabase do HD360 só com ok do Fabiano), login,
 e trocar os dados de exemplo pelos reais. Gráficos: série 2026 `#1A6FA8`, 2025 `#C97A2A`
 (validados para daltonismo); barras de uma série só em `#1A6FA8`.
-Protótipo aprovado em 17/11 (com "Fechar a agenda por um período"). Migrações escritas em
-`supabase/migrations/2026-11-17-0[1-5]-*.sql`, **não aplicadas** (aguardam ok do Fabiano). Segurança
+Protótipo aprovado em 17/11 (com "Fechar a agenda por um período"). Migrações
+`supabase/migrations/2026-11-17-0[1-5]-*.sql` e a carga **aplicadas em 18/11** (35 tabelas `bb_`, todas
+com RLS; 17 lanchas, 2 roteiros; dona cadastrada). Escrita no banco pelo MCP é recusada: gerar arquivo
+para o Fabiano rodar no SQL Editor e conferir por leitura. Em 18/11 também foram trancadas as tabelas
+`po_` da PO (só `po_equipe` acessa). Segurança
 por papel em `bb_equipe` (dona/atendente/parceiro/marinheiro), nunca `authenticated using (true)`
 porque o projeto é compartilhado; anon sem policy (site lê pelo PHP com service_role). Ver `supabase/README.md`.
 
