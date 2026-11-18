@@ -1,4 +1,4 @@
-/* Painel Barra Boat | protótipo
+/* Painel Barra Boat (painel real em index.html + app.js; protótipo em prototipo.html)
    Princípio: a Michele usa sem treinamento. Texto grande, botões com palavra (nunca só ícone),
    uma ação principal por tela, linguagem do dia a dia. */
 :root{
@@ -13,6 +13,7 @@
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--fundo);color:var(--texto);font:400 1.0625rem/1.5 var(--f);-webkit-font-smoothing:antialiased}
 .sprite{display:none}
+[hidden]{display:none !important}
 svg{width:1em;height:1em;flex-shrink:0}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -25,8 +26,9 @@ h1,h2,h3{color:var(--tinta);margin:0;line-height:1.15}
 
 /* ---------- estrutura: menu embaixo no celular, na esquerda no computador ---------- */
 .app{min-height:100vh}
-.nav{position:fixed;z-index:20;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);background:var(--abismo);padding:6px 4px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -8px 24px -16px rgba(0,0,0,.5)}
+.nav{position:fixed;z-index:20;left:0;right:0;bottom:0;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--abismo);padding:6px 4px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -8px 24px -16px rgba(0,0,0,.5)}
 .nav__marca{display:none}
+.nav__sair{display:none}
 .nav__item{display:grid;justify-items:center;gap:2px;padding:6px 2px;border-radius:14px;color:rgba(255,255,255,.72);text-decoration:none;font-size:.8rem;font-weight:600}
 .nav__item svg{font-size:1.55rem}
 .nav__item[aria-current="page"]{color:#fff;background:rgba(143,198,227,.18)}
@@ -38,6 +40,8 @@ h1,h2,h3{color:var(--tinta);margin:0;line-height:1.15}
   .nav__item{display:flex;align-items:center;gap:12px;padding:12px 14px;font-size:1rem;justify-items:start}
   .nav__item svg{font-size:1.35rem}
   .nav__item:hover{color:#fff;background:rgba(255,255,255,.08)}
+  .nav__sair{display:block;margin-top:auto;padding:12px 14px;border:0;border-radius:14px;background:transparent;color:rgba(255,255,255,.6);font-weight:600;text-align:left}
+  .nav__sair:hover{color:#fff;background:rgba(255,255,255,.08)}
   .app{padding-left:220px}
   .tela{padding:32px 40px 60px}
 }
@@ -51,6 +55,8 @@ h1,h2,h3{color:var(--tinta);margin:0;line-height:1.15}
 /* ---------- botões: sempre com texto ---------- */
 .botao{text-align:center;line-height:1.2;display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 22px;border-radius:16px;border:0;font-weight:700;font-size:1.02rem;text-decoration:none;transition:transform .15s,background .2s}
 .botao:active{transform:scale(.98)}
+.botao:disabled,.botao-icone:disabled{opacity:.55;cursor:default;transform:none}
+.botao--perigo,.botao--leve.botao--perigo{background:var(--perigo);color:#fff;box-shadow:none}
 .botao svg{font-size:1.3rem}
 .botao--principal{background:linear-gradient(135deg,var(--abismo),var(--canal));color:#fff;box-shadow:0 12px 24px -14px rgba(24,96,140,.9)}
 .botao--wa{background:#1F8F55;color:#fff}
@@ -222,6 +228,7 @@ h1,h2,h3{color:var(--tinta);margin:0;line-height:1.15}
 .etapas{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:6px}
 .etapas span{height:8px;border-radius:4px;background:var(--linha)}
 .etapas span.on{background:var(--canal)}
+.etapas span.on.perdido{background:var(--perigo)}
 
 /* ---------- gráficos (barras em HTML) ---------- */
 .grafico{background:#fff;border-radius:var(--r);padding:18px;box-shadow:var(--sombra)}
@@ -262,6 +269,30 @@ details.tabela td:first-child,details.tabela th:first-child{text-align:left}
 .aviso{position:fixed;z-index:70;left:50%;bottom:96px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:16px;background:var(--tinta);color:#fff;font-weight:600;box-shadow:0 14px 30px -12px rgba(0,0,0,.5);max-width:calc(100% - 32px);animation:sobe .25s}
 .aviso[hidden]{display:none}
 .aviso svg{color:#7EE2A8;font-size:1.3rem}
+.aviso--erro{background:var(--perigo)}
 @media (min-width:900px){.aviso{bottom:32px;left:calc(50% + 110px)}}
+
+/* ---------- painel real ---------- */
+.entrada{min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:linear-gradient(160deg,var(--abismo),var(--canal))}
+.entrada__caixa{width:min(400px,100%);background:#fff;border-radius:24px;padding:28px 24px 22px;box-shadow:0 30px 60px -30px rgba(0,0,0,.6)}
+.entrada__caixa img{display:block;margin:-4px auto 6px;padding:14px 18px;border-radius:16px;background:var(--abismo);max-width:100%;height:auto}
+.entrada__caixa h1{text-align:center;font-size:1.25rem;font-variation-settings:"wdth" 112;margin:6px 0 20px;color:var(--suave);font-weight:600}
+.entrada__ajuda{margin:16px 0 0;text-align:center;font-size:.9rem;color:var(--suave)}
+.erro{margin:0 0 14px;padding:10px 14px;border-radius:12px;background:#FDECEA;color:var(--perigo);font-weight:600;font-size:.95rem}
+.vazio{color:var(--suave);list-style:none}
+.carregando{color:var(--suave);padding:40px 0;text-align:center}
+.busca{display:block;margin-bottom:12px}
+.busca input{width:100%;min-height:52px;padding:12px 16px;border-radius:16px;border:1.5px solid var(--linha);background:#fff;font-size:1.02rem}
+.busca input:focus{border-color:var(--canal);outline:0;box-shadow:0 0 0 3px rgba(24,96,140,.15)}
+.ag-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.mes-nav{display:flex;align-items:center;gap:8px;margin-top:6px}
+.mes-nav p{margin:0;min-width:150px;text-align:center;font-weight:600;color:var(--tinta)}
+.mes-nav .botao-icone{width:40px;height:40px;background:#fff;box-shadow:var(--sombra)}
+.notas{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
+.notas li{background:#fff;border-radius:14px;padding:10px 14px;box-shadow:var(--sombra)}
+.notas p{margin:0;color:var(--tinta)}
+.notas small{color:var(--suave);font-size:.82rem}
+.lancha-c.is-oculta img{filter:grayscale(1);opacity:.6}
+.linha .botao-icone{width:40px;height:40px}
 
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}

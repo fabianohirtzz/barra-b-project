@@ -141,7 +141,14 @@ Protótipo aprovado em 17/11 (com "Fechar a agenda por um período"). Migraçõe
 `supabase/migrations/2026-11-17-0[1-5]-*.sql` e a carga **aplicadas em 18/11** (35 tabelas `bb_`, todas
 com RLS; 17 lanchas, 2 roteiros; dona cadastrada). Escrita no banco pelo MCP é recusada: gerar arquivo
 para o Fabiano rodar no SQL Editor e conferir por leitura. Em 18/11 também foram trancadas as tabelas
-`po_` da PO (só `po_equipe` acessa). Segurança
+`po_` da PO (só `po_equipe` acessa).
+**Painel real ligado ao Supabase (18/11):** `painel/index.html` + `app.js` + `config.js` (login, Hoje, Agenda
+com passeios/manutenção/período fechado/dia do dono, Clientes com funil, pedido, valores, pagamentos e
+anotações, Dinheiro só da dona com despesas + recibo no bucket privado, meta e gráficos, Lanchas, Parceiros,
+Marinheiros). O protótipo aprovado ficou em `painel/prototipo.html`. Falta: robô/conversas do WhatsApp,
+leitor das agendas dos donos (cron PHP), fotos pelo painel, roteiros, textos do site, acessos da equipe,
+lista de passageiros e contrato. Teste sem login real: servir o repo e trocar o supabase-js por um falso em
+memória (Playwright `page.route`). Segurança
 por papel em `bb_equipe` (dona/atendente/parceiro/marinheiro), nunca `authenticated using (true)`
 porque o projeto é compartilhado; anon sem policy (site lê pelo PHP com service_role). Ver `supabase/README.md`.
 

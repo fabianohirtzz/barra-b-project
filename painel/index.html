@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="painel.css?v=4">
+  <link rel="stylesheet" href="painel.css?v=5">
 </head>
 <body>
   <svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -33,9 +33,19 @@
     <symbol id="p-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.5v13l10.5-6.5Z"/></symbol>
   </svg>
 
-  <p class="faixa-prototipo">Protótipo com dados de exemplo. Nada aqui é real nem fica salvo.</p>
+  <main class="entrada" id="entrada" hidden>
+    <form class="entrada__caixa" id="entrada-form">
+      <img src="../assets/img/marca/logo-branco.png" alt="Barra Boat Floripa" width="190">
+      <h1>Painel</h1>
+      <label class="campo"><span>E-mail</span><input type="email" id="entrada-email" autocomplete="username" required></label>
+      <label class="campo"><span>Senha</span><input type="password" id="entrada-senha" autocomplete="current-password" required></label>
+      <p class="erro" id="entrada-erro" role="alert" hidden></p>
+      <button class="botao botao--principal botao--cheio" type="submit" id="entrada-botao">Entrar</button>
+      <p class="entrada__ajuda">Esqueceu a senha? Fale com a Freela In Home pelo WhatsApp.</p>
+    </form>
+  </main>
 
-  <div class="app">
+  <div class="app" id="app" hidden>
     <nav class="nav" aria-label="Menu do painel">
       <div class="nav__marca"><img src="../assets/img/marca/logo-branco.png" alt="Barra Boat Floripa"></div>
       <a class="nav__item" href="#hoje" data-nav="hoje"><svg><use href="#p-hoje"/></svg><span>Hoje</span></a>
@@ -43,6 +53,7 @@
       <a class="nav__item" href="#clientes" data-nav="clientes"><svg><use href="#p-clientes"/></svg><span>Clientes</span></a>
       <a class="nav__item" href="#dinheiro" data-nav="dinheiro"><svg><use href="#p-dinheiro"/></svg><span>Dinheiro</span></a>
       <a class="nav__item" href="#mais" data-nav="mais"><svg><use href="#p-mais"/></svg><span>Mais</span></a>
+      <button class="nav__sair" type="button" data-sair>Sair</button>
     </nav>
     <main class="tela" id="tela" tabindex="-1"></main>
   </div>
@@ -60,6 +71,8 @@
 
   <div class="aviso" id="aviso" role="status" aria-live="polite" hidden></div>
 
-  <script src="prototipo.js?v=4" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="config.js?v=1"></script>
+  <script src="app.js?v=1" defer></script>
 </body>
 </html>
