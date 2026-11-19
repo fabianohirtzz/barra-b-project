@@ -60,7 +60,15 @@ Referência: `E:\Clientes\Pereira Oliveira Turismo\po-tu-project` (ler o CLAUDE.
 - **Prévia:** GitHub Pages deste repo, sempre `noindex` (o PHP não roda lá).
   Repo: https://github.com/fabianohirtzz/barra-b-project (público) ·
   Prévia: https://fabianohirtzz.github.io/barra-b-project/
-- **Produção:** ErêHost, domínio barraboatfloripa.com.br (mantido).
+- **Produção:** ErêHost, domínio barraboatfloripa.com.br (mantido). DNS saiu do Cloudflare em
+  18/11: servidores `ns1/ns2.cpbr-sp4.erehost.com.br`, IP `200.11.120.126`, zona no cPanel
+  (MX, SPF, DKIM e DMARC conferidos). SSL pelo AutoSSL.
+- **Servidor de teste:** https://novo.barraboatfloripa.com.br (pasta `novo/`, `noindex` pelo
+  `.htaccess` e pela meta). `config.local.php` com a `service_role` já está em `novo/` (403 pela web).
+- **Deploy:** `BB_FTP_SENHA='...' python tools/publicar.py` (FTPS em `ftp.barraboatfloripa.com.br`;
+  envia só o que mudou, guardado em `.publicado.json`; reconecta quando a ErêHost derruba a sessão).
+  **A raiz do FTP é o WordPress em produção:** o padrão é `/novo` e a raiz só com `--producao`,
+  no dia da troca. Senha só na hora, nunca em arquivo.
 
 ## Escopo completo
 

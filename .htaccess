@@ -1,0 +1,15 @@
+# Barra Boat Floripa: regras do servidor (ErêHost, Apache/LiteSpeed)
+
+Options -Indexes
+DirectoryIndex index.php index.html
+ErrorDocument 404 /404.html
+
+# Segredos do servidor nunca são servidos
+<FilesMatch "^(config\.local\.php|\.publicado\.json)$">
+  Require all denied
+</FilesMatch>
+
+# Prévia em novo.barraboatfloripa.com.br: fora do Google até a troca
+<If "%{HTTP_HOST} =~ /^(www\.)?novo\./">
+  Header set X-Robots-Tag "noindex, nofollow"
+</If>
