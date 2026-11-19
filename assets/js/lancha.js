@@ -11,6 +11,10 @@
   if (gal) {
     const total = Number(gal.dataset.total) || 1;
     const pasta = gal.dataset.pasta;
+    // no servidor a lista vem do banco (fotos enviadas pelo painel têm qualquer nome);
+    // na prévia estática as fotos são 01.webp, 02.webp...
+    let lista = null;
+    try { lista = gal.dataset.fotos ? JSON.parse(gal.dataset.fotos) : null; } catch (e) { lista = null; }
     const img = gal.querySelector('[data-galeria-img]');
     const n = gal.querySelector('[data-galeria-n]');
     const minis = Array.from(gal.querySelectorAll('[data-foto]'));
@@ -18,7 +22,7 @@
     let atual = 1;
     function mostra(k) {
       atual = ((k - 1 + total) % total) + 1;
-      img.src = pasta + String(atual).padStart(2, '0') + '.webp';
+      img.src = (lista && lista[atual - 1]) || (pasta + String(atual).padStart(2, '0') + '.webp');
       img.alt = nome + ', foto ' + atual + ' de ' + total;
       n.textContent = atual;
       minis.forEach((b) => {

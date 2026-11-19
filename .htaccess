@@ -1,8 +1,18 @@
 # Barra Boat Floripa: regras do servidor (ErêHost, Apache/LiteSpeed)
 
 Options -Indexes
-DirectoryIndex index.php index.html
-ErrorDocument 404 /404.html
+DirectoryIndex index.html
+ErrorDocument 404 /site.php
+
+RewriteEngine On
+
+# Código e cache do servidor não são servidos pela web
+RewriteRule ^(lib|cache)(/|$) - [F,L]
+
+# Páginas (pastas com index.html) são montadas pelo site.php com os dados do banco:
+# "/", "/lanchas/", "/lanchas/<slug>/", "/sobre/"... O painel e a api ficam de fora.
+RewriteCond %{REQUEST_URI} !^/(painel|api|assets)/
+RewriteRule ^((?:[a-z0-9-]+/){0,2})$ site.php?p=$1 [L,QSA]
 
 # Segredos do servidor nunca são servidos
 <FilesMatch "^(config\.local\.php|\.publicado\.json)$">

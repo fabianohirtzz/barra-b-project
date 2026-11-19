@@ -201,10 +201,14 @@ ICONE = [(r'cabin|cabine|quarto|cama', 'cabine'), (r'banheiro|vaso', 'banheiro')
 FORA = r'^(passageiros:?|itens:?|incluso:?|lancha phantom|\d+ passageiros|\d+ ?p[eé]s|\*?kit (diversao|de seguranca)\*?|oferecemos agua e frutas a bordo!?)$'
 
 
+# Itens que estavam só na descrição longa do site antigo (e no card da home), não na lista curta.
+ITENS_EXTRA = {'phantom-30': ['Tapete flutuante', 'Stand up'], 'phantom-29-my-girl': ['Tapete flutuante']}
+
+
 def itens_de(slug):
     l = L_JSON[slug]
     vistos, saida = set(), []
-    for bruto in l['descricao_curta_itens']:
+    for bruto in l['descricao_curta_itens'] + ITENS_EXTRA.get(slug, []):
         t = re.sub(r'^[\s*•\-–]+|\*+$', '', bruto).strip().rstrip('.')
         if not t:
             continue
@@ -411,7 +415,7 @@ for s in ORDEM:
     gerados.append(pagina(f'lanchas/{s}/', f'{nome}: lancha para {pax} pessoas em Florianópolis | Barra Boat Floripa',
                           f'Aluguel da lancha {nome}, {pes} pés, até {pax} pessoas, com marinheiro e combustível inclusos. Veja fotos, itens a bordo e as datas livres.',
                           corpo, [ld_m, ld_prod], og_img=f'assets/img/lanchas/{s}/01.webp',
-                          js_extra=f'\n  <script src="{{pre}}assets/js/lancha.js?v=2" defer></script>'))
+                          js_extra=f'\n  <script src="{{pre}}assets/js/lancha.js?v=3" defer></script>'))
 
 # ---------------------------------------------------------------- /roteiros/
 migs, ld_m = migalhas([('Início', './'), ('Roteiros', None)])

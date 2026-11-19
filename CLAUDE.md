@@ -160,5 +160,17 @@ memória (Playwright `page.route`). Segurança
 por papel em `bb_equipe` (dona/atendente/parceiro/marinheiro), nunca `authenticated using (true)`
 porque o projeto é compartilhado; anon sem policy (site lê pelo PHP com service_role). Ver `supabase/README.md`.
 
+**Site pelo PHP (19/11):** em novo.barraboatfloripa.com.br as páginas passam pelo `site.php` (o `.htaccess`
+manda as pastas para lá). O molde de cada página é o HTML estático do gerador; `lib/site.php` troca só o que
+vem do banco: cards da home e de `/lanchas/`, opções do formulário, a página `/lanchas/<slug>/` inteira e os
+números da frota ("17 lanchas de 23 a 37 pés"). Lancha escondida no painel vira 404. `lib/bb.php` lê o Supabase
+com a service_role e guarda em `cache/` por 2 min (Supabase fora do ar: usa a última cópia; sem cópia, serve a
+estática). `api/disponibilidade.php` entrega as datas ocupadas (passeios, agenda do dono, bloqueios) ao
+calendário. **Mudou o HTML de lancha ou de card no gerador? Mude também `lib/lanchas.php` e rode
+`php tools/conferir_php.php`** (compara as 19 páginas com a prévia). `tools/publicar.py` envia todo arquivo
+versionado que mudou na cópia de trabalho, inclusive trabalho ainda não commitado de outra sessão.
+Falta no PHP: leitor das agendas dos donos (cron), fotos pelo painel, acessos da equipe, limpar o cache quando
+o painel salva.
+
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.

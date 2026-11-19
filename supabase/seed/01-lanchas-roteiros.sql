@@ -357,7 +357,9 @@ select slug, legado_id, nome, pes, passageiros, regiao, itens, capa_url, fotos, 
    "Piso antiderrapante",
    "Toldo e fechamento frontal e lateral",
    "Cooler",
-   "Geladeira térmica"
+   "Geladeira térmica",
+   "Tapete flutuante",
+   "Stand up"
   ],
   "capa_url": "/assets/img/lanchas/phantom-30.webp",
   "fotos": [
@@ -642,7 +644,8 @@ select slug, legado_id, nome, pes, passageiros, regiao, itens, capa_url, fotos, 
    "Piso antiderrapante",
    "Toldo e fechamento frontal e lateral",
    "Cooler",
-   "Geladeira térmica"
+   "Geladeira térmica",
+   "Tapete flutuante"
   ],
   "capa_url": "/assets/img/lanchas/phantom-29-my-girl.webp",
   "fotos": [
