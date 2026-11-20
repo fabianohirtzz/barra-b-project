@@ -109,7 +109,8 @@ Ver `docs/funcionalidades.md` (lista fechada com o Fabiano em 2026-11-12) e
 ## Regras de copy (Freela)
 
 Português. Sem travessões, sem emojis. Números concretos. Nunca falar preço.
-Sem pet: nunca mencionar animais a bordo (decisão da Michele, 2026-11-16).
+Pets (reunião de 19/11, substitui o "sem pet" de 16/11): **Costa da Lagoa aceita pets de porte pequeno e médio;
+Ilha do Campeche não aceita** (a ilha proíbe animais), com aviso na página do roteiro. Fora isso, não falar de pet.
 No site, quem atende é "a nossa equipe" (nunca citar a Michele pelo nome; só nas avaliações reais do Google).
 
 ---
@@ -169,6 +170,10 @@ passeios de jan/2025 a dez/2026, clientes, pagamentos, despesas, metas; ids `de3
 `2026-11-19-06-clima.sql`, um registro por dia). Limites em `CLIMA` no `painel/app.js` (vento 30 km/h, rajada 45,
 chuva 5 mm). **Nenhuma fonte de previsão integrada ainda:** falta o cron PHP que preenche `bb_clima` (fonte a
 escolher). Para a apresentação: `supabase/demo/clima.sql` (rodar no dia, pode repetir).
+**Windguru (20/11):** a Michele usa o Windguru, spot próprio **1083158** ("Barra Boat Floripa"). A tela Hoje mostra
+o widget oficial gratuito (`montaWindguru()` no `app.js`, km/h, 4 dias, em português). O widget só exibe; o alerta
+automático continua dependendo do `bb_clima`. Puxar os números do Windguru para o alerta exige a API paga deles
+(não copiar do site).
 
 **Site pelo PHP (19/11):** em novo.barraboatfloripa.com.br as páginas passam pelo `site.php` (o `.htaccess`
 manda as pastas para lá). O molde de cada página é o HTML estático do gerador; `lib/site.php` troca só o que
@@ -181,6 +186,22 @@ calendário. **Mudou o HTML de lancha ou de card no gerador? Mude também `lib/l
 versionado que mudou na cópia de trabalho, inclusive trabalho ainda não commitado de outra sessão.
 Falta no PHP: leitor das agendas dos donos (cron), fotos pelo painel, acessos da equipe, limpar o cache quando
 o painel salva.
+
+**Ajustes da reunião de 19/11 (feitos em 20/11):** mês no cabeçalho da Agenda; "Próximos dias" (3 dias) na
+tela Hoje; passeio muda de dia e de lancha (o pedido do cliente acompanha); botões "Mandar a reserva ao dono" e
+"Mandar ao marinheiro" (wa.me com texto pronto, sem custo; o envio automático pela API, R$ 0,31 cada, fica para
+depois do WhatsApp oficial); despesa "Outros" pede o quê e vira categoria nova; apagar lancha (com passeio no
+histórico só esconde), parceiro e marinheiro; parceiro com lanchas em quadradinhos ("Lanchas dele" grava
+`bb_lanchas.parceiro_id`, "Lanchas que ele vende" grava `bb_parceiro_lanchas`); Dinheiro por Mês, Semestre ou Ano.
+Teste do painel sem login: `supabase-js` falso em memória com o playwright-core do cache do npx.
+**Dados de exemplo x dados da Michele:** ela já vai cadastrar marinheiros, parceiros e clientes de verdade. O painel
+mostra o selo "exemplo" nos registros fictícios (id `de300000-…` ou `origem_import = 'demo'`). Antes de lançar, rodar
+`supabase/demo/apagar.sql`: apaga só os fictícios, as metas com `demo = true` (migração
+`2026-11-20-07-metas-demo.sql`, **aplicar antes de publicar o painel**) e os testes da apresentação (listados por id).
+O que ela lançar fica. O que ela anotar *dentro* de um registro de exemplo some junto.
+**Ainda da reunião:** vídeo/GIF de como conectar o Google Agenda (para os donos); tabela de clientes com histórico;
+foto antiga da Michele e do Neto para a página Sobre (ela envia); QR do Cadastur (ela envia); acessos de parceiro e
+marinheiro; ajustar o site no celular (letra pequena).
 
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.

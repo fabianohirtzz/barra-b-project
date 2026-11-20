@@ -296,11 +296,12 @@ begin
   end loop;
 
   -- ---------- metas de 2026 (perto do que foi vendido; a do mês atual um pouco acima) ----------
-  insert into public.bb_metas (mes, valor)
+  insert into public.bb_metas (mes, valor, demo)   -- demo: migração 2026-11-20-07
   select mes,
          case when mes = date_trunc('month', hoje)::date then ceil(fat * 1.12 / 5000) * 5000
               when mes > date_trunc('month', hoje)::date then ceil(fat * 1.6 / 5000) * 5000
-              else greatest(5000, round(fat * (0.9 + random() * 0.25) / 5000) * 5000) end
+              else greatest(5000, round(fat * (0.9 + random() * 0.25) / 5000) * 5000) end,
+         true
     from (select date_trunc('month', p.dia)::date mes, sum(ld.valor_fechado) fat
             from public.bb_passeios p join public.bb_leads ld on ld.id = p.lead_id
            where p.id::text like 'de300000-%' and p.dia >= '2026-01-01'

@@ -68,7 +68,7 @@
   const CORES = ['#1A6FA8', '#C97A2A', '#5B8C3A', '#8A5DB0', '#B04A5A', '#3A8C8C'];
 
   /* ================= estado (o que veio do banco) ================= */
-  const S = { user: null, papel: null, nome: '', lanchas: [], parceiros: [], marinheiros: [], roteiros: [], leads: [], receb: [], passeios: [], bloqueios: [], dono: [], despesas: [], metas: {}, clima: [] };
+  const S = { user: null, papel: null, nome: '', lanchas: [], parceiros: [], marinheiros: [], roteiros: [], leads: [], receb: [], passeios: [], bloqueios: [], dono: [], despesas: [], metas: {}, clima: [], vende: [] };
 
   /* ================= alerta de clima (item 38) =================
      A previsão chega pronta em bb_clima (um registro por dia, gravado pelo servidor).
@@ -101,6 +101,12 @@
   const corLancha = (l) => l.cor || (l.parceiro_id ? CORES[Math.max(S.parceiros.findIndex((p) => p.id === l.parceiro_id), 0) % CORES.length] : '#083359');
   const donoNome = (l) => (l.parceiro_id ? ((parceiro(l.parceiro_id) || {}).nome || 'Parceiro') : 'Própria');
   const lanchasAtivas = () => S.lanchas.filter((l) => l.ativo);
+  // Dados fictícios da apresentação (supabase/demo): somem no lançamento. O selo avisa para não
+  // cadastrar nada de verdade em cima deles.
+  const exemplo = (x) => !!x && (String(x.id || '').startsWith('de300000-') || x.origem_import === 'demo');
+  const seloExemplo = (x) => (exemplo(x) ? ' <span class="selo selo--neutro selo--exemplo" title="Dado de exemplo: será apagado antes do lançamento">exemplo</span>' : '');
+  const digitos = (t) => String(t || '').replace(/\D/g, '');
+  const linkWa = (tel, txt) => `https://wa.me/${digitos(tel)}${txt ? '?text=' + encodeURIComponent(txt) : ''}`;
 
   async function todos(monta) {
     let out = [];
@@ -121,13 +127,14 @@
       um(sb.from('bb_parceiros').select('*').order('nome')),
       um(sb.from('bb_marinheiros').select('*').order('nome')),
       um(sb.from('bb_roteiros').select('id,slug,nome').order('ordem')),
-      todos(() => sb.from('bb_leads').select('id,created_at,updated_at,nome,wa_id,email,idioma,mensagem,data_desejada,data_texto,pessoas,roteiro_id,lancha_id,etapa,motivo_perda,valor_orcado,valor_fechado,custos_passeio,orcamento_at,fechado_at,perdido_at,notas,origem,origem_manual,parceiro_id').order('created_at', { ascending: false })),
+      todos(() => sb.from('bb_leads').select('id,created_at,updated_at,nome,wa_id,email,idioma,mensagem,data_desejada,data_texto,pessoas,roteiro_id,lancha_id,etapa,motivo_perda,valor_orcado,valor_fechado,custos_passeio,orcamento_at,fechado_at,perdido_at,notas,origem,origem_manual,origem_import,parceiro_id').order('created_at', { ascending: false })),
       todos(() => sb.from('bb_recebimentos').select('*').order('recebido_em').order('id')),
       todos(() => sb.from('bb_passeios').select('*').neq('status', 'cancelado').gte('dia', anoPassado).order('dia').order('id')),
       um(sb.from('bb_bloqueios').select('*').gte('fim', recente).order('inicio')),
       todos(() => sb.from('bb_agenda_dono').select('lancha_id,dia,origem').gte('dia', recente).order('dia')),
     ]);
     Object.assign(S, { lanchas, parceiros, marinheiros, roteiros, leads, receb, passeios, bloqueios, dono });
+    S.vende = await um(sb.from('bb_parceiro_lanchas').select('parceiro_id,lancha_id')).catch(() => []);
     // A previsão é um extra: se a tabela ainda não existir ou a leitura falhar, o painel segue sem o alerta.
     S.clima = await um(sb.from('bb_clima').select('*').gte('dia', iso(hoje())).lte('dia', iso(somaDias(hoje(), 3))).order('dia')).catch(() => []);
     if (dona()) {
@@ -177,6 +184,7 @@
   function msgErro(e) {
     if (!e) return 'Não deu certo. Tente de novo.';
     if (e.code === '23505') return /passeios/.test(e.message || '') ? 'Essa lancha já tem passeio neste dia.' : 'Isso já está cadastrado.';
+    if (e.code === '23503') return 'Não dá para apagar: tem passeios ou valores ligados a este cadastro.';
     if (e.code === 'P0001') return e.message; // mensagens do banco já vêm em português (ex.: agenda fechada)
     if (e.code === '42501' || /row-level security/i.test(e.message || '')) return 'Seu acesso não permite essa alteração.';
     if (/JWT|token/i.test(e.message || '')) return 'Sua sessão expirou. Entre de novo.';
@@ -235,6 +243,30 @@
     lista.map((x) => `<option value="${x.id}"${x.id === sel ? ' selected' : ''}>${esc(rotulo(x))}</option>`).join('');
   const vazio = (txt) => `<li class="cartao vazio">${esc(txt)}</li>`;
 
+  /* ================= mensagens prontas do passeio =================
+     Para o dono da lancha (parceiro) e para o marinheiro, pelo WhatsApp da Michele.
+     Abre a conversa com o texto pronto; ela confere e envia. */
+  const diaDoPasseio = (p) => { const d = deIso(p.dia); return `${DIAS_LONGOS[d.getDay()].toLowerCase()}, ${dd(d)}`; };
+  function textoPasseio(p, para) {
+    const l = lancha(p.lancha_id) || { nome: 'lancha' }, c = lead(p.lead_id), r = roteiro(p.roteiro_id), m = marinheiro(p.marinheiro_id);
+    const pessoas = p.pessoas || (c && c.pessoas);
+    const partes = [`saída ${p.hora_saida ? hora(p.hora_saida) : 'a combinar'}`, pessoas ? `${pessoas} pessoas` : '', `roteiro ${r ? r.nome : 'a combinar'}`].filter(Boolean).join(', ');
+    if (para === 'dono') {
+      const dono = parceiro(l.parceiro_id);
+      return `Oi${dono ? ', ' + primeiroNome(dono.nome) : ''}! Reserva da ${l.nome} pela Barra Boat Floripa: ${diaDoPasseio(p)}, ${partes}.${m ? ` Marinheiro: ${m.nome}.` : ''}${c && c.nome ? ` Cliente: ${c.nome}.` : ''}`;
+    }
+    return `Oi${m ? ', ' + primeiroNome(m.nome) : ''}! Passeio de ${diaDoPasseio(p)} na ${l.nome}: ${partes}.${c ? ` Cliente: ${c.nome || 'sem nome'}${c.wa_id ? ', WhatsApp ' + foneTela(c.wa_id) : ''}.` : ''}`;
+  }
+  // Botões "mandar ao dono" e "mandar ao marinheiro" (só aparecem quando há para quem mandar).
+  function botoesEnvio(p, pequeno) {
+    const l = lancha(p.lancha_id) || {}, dono = parceiro(l.parceiro_id), m = marinheiro(p.marinheiro_id);
+    const cls = `botao botao--wa${pequeno ? ' botao--pequeno' : ''}`;
+    return [
+      dono ? `<a class="${cls}" href="${linkWa(dono.telefone, textoPasseio(p, 'dono'))}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Mandar a reserva ao dono</a>` : '',
+      m ? `<a class="${cls}" href="${linkWa(m.telefone, textoPasseio(p, 'marinheiro'))}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Mandar ao marinheiro</a>` : '',
+    ].join('');
+  }
+
   /* ================= HOJE ================= */
   // Um aviso por dia de tempo ruim que tenha passeio marcado (hoje e os próximos 3 dias),
   // com a mensagem pronta para cada cliente no idioma dele.
@@ -262,6 +294,24 @@
         <ul class="alerta__lista">${itens}</ul>
       </div></div>`;
     }).join('');
+  }
+
+  // Previsão do Windguru (spot "Barra Boat Floripa", o que a Michele já acompanha).
+  // Widget oficial: o script põe um iframe logo depois do elemento com o id `uid`.
+  // A tela é redesenhada inteira, então o widget é montado de novo a cada vez.
+  const WINDGURU = 1083158;
+  function montaWindguru() {
+    const lugar = tela.querySelector('[data-windguru]');
+    if (!lugar) return;
+    const uid = `wg_fwdg_${WINDGURU}_100_${Date.now()}`;
+    lugar.id = uid;
+    const s = document.createElement('script');
+    s.src = 'https://www.windguru.cz/js/widget.php?' + [`s=${WINDGURU}`, 'm=100', `uid=${uid}`, 'wj=kmh', 'tj=c', 'waj=m', 'tij=cm',
+      'odh=6', 'doh=20', 'fhours=96', 'hrsm=2', 'vt=forecasts', 'lng=pt', 'idbs=1',
+      'p=WINDSPD,GUST,SMER,HTSGW,PERPW,TMPE,CDC,APCP1s,RATING'].join('&');
+    s.async = true;
+    s.onload = s.onerror = () => s.remove();
+    document.head.appendChild(s);
   }
 
   function telaHoje() {
@@ -295,13 +345,27 @@
           ${f > 0 ? `<div><dt>Falta receber</dt><dd>${R(f)}</dd></div>` : ''}
         </dl>
         <div class="acoes">${c ? `<button class="botao botao--leve botao--pequeno" type="button" data-cliente="${c.id}">Abrir</button>` : ''}
-        ${f > 0 ? `<button class="botao botao--leve botao--pequeno" type="button" data-receber="${c.id}">Recebi o restante</button>` : ''}</div>
+        ${f > 0 ? `<button class="botao botao--leve botao--pequeno" type="button" data-receber="${c.id}">Recebi o restante</button>` : ''}
+        ${m ? `<a class="botao botao--leve botao--pequeno" href="${linkWa(m.telefone, textoPasseio(p, 'marinheiro'))}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Mandar ao marinheiro</a>` : ''}</div>
       </li>`;
     }).join('') || vazio('Nenhum passeio marcado para hoje.');
 
+    // Próximos 3 dias: para ver de longe o que vem (e o tempo, com o alerta de clima acima).
+    const proxDias = S.passeios.filter((p) => p.dia > hs && p.dia <= iso(somaDias(h, 3)))
+      .sort((a, b) => (a.dia + (a.hora_saida || '99')).localeCompare(b.dia + (b.hora_saida || '99')));
+    const proximos = proxDias.map((p) => {
+      const l = lancha(p.lancha_id) || { nome: 'Lancha' }, c = lead(p.lead_id);
+      const dif = Math.round((deIso(p.dia) - h) / 864e5);
+      const rot = dif === 1 ? 'Amanhã' : DIAS_LONGOS[deIso(p.dia).getDay()];
+      return `<li><button class="linha" type="button" data-dia="${p.lancha_id}|${p.dia}">
+        <span class="linha__icone"><i class="bolinha" style="background:${corLancha(l)}"></i></span>
+        <span class="linha__corpo"><b>${rot}, ${ddIso(p.dia)}${p.hora_saida ? ' às ' + hora(p.hora_saida) : ''}${seloExemplo(p)}</b><span>${esc([l.nome, c ? c.nome || 'Sem nome' : '', (p.pessoas || (c && c.pessoas)) ? (p.pessoas || c.pessoas) + ' pessoas' : ''].filter(Boolean).join(' · '))}</span></span>
+        <svg><use href="#p-seta"/></svg></button></li>`;
+    }).join('') || vazio('Nenhum passeio nos próximos 3 dias.');
+
     const espera = novos.map((c) => `<li><button class="linha" type="button" data-cliente="${c.id}">
         <span class="avatar">${esc((c.nome || '?')[0].toUpperCase())}</span>
-        <span class="linha__corpo"><b>${esc(c.nome || foneTela(c.wa_id) || 'Sem nome')}</b><span>${esc(c.mensagem || 'Sem mensagem')}</span></span>
+        <span class="linha__corpo"><b>${esc(c.nome || foneTela(c.wa_id) || 'Sem nome')}${seloExemplo(c)}</b><span>${esc(c.mensagem || 'Sem mensagem')}</span></span>
         <span class="selo selo--alerta"><svg><use href="#p-relogio"/></svg>${esc(quando(c.created_at))}</span>
       </button></li>`).join('') || vazio('Ninguém esperando resposta agora.');
 
@@ -311,7 +375,13 @@
 
       ${alertasClima(h)}
 
+      <section class="bloco"><h2>Previsão do Windguru <small>próximos 4 dias, vento em km/h</small></h2>
+        <div class="cartao windguru"><div data-windguru></div>
+          <a class="windguru__link" href="https://www.windguru.cz/${WINDGURU}" target="_blank" rel="noopener">Abrir no Windguru</a></div></section>
+
       <section class="bloco"><h2>Passeios de hoje <small>${ps.length} ${ps.length === 1 ? 'passeio' : 'passeios'}</small></h2><ul class="lista">${cartoes}</ul></section>
+
+      <section class="bloco"><h2>Próximos dias <small>${proxDias.length} ${proxDias.length === 1 ? 'passeio' : 'passeios'}</small></h2><ul class="lista">${proximos}</ul></section>
 
       <section class="bloco"><h2>Esperando sua resposta <small>${novos.length} ${novos.length === 1 ? 'pessoa' : 'pessoas'}</small></h2><ul class="lista">${espera}</ul></section>
 
@@ -322,6 +392,7 @@
           ${dona() ? `<div class="numero"><span>Despesas este mês</span><b>${R(despMes.reduce((s, d) => s + Number(d.valor), 0))}</b><small>${despMes.length} ${despMes.length === 1 ? 'anotação' : 'anotações'}</small></div>` : ''}
         </div>
       </section>`;
+    montaWindguru();
   }
 
   /* ================= AGENDA ================= */
@@ -344,7 +415,8 @@
     const base = somaDias(hoje(), agIni);
     const dias = Array.from({ length: 14 }, (_, i) => somaDias(base, i));
     const hs = iso(hoje());
-    const cab = dias.map((d) => `<th scope="col" class="${iso(d) === hs ? 'is-hoje' : ''} ${d.getDay() % 6 === 0 ? 'is-fds' : ''}">${DIAS[d.getDay()]}<b>${d.getDate()}</b></th>`).join('');
+    // o mês em cada coluna: a grade de 14 dias quase sempre atravessa a virada do mês
+    const cab = dias.map((d) => `<th scope="col" class="${iso(d) === hs ? 'is-hoje' : ''} ${d.getDay() % 6 === 0 ? 'is-fds' : ''} ${d.getDate() === 1 ? 'is-mes' : ''}">${DIAS[d.getDay()]}<b>${d.getDate()}</b><small>${MESES[d.getMonth()]}</small></th>`).join('');
     const linhas = lanchasAtivas().map((l) => {
       const cel = dias.map((d) => {
         const s = iso(d), e = estadoDia(l, s);
@@ -475,10 +547,11 @@
           <div><dt>Pessoas:</dt><dd>${p.pessoas || 'a confirmar'}</dd></div>
           <div><dt>Roteiro:</dt><dd>${esc(r ? r.nome : 'a combinar')}</dd></div>
           <div><dt>Marinheiro:</dt><dd>${esc(m ? m.nome : 'a definir')}</dd></div>
-        </dl></div>
-        <div class="acoes" style="margin-top:16px">
+        </dl>${exemplo(p) ? '<p class="selo selo--neutro" style="white-space:normal;margin:10px 0 0">Passeio de exemplo: será apagado antes do lançamento.</p>' : ''}</div>
+        ${botoesEnvio(p) ? `<div class="acoes" style="margin-top:16px">${botoesEnvio(p)}</div>` : ''}
+        <div class="acoes" style="margin-top:12px">
           ${c ? `<button class="botao botao--principal" type="button" data-abrir-c="${c.id}">Abrir o cliente</button>` : ''}
-          <button class="botao botao--leve" type="button" data-editar>Mudar marinheiro ou hora</button>
+          <button class="botao botao--leve" type="button" data-editar>Mudar data, hora ou marinheiro</button>
           <button class="botao botao--leve" type="button" data-cancelar>Cancelar este passeio</button>
         </div>`, (g) => {
         const ab = g.querySelector('[data-abrir-c]'); if (ab) ab.addEventListener('click', () => abreCliente(ab.dataset.abrirC));
@@ -581,6 +654,10 @@
   function editarPasseio(p) {
     abreGaveta('Mudar o passeio', `
       <div class="grade-2">
+        <label class="campo"><span>Dia</span><input type="date" data-dia value="${p.dia}"></label>
+        <label class="campo"><span>Lancha</span><select data-lancha>${opcoes(S.lanchas.filter((x) => x.ativo || x.id === p.lancha_id), p.lancha_id, (x) => `${x.nome} (até ${x.passageiros})`)}</select></label>
+      </div>
+      <div class="grade-2">
         <label class="campo"><span>Saída</span><input type="time" data-hora value="${(p.hora_saida || '').slice(0, 5)}"></label>
         <label class="campo"><span>Pessoas</span><input data-pessoas inputmode="numeric" value="${p.pessoas || ''}"></label>
       </div>
@@ -588,17 +665,28 @@
         <label class="campo"><span>Marinheiro</span><select data-marinheiro>${opcoes(S.marinheiros.filter((x) => x.ativo || x.id === p.marinheiro_id), p.marinheiro_id, (x) => x.nome, 'A definir')}</select></label>
         <label class="campo"><span>Roteiro</span><select data-roteiro>${opcoes(S.roteiros, p.roteiro_id, (x) => x.nome, 'A combinar')}</select></label>
       </div>
-      <p class="ajuda">Para trocar a lancha ou o dia, cancele este passeio e marque de novo.</p>
+      <p class="ajuda">Mudou o dia ou a lancha? O dia antigo fica livre no site e o novo fica ocupado. Se a lancha for de parceiro, mande a reserva de novo ao dono.</p>
+      <p class="erro" data-erro hidden></p>
       <button class="botao botao--principal botao--cheio" type="button" data-salvar>Salvar</button>`, (c) => {
       aoSalvar(c.querySelector('[data-salvar]'), async () => {
+        const dia = c.querySelector('[data-dia]').value, lanchaId = c.querySelector('[data-lancha]').value;
+        if (!dia || !lanchaId) return erroCampo(c, 'Escolha o dia e a lancha.');
+        const mudou = dia !== p.dia || lanchaId !== p.lancha_id;
+        const outro = S.passeios.find((x) => x.id !== p.id && x.lancha_id === lanchaId && x.dia === dia);
+        if (outro) return erroCampo(c, `A ${lancha(lanchaId).nome} já tem passeio em ${ddIso(dia)}.`);
+        erroCampo(c, '');
         const ok = await grava(sb.from('bb_passeios').update({
+          dia, lancha_id: lanchaId,
           hora_saida: c.querySelector('[data-hora]').value || null,
           pessoas: Number(c.querySelector('[data-pessoas]').value) || null,
           marinheiro_id: c.querySelector('[data-marinheiro]').value || null,
           roteiro_id: c.querySelector('[data-roteiro]').value || null,
         }).eq('id', p.id));
         if (!ok) return;
-        fechaGaveta(); await atualiza(); avisa('Passeio atualizado.');
+        // o pedido do cliente acompanha o passeio (data e lancha)
+        if (p.lead_id && mudou) await grava(sb.from('bb_leads').update({ data_desejada: dia, lancha_id: lanchaId }).eq('id', p.lead_id));
+        fechaGaveta(); await atualiza();
+        avisa(mudou ? `Passeio mudado para ${lancha(lanchaId).nome}, ${ddIso(dia)}.` : 'Passeio atualizado.');
       });
     });
   }
@@ -630,7 +718,7 @@
         const partes = [data, c.pessoas ? c.pessoas + ' pessoas' : '', l ? l.nome : r ? r.nome : '', valor, c.etapa === 'perdidos' ? c.motivo_perda : '', t ? ETAPAS.find((e) => e.id === c.etapa).nome : ''].filter(Boolean);
         return `<li><button class="linha" type="button" data-cliente="${c.id}">
           <span class="avatar">${esc((c.nome || '?')[0].toUpperCase())}</span>
-          <span class="linha__corpo"><b>${esc(c.nome || foneTela(c.wa_id) || 'Sem nome')}</b><span>${esc(partes.join(' · '))}</span></span>
+          <span class="linha__corpo"><b>${esc(c.nome || foneTela(c.wa_id) || 'Sem nome')}${seloExemplo(c)}</b><span>${esc(partes.join(' · '))}</span></span>
           <svg><use href="#p-seta"/></svg></button></li>`;
       }).join('') || vazio(t ? 'Ninguém encontrado com esse nome ou telefone.' : 'Ninguém nesta etapa agora.');
     };
@@ -693,6 +781,7 @@
     abreGaveta(c.nome || foneTela(c.wa_id) || 'Cliente', `
       <div class="secao-g">
         <div class="etapas" aria-hidden="true">${ETAPAS.slice(0, 4).map((e, i) => `<span class="${i <= n && c.etapa !== 'perdidos' ? 'on' : ''}"></span>`).join('')}<span class="${c.etapa === 'perdidos' ? 'on perdido' : ''}"></span></div>
+        ${exemplo(c) ? '<p class="selo selo--neutro" style="white-space:normal;margin:0 0 10px">Cliente de exemplo: será apagado antes do lançamento, com tudo o que for anotado nele.</p>' : ''}
         <p style="margin:0;color:var(--suave)">Etapa: <b style="color:var(--tinta)">${esc(ETAPAS[n].nome)}</b> · veio de ${esc(nomeOrigem(c.origem_manual || c.origem))} · chegou ${esc(quando(c.created_at))}${c.etapa === 'perdidos' && c.motivo_perda ? ` · ${esc(c.motivo_perda)}` : ''}</p>
       </div>
       <div class="acoes secao-g">
@@ -703,7 +792,8 @@
       </div>
 
       <div class="secao-g"><h3>O passeio</h3>
-        ${p ? `<div class="estado"><svg><use href="#p-ok"/></svg>Marcado na ${esc((lancha(p.lancha_id) || {}).nome || 'lancha')}, ${DIAS[deIso(p.dia).getDay()]} ${ddIso(p.dia)}${p.hora_saida ? ', saída ' + hora(p.hora_saida) : ''}.</div>`
+        ${p ? `<div class="estado"><svg><use href="#p-ok"/></svg>Marcado na ${esc((lancha(p.lancha_id) || {}).nome || 'lancha')}, ${DIAS[deIso(p.dia).getDay()]} ${ddIso(p.dia)}${p.hora_saida ? ', saída ' + hora(p.hora_saida) : ''}.</div>
+          <div class="acoes" style="margin-bottom:12px"><button class="botao botao--leve botao--pequeno" type="button" data-editar-p>Mudar data, hora ou marinheiro</button>${botoesEnvio(p, true)}</div>`
           : c.etapa === 'fechados' ? '<div class="alerta" style="margin-bottom:12px"><div><b>Ainda não está na agenda.</b><p style="margin:2px 0 0">Marque para o dia aparecer ocupado no site.</p></div></div>' : ''}
         <div class="cartao">
           <div class="grade-2">
@@ -715,7 +805,7 @@
             <label class="campo"><span>Lancha</span><select data-f="lancha_id"${p ? ' disabled' : ''}>${opcoes(lanchasAtivas(), c.lancha_id, (x) => `${x.nome} (até ${x.passageiros})`, 'Ainda não escolhida')}</select></label>
           </div>
           ${l && c.pessoas > l.passageiros ? `<p class="selo selo--alerta" style="margin:0 0 12px">A ${esc(l.nome)} leva até ${l.passageiros} pessoas.</p>` : ''}
-          ${p ? '<p class="ajuda">Para trocar a lancha ou o dia, cancele o passeio na Agenda e marque de novo.</p>' : ''}
+          ${p ? '<p class="ajuda">Para trocar a lancha ou o dia, abra o passeio na Agenda e toque em "Mudar data, hora ou marinheiro".</p>' : ''}
           <div class="acoes"><button class="botao botao--leve" type="button" data-salvar-pedido>Salvar o pedido</button>
           ${!p && c.etapa !== 'perdidos' ? '<button class="botao botao--principal" type="button" data-marcar>Marcar na agenda</button>' : ''}</div>
         </div>
@@ -759,6 +849,8 @@
         etapaAtual = para;
         await reabre(`${c.nome || 'Cliente'} passou para ${ETAPAS.find((e) => e.id === para).nome}.`);
       }));
+      const ep = g.querySelector('[data-editar-p]');
+      if (ep) ep.addEventListener('click', () => editarPasseio(p));
       const perdeu = g.querySelector('[data-perdeu]');
       if (perdeu) perdeu.addEventListener('click', () => naoFechou(c));
       aoSalvar(g.querySelector('[data-salvar-pedido]'), async () => {
@@ -843,18 +935,37 @@
   const vendasDoMes = (m) => S.leads.filter((l) => l.etapa === 'fechados' && Number(l.valor_fechado) > 0 && (diaVenda(l) || '').startsWith(m));
   const fatMes = (m) => vendasDoMes(m).reduce((s, l) => s + Number(l.valor_fechado), 0);
   const despesasDoMes = (m) => S.despesas.filter((d) => d.dia.startsWith(m));
+  // Período do Dinheiro: o mês escolhido, o semestre ou o ano em que ele cai.
+  let periodo = 'mes';
+  const PASSO = { mes: 1, semestre: 6, ano: 12 };
+  function mesesDoPeriodo(m = mesSel, tipo = periodo) {
+    const [a, n] = m.split('-').map(Number);
+    const de = tipo === 'mes' ? n : tipo === 'semestre' ? (n <= 6 ? 1 : 7) : 1;
+    const qt = tipo === 'mes' ? 1 : tipo === 'semestre' ? 6 : 12;
+    return Array.from({ length: qt }, (_, i) => `${a}-${pad(de + i)}`);
+  }
+  function nomePeriodo(m = mesSel, tipo = periodo) {
+    const [a, n] = m.split('-').map(Number);
+    if (tipo === 'ano') return String(a);
+    if (tipo === 'semestre') return `${n <= 6 ? '1º' : '2º'} semestre de ${a}`;
+    return nomeMes(m);
+  }
+  const noPeriodo = (ms) => (data) => ms.includes(String(data || '').slice(0, 7));
 
   function telaDinheiro() {
     if (!dona()) { tela.innerHTML = '<header class="cab"><div><h1>Dinheiro</h1></div></header><p class="cartao vazio">Esta parte é só da dona.</p>'; return; }
-    const desp = despesasDoMes(mesSel);
+    const ms = mesesDoPeriodo();
+    const desp = S.despesas.filter((d) => noPeriodo(ms)(d.dia));
     const atual = iso(hoje()).slice(0, 7);
+    const rotulos = { mes: ['Mês anterior', 'Próximo mês'], semestre: ['Semestre anterior', 'Próximo semestre'], ano: ['Ano anterior', 'Próximo ano'] }[periodo];
     tela.innerHTML = `<header class="cab"><div><h1>Dinheiro</h1>
-        <div class="mes-nav"><button class="botao-icone" type="button" data-mes="-1" aria-label="Mês anterior"><svg><use href="#p-volta"/></svg></button>
-        <p>${esc(nomeMes(mesSel).replace(/^./, (x) => x.toUpperCase()))}</p>
-        <button class="botao-icone" type="button" data-mes="1" aria-label="Próximo mês"${mesSel >= atual ? ' disabled' : ''}><svg><use href="#p-seta"/></svg></button></div></div>
+        <div class="mes-nav"><button class="botao-icone" type="button" data-mes="-1" aria-label="${rotulos[0]}"><svg><use href="#p-volta"/></svg></button>
+        <p>${esc(nomePeriodo().replace(/^./, (x) => x.toUpperCase()))}</p>
+        <button class="botao-icone" type="button" data-mes="1" aria-label="${rotulos[1]}"${ms[ms.length - 1] >= atual ? ' disabled' : ''}><svg><use href="#p-seta"/></svg></button></div>
+        <div class="chips chips--periodo" role="group" aria-label="Ver por">${[['mes', 'Mês'], ['semestre', 'Semestre'], ['ano', 'Ano']].map(([v, n]) => `<button class="chip" type="button" aria-pressed="${v === periodo}" data-periodo="${v}">${n}</button>`).join('')}</div></div>
       <div class="acoes"><button class="botao botao--principal" type="button" data-despesa><svg><use href="#p-mais-um"/></svg>Anotar despesa</button></div></header>
       <div class="abas" role="tablist" aria-label="Dinheiro">
-        <button class="aba" type="button" role="tab" aria-selected="${abaDinheiro === 'resumo'}" data-aba-d="resumo">Resumo do mês</button>
+        <button class="aba" type="button" role="tab" aria-selected="${abaDinheiro === 'resumo'}" data-aba-d="resumo">Resumo</button>
         <button class="aba" type="button" role="tab" aria-selected="${abaDinheiro === 'despesas'}" data-aba-d="despesas">Despesas<b>${desp.length}</b></button></div>
       <div id="dinheiro-corpo"></div>`;
     if (abaDinheiro === 'resumo') resumo(); else despesas();
@@ -864,21 +975,27 @@
 
   function resumo() {
     const m = mesSel, [ano, mesN] = m.split('-').map(Number);
-    const vendas = vendasDoMes(m);
+    const ms = mesesDoPeriodo(), dentro = noPeriodo(ms);
+    const msAP = ms.map((x) => `${ano - 1}${x.slice(4)}`);
+    const umMes = periodo === 'mes';
+    const noP = umMes ? 'no mês' : periodo === 'semestre' ? 'no semestre' : 'no ano';
+    const vendas = S.leads.filter((l) => l.etapa === 'fechados' && Number(l.valor_fechado) > 0 && dentro(diaVenda(l)));
     const bruto = vendas.reduce((s, l) => s + Number(l.valor_fechado), 0);
     const custos = vendas.reduce((s, l) => s + (Number(l.custos_passeio) || 0), 0);
-    const despM = despesasDoMes(m), desp = despM.reduce((s, d) => s + Number(d.valor), 0);
+    const despM = S.despesas.filter((d) => dentro(d.dia)), desp = despM.reduce((s, d) => s + Number(d.valor), 0);
     const liquido = bruto - custos - desp;
-    const orcados = S.leads.filter((l) => l.orcamento_at && iso(new Date(l.orcamento_at)).startsWith(m));
+    const orcados = S.leads.filter((l) => l.orcamento_at && dentro(iso(new Date(l.orcamento_at))));
     const comOrc = orcados.filter((l) => Number(l.valor_orcado) > 0);
     const tmOrc = comOrc.length ? Math.round(comOrc.reduce((s, l) => s + Number(l.valor_orcado), 0) / comOrc.length) : 0;
     const tmBruto = vendas.length ? Math.round(bruto / vendas.length) : 0;
     const tmLiq = vendas.length ? Math.round(liquido / vendas.length) : 0;
-    const brutoAP = fatMes(`${ano - 1}-${pad(mesN)}`);
+    const brutoAP = msAP.reduce((s, x) => s + fatMes(x), 0);
     const dif = pct(bruto, brutoAP);
-    const meta = S.metas[m];
+    const comMeta = ms.filter((x) => S.metas[x]);
+    const meta = umMes ? S.metas[m] : comMeta.reduce((s, x) => s + S.metas[x], 0);
+    const brutoMeta = umMes ? bruto : comMeta.reduce((s, x) => s + fatMes(x), 0);
     const atual = iso(hoje()).slice(0, 7);
-    const diasRestam = m === atual ? new Date(ano, mesN, 0).getDate() - hoje().getDate() : 0;
+    const diasRestam = umMes && m === atual ? new Date(ano, mesN, 0).getDate() - hoje().getDate() : 0;
 
     // gráfico: 12 meses do ano escolhido contra o ano anterior
     const F1 = Array.from({ length: 12 }, (_, i) => fatMes(`${ano}-${pad(i + 1)}`));
@@ -886,7 +1003,7 @@
     const futuro = (i) => `${ano}-${pad(i + 1)}` > atual;
     const max = Math.max(1, ...F1, ...F0);
     const temDados = F1.some(Boolean) || F0.some(Boolean);
-    const colunas = F1.map((v, i) => `<div class="colunas__mes ${i === mesN - 1 ? 'is-atual' : ''}">
+    const colunas = F1.map((v, i) => `<div class="colunas__mes ${ms.includes(`${ano}-${pad(i + 1)}`) ? 'is-atual' : ''}">
       <span class="coluna coluna--b" tabindex="0" style="height:${F0[i] / max * 100}%" data-dica="<b>${MESES_LONGOS[i]} de ${ano - 1}</b><br>${R(F0[i])}" aria-label="${MESES_LONGOS[i]} de ${ano - 1}: ${R(F0[i])}"></span>
       ${!futuro(i) || v ? `<span class="coluna coluna--a" tabindex="0" style="height:${v / max * 100}%" data-dica="<b>${MESES_LONGOS[i]} de ${ano}</b><br>${R(v)}" aria-label="${MESES_LONGOS[i]} de ${ano}: ${R(v)}"></span>` : ''}
     </div>`).join('');
@@ -900,27 +1017,28 @@
     despM.forEach((d) => { porCat[d.categoria] = (porCat[d.categoria] || 0) + Number(d.valor); });
     const cats = Object.entries(porCat).sort((a, b) => b[1] - a[1]);
 
-    const diasNoMes = new Date(ano, mesN, 0).getDate();
-    const ocup = lanchasAtivas().map((l) => [l.nome, Math.round(new Set(S.passeios.filter((p) => p.lancha_id === l.id && p.dia.startsWith(m)).map((p) => p.dia)).size / diasNoMes * 100)])
+    const diasNoPeriodo = ms.reduce((s, x) => { const [a, n] = x.split('-').map(Number); return s + new Date(a, n, 0).getDate(); }, 0);
+    const ocup = lanchasAtivas().map((l) => [l.nome, Math.round(new Set(S.passeios.filter((p) => p.lancha_id === l.id && dentro(p.dia)).map((p) => p.dia)).size / diasNoPeriodo * 100)])
       .filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 8);
 
-    const chegaram = S.leads.filter((l) => iso(new Date(l.created_at)).startsWith(m));
+    const chegaram = S.leads.filter((l) => dentro(iso(new Date(l.created_at))));
     const porOrig = {};
     chegaram.forEach((l) => { const o = nomeOrigem(l.origem_manual || l.origem); porOrig[o] = (porOrig[o] || 0) + 1; });
     const origem = Object.entries(porOrig).sort((a, b) => b[1] - a[1]).map(([nome, q]) => [nome, Math.round(q / chegaram.length * 100), q]);
 
     $('#dinheiro-corpo').innerHTML = `
       <div class="numeros">
-        <div class="numero"><span>Entrou (bruto)</span><b>${R(bruto)}</b><small class="${dif == null ? '' : dif >= 0 ? 'sobe' : 'desce'}">${dif == null ? 'passeios fechados no mês' : `${Math.abs(dif)}% ${dif >= 0 ? 'a mais' : 'a menos'} que ${MESES_LONGOS[mesN - 1]} de ${ano - 1}`}</small></div>
+        <div class="numero"><span>Entrou (bruto)</span><b>${R(bruto)}</b><small class="${dif == null ? '' : dif >= 0 ? 'sobe' : 'desce'}">${dif == null ? `passeios fechados ${noP}` : `${Math.abs(dif)}% ${dif >= 0 ? 'a mais' : 'a menos'} que ${umMes ? `${MESES_LONGOS[mesN - 1]} de ${ano - 1}` : nomePeriodo(`${ano - 1}${m.slice(4)}`).replace(/^\d+$/, (x) => 'em ' + x)}`}</small></div>
         <div class="numero"><span>Sobrou (líquido)</span><b>${R(liquido)}</b><small>depois dos custos dos passeios e das despesas</small></div>
-        <div class="numero"><span>Passeios vendidos</span><b>${vendas.length}</b><small>${orcados.length} ${orcados.length === 1 ? 'orçamento enviado' : 'orçamentos enviados'} no mês</small></div>
+        <div class="numero"><span>Passeios vendidos</span><b>${vendas.length}</b><small>${orcados.length} ${orcados.length === 1 ? 'orçamento enviado' : 'orçamentos enviados'} ${noP}</small></div>
       </div>
-      <div class="cartao bloco">${meta ? `<b style="color:var(--tinta)">Meta de ${MESES_LONGOS[mesN - 1]}: ${R(meta)}</b>
-        <div class="meta" role="img" aria-label="${Math.round(bruto / meta * 100)}% da meta"><i style="width:${Math.min(bruto / meta * 100, 100)}%"></i></div>
-        <span style="color:var(--suave)">${Math.round(bruto / meta * 100)}% da meta.${bruto < meta ? ` Faltam ${R(meta - bruto)}${diasRestam ? ` em ${diasRestam} ${diasRestam === 1 ? 'dia' : 'dias'}` : ''}.` : ' Meta batida.'}</span>
-        <button class="botao botao--leve botao--pequeno" type="button" data-meta style="margin-left:8px">Mudar a meta</button>`
-        : `<b style="color:var(--tinta)">Sem meta para ${MESES_LONGOS[mesN - 1]}</b><p style="margin:4px 0 12px;color:var(--suave)">Com uma meta, o painel mostra quanto falta e em quantos dias.</p>
-        <button class="botao botao--leve botao--pequeno" type="button" data-meta>Definir a meta do mês</button>`}</div>
+      <div class="cartao bloco">${meta ? `<b style="color:var(--tinta)">${umMes ? `Meta de ${MESES_LONGOS[mesN - 1]}` : `Metas ${noP}, somadas`}: ${R(meta)}</b>
+        <div class="meta" role="img" aria-label="${Math.round(brutoMeta / meta * 100)}% da meta"><i style="width:${Math.min(brutoMeta / meta * 100, 100)}%"></i></div>
+        <span style="color:var(--suave)">${Math.round(brutoMeta / meta * 100)}% da meta${!umMes && comMeta.length < ms.length ? ` (${comMeta.length} de ${ms.length} meses com meta)` : ''}.${brutoMeta < meta ? ` Faltam ${R(meta - brutoMeta)}${diasRestam ? ` em ${diasRestam} ${diasRestam === 1 ? 'dia' : 'dias'}` : ''}.` : ' Meta batida.'}</span>
+        ${umMes ? '<button class="botao botao--leve botao--pequeno" type="button" data-meta style="margin-left:8px">Mudar a meta</button>' : ''}`
+        : umMes ? `<b style="color:var(--tinta)">Sem meta para ${MESES_LONGOS[mesN - 1]}</b><p style="margin:4px 0 12px;color:var(--suave)">Com uma meta, o painel mostra quanto falta e em quantos dias.</p>
+        <button class="botao botao--leve botao--pequeno" type="button" data-meta>Definir a meta do mês</button>`
+        : `<b style="color:var(--tinta)">Nenhum mês ${noP === 'no ano' ? 'do ano' : 'do semestre'} tem meta</b><p style="margin:4px 0 0;color:var(--suave)">A meta é definida mês a mês. Volte para Mês para definir.</p>`}</div>
 
       <section class="bloco"><h2>Ticket médio</h2>
         <div class="numeros">
@@ -940,17 +1058,18 @@
 
       <div class="grade-2 bloco">
         <section class="grafico" aria-labelledby="g2"><h3 id="g2">Para onde foi o dinheiro</h3>
-          ${cats.length ? `<p class="grafico__frase">O maior gasto do mês foi <b>${esc(cats[0][0].toLowerCase())}</b>: ${R(cats[0][1])} de ${R(desp)} em despesas.</p>${barras(cats.map(([n, v]) => [n, v, R(v)]))}`
-            : '<p class="grafico__frase">Nenhuma despesa anotada neste mês.</p>'}</section>
+          ${cats.length ? `<p class="grafico__frase">O maior gasto ${umMes ? 'do mês' : periodo === 'semestre' ? 'do semestre' : 'do ano'} foi <b>${esc(cats[0][0].toLowerCase())}</b>: ${R(cats[0][1])} de ${R(desp)} em despesas.</p>${barras(cats.map(([n, v]) => [n, v, R(v)]))}`
+            : `<p class="grafico__frase">Nenhuma despesa anotada ${noP}.</p>`}</section>
         <section class="grafico" aria-labelledby="g3"><h3 id="g3">Lanchas mais ocupadas</h3>
-          ${ocup.length ? `<p class="grafico__frase">A <b>${esc(ocup[0][0])}</b> saiu em ${ocup[0][1]}% dos dias do mês.</p>${barras(ocup.map(([n, v]) => [n, v, v + '% dos dias']), 100)}`
-            : '<p class="grafico__frase">Nenhum passeio marcado neste mês.</p>'}</section>
+          ${ocup.length ? `<p class="grafico__frase">A <b>${esc(ocup[0][0])}</b> saiu em ${ocup[0][1]}% dos dias ${umMes ? 'do mês' : periodo === 'semestre' ? 'do semestre' : 'do ano'}.</p>${barras(ocup.map(([n, v]) => [n, v, v + '% dos dias']), 100)}`
+            : `<p class="grafico__frase">Nenhum passeio marcado ${noP}.</p>`}</section>
       </div>
 
       <section class="bloco grafico" aria-labelledby="g4"><h3 id="g4">De onde vieram os clientes</h3>
-        ${origem.length ? `<p class="grafico__frase">${chegaram.length} ${chegaram.length === 1 ? 'pessoa chegou' : 'pessoas chegaram'} no mês. <b>${esc(origem[0][0])}</b> trouxe ${origem[0][1]}%.</p>${barras(origem.map(([n, v, q]) => [n, v, `${v}% (${q})`]), 100)}`
-          : '<p class="grafico__frase">Ninguém chegou neste mês ainda.</p>'}</section>`;
-    $('#dinheiro-corpo [data-meta]').addEventListener('click', () => definirMeta(m));
+        ${origem.length ? `<p class="grafico__frase">${chegaram.length} ${chegaram.length === 1 ? 'pessoa chegou' : 'pessoas chegaram'} ${noP}. <b>${esc(origem[0][0])}</b> trouxe ${origem[0][1]}%.</p>${barras(origem.map(([n, v, q]) => [n, v, `${v}% (${q})`]), 100)}`
+          : `<p class="grafico__frase">Ninguém chegou ${noP} ainda.</p>`}</section>`;
+    const bm = $('#dinheiro-corpo [data-meta]');
+    if (bm) bm.addEventListener('click', () => definirMeta(m));
   }
 
   function barras(itens, teto) {
@@ -968,26 +1087,29 @@
       aoSalvar(g.querySelector('[data-salvar]'), async () => {
         const v = num(g.querySelector('[data-valor]').value);
         if (!v) return erroCampo(g, 'Escreva o valor da meta.');
-        if (!(await grava(sb.from('bb_metas').upsert({ mes: m + '-01', valor: v })))) return;
+        // demo: false tira a marca de exemplo (migração 2026-11-20-07); sem a coluna, grava sem ela
+        let r = await sb.from('bb_metas').upsert({ mes: m + '-01', valor: v, demo: false });
+        if (r.error && /demo/.test(r.error.message || '')) r = await sb.from('bb_metas').upsert({ mes: m + '-01', valor: v });
+        if (r.error) { console.error(r.error); avisa(msgErro(r.error), true); return; }
         fechaGaveta(); await atualiza(); avisa('Meta salva.');
       });
     });
   }
 
   function despesas() {
-    const lista = despesasDoMes(mesSel);
+    const lista = S.despesas.filter((d) => noPeriodo(mesesDoPeriodo())(d.dia));
     const porDia = {};
     lista.forEach((d) => { (porDia[d.dia] = porDia[d.dia] || []).push(d); });
     const hs = iso(hoje()), ontem = iso(somaDias(hoje(), -1));
     const html = Object.keys(porDia).sort().reverse().map((dia) => `
-      <p class="despesa-dia">${dia === hs ? 'Hoje' : dia === ontem ? 'Ontem' : diaLongo(deIso(dia))}</p>
+      <p class="despesa-dia">${dia === hs ? 'Hoje' : dia === ontem ? 'Ontem' : diaLongo(deIso(dia)) + (periodo === 'ano' && dia.slice(0, 4) !== String(hoje().getFullYear()) ? ' de ' + dia.slice(0, 4) : '')}</p>
       <ul class="lista">${porDia[dia].map((d) => `<li class="linha"><span class="linha__icone"><svg><use href="#p-dinheiro"/></svg></span>
-        <span class="linha__corpo"><b>${esc(d.categoria)}</b><span>${esc([(lancha(d.lancha_id) || {}).nome, d.obs].filter(Boolean).join(' · ') || 'sem observação')}</span></span>
+        <span class="linha__corpo"><b>${esc(d.categoria)}${seloExemplo(d)}</b><span>${esc([(lancha(d.lancha_id) || {}).nome, d.obs].filter(Boolean).join(' · ') || 'sem observação')}</span></span>
         <b style="color:var(--tinta);white-space:nowrap">${R(d.valor)}</b>
         <button class="botao-icone" type="button" data-despesa-ver="${d.id}" aria-label="Ver despesa"><svg><use href="#p-seta"/></svg></button></li>`).join('')}</ul>`).join('');
     $('#dinheiro-corpo').innerHTML = `
-      <div class="numeros"><div class="numero"><span>Gasto em ${MESES_LONGOS[Number(mesSel.slice(5)) - 1]}</span><b>${R(lista.reduce((s, d) => s + Number(d.valor), 0))}</b><small>${lista.length} ${lista.length === 1 ? 'anotação' : 'anotações'}</small></div></div>
-      ${html || '<p class="cartao vazio" style="margin-top:16px">Nenhuma despesa anotada neste mês.</p>'}`;
+      <div class="numeros"><div class="numero"><span>Gasto em ${esc(nomePeriodo())}</span><b>${R(lista.reduce((s, d) => s + Number(d.valor), 0))}</b><small>${lista.length} ${lista.length === 1 ? 'anotação' : 'anotações'}</small></div></div>
+      ${html || `<p class="cartao vazio" style="margin-top:16px">Nenhuma despesa anotada ${periodo === 'mes' ? 'neste mês' : periodo === 'semestre' ? 'neste semestre' : 'neste ano'}.</p>`}`;
     $('#dinheiro-corpo').querySelectorAll('[data-despesa-ver]').forEach((b) => b.addEventListener('click', () => verDespesa(b.dataset.despesaVer)));
   }
 
@@ -1030,11 +1152,20 @@
     return b;
   }
 
+  // Categorias: as fixas e as que a Michele já criou em "Outros" (aparecem como opção da próxima vez).
+  function categorias() {
+    const fixas = CATEGORIAS.filter((c) => c !== 'Outros');
+    const criadas = [...new Set(S.despesas.map((d) => d.categoria))].filter((c) => c && !CATEGORIAS.includes(c)).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    return fixas.concat(criadas, 'Outros');
+  }
+
   function anotarDespesa() {
     let cat = null, foto = null;
     abreGaveta('Anotar despesa', `
       <label class="campo"><span>Quanto foi?</span><input class="valor-grande" type="text" inputmode="decimal" placeholder="R$ 0" data-valor autocomplete="off"></label>
-      <div class="campo"><span>Com o quê?</span><div class="chips">${CATEGORIAS.map((c) => `<button class="chip" type="button" aria-pressed="false" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}</div></div>
+      <div class="campo"><span>Com o quê?</span><div class="chips">${categorias().map((c) => `<button class="chip" type="button" aria-pressed="false" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}</div></div>
+      <label class="campo" data-outro hidden><span>Outros: com o quê?</span><input type="text" data-outro-txt maxlength="40" placeholder="Ex.: Copos novos" autocomplete="off">
+        <small>Vira uma opção nova na lista para as próximas despesas.</small></label>
       <label class="campo"><span>Quando?</span><input type="date" value="${iso(hoje())}" data-data></label>
       <label class="campo"><span>Foi de alguma lancha? <small style="font-weight:400;color:var(--suave)">(se quiser)</small></span><select data-lancha>${opcoes(S.lanchas, null, (x) => x.nome, 'Não, foi geral')}</select></label>
       <label class="campo"><span>Observação <small style="font-weight:400;color:var(--suave)">(se quiser)</small></span><input type="text" data-obs placeholder="Ex.: Posto da Barra"></label>
@@ -1043,11 +1174,22 @@
       <p class="erro" data-erro hidden></p>
       <button class="botao botao--principal botao--cheio" type="button" data-salvar>Salvar despesa</button>`, (c) => {
       c.querySelector('[data-valor]').focus();
-      chips(c, '[data-cat]', (b) => { cat = b.dataset.cat; });
+      chips(c, '[data-cat]', (b) => {
+        cat = b.dataset.cat;
+        c.querySelector('[data-outro]').hidden = cat !== 'Outros';
+        if (cat === 'Outros') c.querySelector('[data-outro-txt]').focus();
+      });
       c.querySelector('[data-foto]').addEventListener('change', (e) => { foto = e.target.files[0] || null; c.querySelector('[data-foto-txt]').textContent = foto ? 'Foto do recibo pronta' : 'Tirar foto do recibo'; });
       aoSalvar(c.querySelector('[data-salvar]'), async () => {
         const v = num(c.querySelector('[data-valor]').value);
         if (!v || !cat) return erroCampo(c, 'Escreva o valor e escolha com o quê.');
+        if (cat === 'Outros') {
+          const t = c.querySelector('[data-outro-txt]').value.trim().replace(/\s+/g, ' ');
+          if (!t) return erroCampo(c, 'Escreva com o quê foi a despesa.');
+          // "copos novos" e "Copos novos" viram a mesma categoria
+          const igual = categorias().find((x) => x.toLowerCase() === t.toLowerCase());
+          cat = igual && igual !== 'Outros' ? igual : t.charAt(0).toUpperCase() + t.slice(1);
+        }
         erroCampo(c, '');
         const dia = c.querySelector('[data-data]').value || iso(hoje());
         let recibo = null;
@@ -1122,7 +1264,22 @@
         <label class="campo"><span>Mostrar no site</span><select data-l="ativo"><option value="1"${l.ativo ? ' selected' : ''}>Sim, aparece no site</option><option value="0"${l.ativo ? '' : ' selected'}>Não, esconder por enquanto</option></select></label>
         <p class="ajuda">O site novo lê estes dados quando estiver no servidor. Na prévia de hoje, as páginas continuam como estão.</p>
         <button class="botao botao--principal" type="button" data-salvar-lancha>Salvar</button>
+      </section>
+      <section class="bloco cartao"><h2 style="font-size:1.1rem;margin-bottom:6px">Apagar a lancha</h2>
+        <p style="margin:0 0 12px;color:var(--suave)">Foi vendida ou saiu da frota? Ela some do painel e do site. Se já teve passeios, o painel guarda o histórico e só esconde a lancha do site.</p>
+        <button class="botao botao--leve" type="button" data-apagar-lancha>Apagar a ${esc(l.nome)}</button>
       </section>`;
+    confirmaNoBotao(tela.querySelector('[data-apagar-lancha]'), 'Toque de novo para apagar', async () => {
+      const { error } = await sb.from('bb_lanchas').delete().eq('id', l.id);
+      if (error && error.code === '23503') {
+        // tem passeio no histórico (o banco não deixa apagar): esconde e mantém os números
+        if (!(await grava(sb.from('bb_lanchas').update({ ativo: false }).eq('id', l.id)))) return;
+        await atualiza(); avisa(`A ${l.nome} tem passeios no histórico. Ela ficou escondida do site, com os números guardados.`);
+        return;
+      }
+      if (error) { console.error(error); avisa(msgErro(error), true); return; }
+      location.hash = '#lanchas'; await atualiza(); avisa(`${l.nome} apagada.`);
+    });
     aoSalvar(tela.querySelector('[data-salvar-lancha]'), async () => {
       const v = (k) => tela.querySelector(`[data-l="${k}"]`).value;
       const pax = parseInt(v('passageiros'), 10);
@@ -1192,36 +1349,91 @@
         const lanchasDele = parc ? S.lanchas.filter((l) => l.parceiro_id === x.id).map((l) => l.nome) : [];
         const sub = [foneTela(x.telefone), parc ? { dono: 'Dono de lancha', revendedor: 'Vende passeios', ambos: 'Dono e vende' }[x.tipo] : '', lanchasDele.join(', '), x.ativo ? '' : 'inativo'].filter(Boolean).join(' · ');
         return `<li><button class="linha" type="button" data-pessoa="${tipo}|${x.id}"><span class="avatar">${esc((x.nome || '?')[0].toUpperCase())}</span>
-          <span class="linha__corpo"><b>${esc(x.nome)}</b><span>${esc(sub || 'sem telefone')}</span></span><svg><use href="#p-seta"/></svg></button></li>`;
+          <span class="linha__corpo"><b>${esc(x.nome)}${seloExemplo(x)}</b><span>${esc(sub || 'sem telefone')}</span></span><svg><use href="#p-seta"/></svg></button></li>`;
       }).join('') || vazio(parc ? 'Nenhum parceiro cadastrado ainda.' : 'Nenhum marinheiro cadastrado ainda.')}</ul>`;
   }
 
+  // Parceiro: o que ele faz e com quais lanchas.
+  //  - dono (ou "os dois"): a lancha fica no nome dele (bb_lanchas.parceiro_id): cor na agenda, agenda do dono.
+  //    Vale também para quem cuida da lancha de outra pessoa.
+  //  - vende passeios (ou "os dois"): bb_parceiro_lanchas, as lanchas que ele pode oferecer (e, no acesso
+  //    de parceiro, as que ele vai enxergar).
   function editaPessoa(tipo, id) {
     const parc = tipo === 'parceiros';
     const tabela = parc ? 'bb_parceiros' : 'bb_marinheiros';
     const x = (parc ? S.parceiros : S.marinheiros).find((y) => y.id === id) || { ativo: true, tipo: 'dono' };
     let papel = x.tipo || 'dono';
+    const dele = new Set(id ? S.lanchas.filter((l) => l.parceiro_id === id).map((l) => l.id) : []);
+    const vende = new Set(id ? S.vende.filter((v) => v.parceiro_id === id).map((v) => v.lancha_id) : []);
+    const caixas = (nome, sel) => `<div class="caixas">${S.lanchas.map((l) => {
+      const outro = nome === 'dele' && l.parceiro_id && l.parceiro_id !== id ? parceiro(l.parceiro_id) : null;
+      return `<label class="caixa"><input type="checkbox" data-${nome}="${l.id}"${sel.has(l.id) ? ' checked' : ''}>
+        <span>${esc(l.nome)}${outro ? `<small>hoje com ${esc(primeiroNome(outro.nome))}</small>` : ''}${l.ativo ? '' : '<small>escondida do site</small>'}</span></label>`;
+    }).join('')}</div>`;
+    const usos = id && !parc ? S.passeios.filter((p) => p.marinheiro_id === id).length : 0;
+    const avisoApagar = parc
+      ? (dele.size ? `Ao apagar, ${dele.size === 1 ? 'a lancha dele volta' : `as ${dele.size} lanchas dele voltam`} a aparecer como próprias.` : 'Ao apagar, ele sai da lista de parceiros.')
+      : (usos ? `Ele está em ${usos} ${usos === 1 ? 'passeio' : 'passeios'}. Ao apagar, ${usos === 1 ? 'esse passeio fica' : 'esses passeios ficam'} com o marinheiro "a definir".` : 'Ao apagar, ele sai da lista de marinheiros.');
     abreGaveta(id ? x.nome : parc ? 'Novo parceiro' : 'Novo marinheiro', `
+      ${exemplo(x) ? '<p class="selo selo--neutro" style="white-space:normal;margin:0 0 14px">Cadastro de exemplo: será apagado antes do lançamento. Cadastre os seus em vez de mudar este.</p>' : ''}
       <div class="grade-2">
         <label class="campo"><span>Nome</span><input data-nome value="${esc(x.nome || '')}"></label>
         <label class="campo"><span>WhatsApp</span><input data-fone inputmode="tel" value="${esc(foneTela(x.telefone))}" placeholder="(48) 99999-9999"></label>
       </div>
       ${parc ? `<div class="campo"><span>O que ele faz?</span><div class="chips">${[['dono', 'Dono de lancha'], ['revendedor', 'Vende passeios'], ['ambos', 'Os dois']].map(([v, n]) => `<button class="chip" type="button" aria-pressed="${v === papel}" data-papel="${v}">${n}</button>`).join('')}</div></div>
+        <div class="campo" data-bloco-dele><span>Lanchas dele</span><small class="caixas__ajuda">Marque as lanchas que são dele ou que ele cuida. Na agenda, elas ficam com a cor dele.</small>${caixas('dele', dele)}</div>
+        <div class="campo" data-bloco-vende><span>Lanchas que ele vende</span><small class="caixas__ajuda">As lanchas que ele pode oferecer aos clientes dele.</small>${caixas('vende', vende)}</div>
         <label class="campo"><span>Comissão de quem vende (%) <small style="font-weight:400;color:var(--suave)">(se tiver)</small></span><input data-comissao inputmode="decimal" value="${x.comissao_pct != null ? String(x.comissao_pct).replace('.', ',') : ''}"></label>` : ''}
       ${id ? `<label class="campo"><span>Situação</span><select data-ativo><option value="1"${x.ativo ? ' selected' : ''}>Ativo</option><option value="0"${x.ativo ? '' : ' selected'}>Inativo</option></select></label>` : ''}
       <p class="erro" data-erro hidden></p>
-      <button class="botao botao--principal botao--cheio" type="button" data-salvar>Salvar</button>`, (g) => {
-      if (parc) chips(g, '[data-papel]', (b) => { papel = b.dataset.papel; });
-      g.querySelector('[data-nome]').focus();
+      <button class="botao botao--principal botao--cheio" type="button" data-salvar>Salvar</button>
+      ${id ? `<div class="apagar-cadastro"><p>${esc(avisoApagar)}</p>
+        <button class="botao botao--leve botao--cheio" type="button" data-apagar>Apagar ${parc ? 'parceiro' : 'marinheiro'}</button></div>` : ''}`, (g) => {
+      const mostra = () => {
+        if (!parc) return;
+        g.querySelector('[data-bloco-dele]').hidden = papel === 'revendedor';
+        g.querySelector('[data-bloco-vende]').hidden = papel === 'dono';
+      };
+      if (parc) chips(g, '[data-papel]', (b) => { papel = b.dataset.papel; mostra(); });
+      mostra();
+      if (!id) g.querySelector('[data-nome]').focus();
       aoSalvar(g.querySelector('[data-salvar]'), async () => {
         const nome = g.querySelector('[data-nome]').value.trim();
         if (!nome) return erroCampo(g, 'Escreva o nome.');
+        erroCampo(g, '');
         const dados = { nome, telefone: fone(g.querySelector('[data-fone]').value) };
         if (parc) { dados.tipo = papel; const cm = g.querySelector('[data-comissao]').value.trim(); dados.comissao_pct = cm ? num(cm) : null; }
         if (id) dados.ativo = g.querySelector('[data-ativo]').value === '1';
-        const ok = await grava(id ? sb.from(tabela).update(dados).eq('id', id) : sb.from(tabela).insert(dados));
-        if (!ok) return;
+        const salvo = await grava(id ? sb.from(tabela).update(dados).eq('id', id).select('id').single() : sb.from(tabela).insert(dados).select('id').single());
+        if (!salvo) return;
+        if (parc) {
+          const pid = salvo.id;
+          const marcadas = (k) => [...g.querySelectorAll(`[data-${k}]`)].filter((i) => i.checked).map((i) => i.dataset[k]);
+          // dono: vale o que está marcado (a que era dele e foi desmarcada volta a ser própria)
+          const novasDele = papel === 'revendedor' ? [] : marcadas('dele');
+          const tirar = [...dele].filter((l) => !novasDele.includes(l));
+          const por = novasDele.filter((l) => !dele.has(l));
+          if (por.length && !(await grava(sb.from('bb_lanchas').update({ parceiro_id: pid }).in('id', por)))) return;
+          if (tirar.length && !(await grava(sb.from('bb_lanchas').update({ parceiro_id: null }).in('id', tirar).eq('parceiro_id', pid)))) return;
+          // vende: a lista marcada substitui a anterior
+          const novasVende = papel === 'dono' ? [] : marcadas('vende');
+          const sai = [...vende].filter((l) => !novasVende.includes(l)), entra = novasVende.filter((l) => !vende.has(l));
+          if (sai.length && !(await grava(sb.from('bb_parceiro_lanchas').delete().eq('parceiro_id', pid).in('lancha_id', sai)))) return;
+          if (entra.length && !(await grava(sb.from('bb_parceiro_lanchas').insert(entra.map((l) => ({ parceiro_id: pid, lancha_id: l })))))) return;
+        }
         fechaGaveta(); await atualiza(); avisa('Salvo.');
+      });
+      const ap = g.querySelector('[data-apagar]');
+      if (ap) confirmaNoBotao(ap, 'Toque de novo para apagar', async () => {
+        const { error } = await sb.from(tabela).delete().eq('id', id);
+        if (error && error.code === '23503') {
+          // parceiro com comissão anotada: o banco guarda o histórico; ele fica inativo
+          if (!(await grava(sb.from(tabela).update({ ativo: false }).eq('id', id)))) return;
+          fechaGaveta(); await atualiza(); avisa(`${x.nome} tem comissões anotadas. Ficou inativo, com o histórico guardado.`);
+          return;
+        }
+        if (error) { console.error(error); avisa(msgErro(error), true); return; }
+        fechaGaveta(); await atualiza(); avisa(`${x.nome} apagado.`);
       });
     });
   }
@@ -1260,7 +1472,7 @@
   window.addEventListener('hashchange', () => { rota(); window.scrollTo(0, 0); tela.focus({ preventScroll: true }); });
 
   document.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-cliente],[data-despesa],[data-dia],[data-etapa],[data-aba-d],[data-conectar],[data-instrucoes],[data-breve],[data-receber],[data-ag],[data-mes],[data-sair],[data-novo-cliente],[data-pessoa]');
+    const t = e.target.closest('[data-cliente],[data-despesa],[data-dia],[data-etapa],[data-aba-d],[data-conectar],[data-instrucoes],[data-breve],[data-receber],[data-ag],[data-mes],[data-periodo],[data-sair],[data-novo-cliente],[data-pessoa]');
     if (!t) return;
     const d = t.dataset;
     if (d.cliente) abreCliente(d.cliente);
@@ -1272,7 +1484,8 @@
     else if (d.instrucoes) instrucoes(d.instrucoes);
     else if (d.receber) anotarRecebimento(d.receber, 'restante');
     else if (d.ag != null) { agIni = d.ag === '0' ? 0 : Math.max(agIni + Number(d.ag), -56); telaAgenda(); }
-    else if (d.mes) { mesSel = somaMes(mesSel, Number(d.mes)); telaDinheiro(); }
+    else if (d.mes) { mesSel = somaMes(mesSel, Number(d.mes) * PASSO[periodo]); if (mesSel > iso(hoje()).slice(0, 7)) mesSel = iso(hoje()).slice(0, 7); telaDinheiro(); }
+    else if (d.periodo) { periodo = d.periodo; telaDinheiro(); }
     else if ('novoCliente' in d) novoCliente();
     else if (d.pessoa) { const [tipo, id] = d.pessoa.split('|'); editaPessoa(tipo, id || null); }
     else if ('sair' in d) sai();

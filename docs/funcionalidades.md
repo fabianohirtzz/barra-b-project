@@ -143,8 +143,8 @@ português (o site continua multi-idioma, como no Encanto da Ponte).
 Fabiano está avaliando com a Michele (estimativa feita: Sonnet 5.5 em torno de US$ 90 a 130/mês
 para 500 contatos na temporada).
 
-**Sem pet:** a Barra Boat não leva animais (a Ilha do Campeche proíbe animais na praia e eles
-teriam de ficar na lancha). Nenhuma menção a pet no site, no robô ou nos textos.
+**Pets (revisto na reunião de 19/11):** Costa da Lagoa aceita pets de porte pequeno e médio. Ilha do
+Campeche não (a ilha proíbe animais): a página do roteiro avisa. O robô segue a mesma regra.
 
 ## Decisão de 2026-11-17 (protótipo aprovado)
 
