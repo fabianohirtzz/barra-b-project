@@ -160,6 +160,16 @@ memória (Playwright `page.route`). Segurança
 por papel em `bb_equipe` (dona/atendente/parceiro/marinheiro), nunca `authenticated using (true)`
 porque o projeto é compartilhado; anon sem policy (site lê pelo PHP com service_role). Ver `supabase/README.md`.
 
+**Dados fictícios para a apresentação (19/11):** `supabase/demo/carregar.sql` (3 parceiros, 3 marinheiros,
+passeios de jan/2025 a dez/2026, clientes, pagamentos, despesas, metas; ids `de300000-…`, leads com
+`origem_import = 'demo'`). Testado no banco com rollback. **Antes de lançar, rodar `supabase/demo/apagar.sql`.**
+
+**Alerta de clima (item 38, 19/11):** a tela Hoje mostra um aviso para cada dia de tempo ruim com passeio
+(hoje + 3 dias), com o botão de WhatsApp e a mensagem pronta (pt/es). Lê `bb_clima` (migração
+`2026-11-19-06-clima.sql`, um registro por dia). Limites em `CLIMA` no `painel/app.js` (vento 30 km/h, rajada 45,
+chuva 5 mm). **Nenhuma fonte de previsão integrada ainda:** falta o cron PHP que preenche `bb_clima` (fonte a
+escolher). Para a apresentação: `supabase/demo/clima.sql` (rodar no dia, pode repetir).
+
 **Site pelo PHP (19/11):** em novo.barraboatfloripa.com.br as páginas passam pelo `site.php` (o `.htaccess`
 manda as pastas para lá). O molde de cada página é o HTML estático do gerador; `lib/site.php` troca só o que
 vem do banco: cards da home e de `/lanchas/`, opções do formulário, a página `/lanchas/<slug>/` inteira e os

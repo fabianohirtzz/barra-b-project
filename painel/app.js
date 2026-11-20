@@ -68,7 +68,23 @@
   const CORES = ['#1A6FA8', '#C97A2A', '#5B8C3A', '#8A5DB0', '#B04A5A', '#3A8C8C'];
 
   /* ================= estado (o que veio do banco) ================= */
-  const S = { user: null, papel: null, nome: '', lanchas: [], parceiros: [], marinheiros: [], roteiros: [], leads: [], receb: [], passeios: [], bloqueios: [], dono: [], despesas: [], metas: {} };
+  const S = { user: null, papel: null, nome: '', lanchas: [], parceiros: [], marinheiros: [], roteiros: [], leads: [], receb: [], passeios: [], bloqueios: [], dono: [], despesas: [], metas: {}, clima: [] };
+
+  /* ================= alerta de clima (item 38) =================
+     A previsão chega pronta em bb_clima (um registro por dia, gravado pelo servidor).
+     Passou de um destes limites, o dia vira alerta na tela Hoje. */
+  const CLIMA = { vento: 30, rajada: 45, chuva: 5, chuvaProb: 60 };
+  const RUMOS = ['norte', 'nordeste', 'leste', 'sudeste', 'sul', 'sudoeste', 'oeste', 'noroeste'];
+  const rumo = (g) => (g == null ? '' : RUMOS[Math.round(Number(g) / 45) % 8]);
+  function climaRuim(c) {
+    const vento = Number(c.vento_kmh) >= CLIMA.vento || Number(c.rajada_kmh) >= CLIMA.rajada;
+    const chuva = Number(c.chuva_mm) >= CLIMA.chuva && (c.chuva_prob == null || Number(c.chuva_prob) >= CLIMA.chuvaProb);
+    if (!vento && !chuva) return null;
+    const partes = [];
+    if (vento) partes.push(`vento ${rumo(c.direcao_graus)} forte (${Math.round(c.vento_kmh)} km/h${c.rajada_kmh ? `, rajadas de ${Math.round(c.rajada_kmh)}` : ''})`.replace('  ', ' '));
+    if (chuva) partes.push(`chuva (${String(Number(c.chuva_mm)).replace('.', ',')} mm)`);
+    return { vento, chuva, texto: partes.join(' e ') };
+  }
   const dona = () => S.papel === 'dona';
   const porId = (lista, id) => (id ? lista.find((x) => x.id === id) : null);
   const lancha = (id) => porId(S.lanchas, id);
@@ -112,6 +128,8 @@
       todos(() => sb.from('bb_agenda_dono').select('lancha_id,dia,origem').gte('dia', recente).order('dia')),
     ]);
     Object.assign(S, { lanchas, parceiros, marinheiros, roteiros, leads, receb, passeios, bloqueios, dono });
+    // A previsão é um extra: se a tabela ainda não existir ou a leitura falhar, o painel segue sem o alerta.
+    S.clima = await um(sb.from('bb_clima').select('*').gte('dia', iso(hoje())).lte('dia', iso(somaDias(hoje(), 3))).order('dia')).catch(() => []);
     if (dona()) {
       const [despesas, metas] = await Promise.all([
         todos(() => sb.from('bb_despesas').select('*').gte('dia', anoPassado).order('dia', { ascending: false }).order('id')),
@@ -218,6 +236,34 @@
   const vazio = (txt) => `<li class="cartao vazio">${esc(txt)}</li>`;
 
   /* ================= HOJE ================= */
+  // Um aviso por dia de tempo ruim que tenha passeio marcado (hoje e os próximos 3 dias),
+  // com a mensagem pronta para cada cliente no idioma dele.
+  function alertasClima(h) {
+    return S.clima.map((c) => {
+      const ruim = climaRuim(c);
+      if (!ruim) return '';
+      const ps = S.passeios.filter((p) => p.dia === c.dia);
+      if (!ps.length) return '';
+      const dif = Math.round((deIso(c.dia) - h) / 864e5);
+      const rotulo = dif === 0 ? 'Hoje' : dif === 1 ? 'Amanhã' : DIAS_LONGOS[deIso(c.dia).getDay()];
+      const itens = ps.map((p) => {
+        const l = lancha(p.lancha_id) || { nome: 'Lancha' }, cl = lead(p.lead_id);
+        const n = primeiroNome(cl && cl.nome), digitos = String((cl && cl.wa_id) || '').replace(/\D/g, '');
+        const motivo = ruim.vento && ruim.chuva ? 'vento forte e chuva' : ruim.vento ? 'vento forte' : 'chuva';
+        const txt = cl && cl.idioma === 'es'
+          ? `¡Hola${n ? ', ' + n : ''}! Te escribimos de Barra Boat Floripa. El pronóstico para el ${ddIso(c.dia)} indica ${ruim.vento && ruim.chuva ? 'viento fuerte y lluvia' : ruim.vento ? 'viento fuerte' : 'lluvia'} en la Barra da Lagoa. Lo estamos siguiendo de cerca: si se confirma, cambiamos la fecha sin costo. ¿Qué otro día les vendría bien?`
+          : `Olá${n ? ', ' + n : ''}! Aqui é da Barra Boat Floripa. A previsão para ${ddIso(c.dia)} indica ${motivo} na Barra da Lagoa. Estamos acompanhando: se o tempo se confirmar, remarcamos o passeio sem custo. Qual outra data fica boa para vocês?`;
+        return `<li><span><b>${esc(l.nome)}</b>${p.hora_saida ? ', ' + hora(p.hora_saida) : ''}${cl ? ` · ${esc(cl.nome || 'Sem nome')}` : ''}</span>
+          ${digitos ? `<a class="botao botao--leve botao--pequeno" href="https://wa.me/${digitos}?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Avisar pelo WhatsApp</a>` : ''}</li>`;
+      }).join('');
+      return `<div class="alerta bloco" role="note"><svg><use href="#p-vento"/></svg><div>
+        <b>${rotulo}, ${ddIso(c.dia)}: ${esc(ruim.texto)}.</b>
+        <p>${ps.length === 1 ? 'Tem 1 passeio marcado' : `Tem ${ps.length} passeios marcados`} nesse dia. Vale avisar ${ps.length === 1 ? 'o cliente' : 'os clientes'} e oferecer outra data.${c.fonte === 'demo' ? ' <i>(previsão de exemplo)</i>' : ''}</p>
+        <ul class="alerta__lista">${itens}</ul>
+      </div></div>`;
+    }).join('');
+  }
+
   function telaHoje() {
     const h = hoje(), hs = iso(h), em7 = iso(somaDias(h, 7));
     const ps = S.passeios.filter((p) => p.dia === hs).sort((a, b) => (a.hora_saida || '99').localeCompare(b.hora_saida || '99'));
@@ -262,6 +308,8 @@
     tela.innerHTML = `
       <header class="cab"><div><h1>${esc(saudacao)}</h1><p>${DIAS_LONGOS[h.getDay()]}, ${diaLongo(h)}</p></div>
         <div class="acoes">${dona() ? '<button class="botao botao--principal" type="button" data-despesa><svg><use href="#p-mais-um"/></svg>Anotar despesa</button>' : ''}</div></header>
+
+      ${alertasClima(h)}
 
       <section class="bloco"><h2>Passeios de hoje <small>${ps.length} ${ps.length === 1 ? 'passeio' : 'passeios'}</small></h2><ul class="lista">${cartoes}</ul></section>
 

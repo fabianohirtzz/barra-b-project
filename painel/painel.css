@@ -79,6 +79,10 @@ h1,h2,h3{color:var(--tinta);margin:0;line-height:1.15}
 .alerta svg{font-size:1.6rem;margin-top:2px}
 .alerta b{color:#5E3900}
 .alerta p{margin:2px 0 10px}
+.alerta__lista{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.alerta__lista li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:8px 0;border-top:1px solid var(--alerta-borda)}
+.alerta__lista b{color:#5E3900}
+.alerta .botao svg{font-size:1.2rem;margin-top:0}
 
 /* passeio do dia */
 .passeio{display:grid;gap:12px}
