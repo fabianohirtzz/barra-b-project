@@ -319,3 +319,36 @@ details.tabela td:first-child,details.tabela th:first-child{text-align:left}
 .linha .botao-icone{width:40px;height:40px}
 
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+
+/* ---------- clientes em tabela (uma linha por pessoa) ---------- */
+.tabela-cli{background:#fff;border-radius:var(--r);box-shadow:var(--sombra);overflow-x:auto}
+.tabela-cli table{width:100%;border-collapse:collapse;font-size:.95rem}
+.tabela-cli th{position:sticky;top:0;background:#fff;text-align:left;font-size:.82rem;font-weight:600;color:var(--suave);padding:12px 14px;border-bottom:1.5px solid var(--linha);white-space:nowrap}
+.tabela-cli th button{border:0;background:none;padding:0;font-weight:600;color:var(--canal);text-decoration:underline;text-decoration-color:rgba(24,96,140,.3);text-underline-offset:3px}
+.tabela-cli th[aria-sort="ascending"] button,.tabela-cli th[aria-sort="descending"] button{color:var(--tinta);text-decoration:none}
+.tabela-cli th[aria-sort="ascending"] button::after{content:" \2191"}
+.tabela-cli th[aria-sort="descending"] button::after{content:" \2193"}
+.tabela-cli td{padding:12px 14px;border-bottom:1px solid var(--linha);vertical-align:top}
+.tabela-cli tbody tr{cursor:pointer}
+.tabela-cli tbody tr:hover{background:#F6F9FC}
+.tabela-cli tbody tr:last-child td{border-bottom:0}
+.tabela-cli .num{text-align:right;font-variant-numeric:tabular-nums}
+.tabela-cli td small{display:block;color:var(--suave);font-size:.82rem}
+.tabela-cli td b{color:var(--tinta);font-weight:600}
+.tabela-cli__nome{border:0;background:none;padding:0;text-align:left;font-weight:600;color:var(--tinta)}
+.tabela-cli__nada{color:#9AABBB}
+.tabela-cli td[data-r="WhatsApp"]{white-space:nowrap}
+.tabela-cli td[data-r="E-mail"]{max-width:260px;overflow-wrap:break-word}
+@media (max-width:759px){
+  .tabela-cli{background:none;box-shadow:none;overflow:visible}
+  .tabela-cli table,.tabela-cli tbody{display:block}
+  .tabela-cli thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .tabela-cli tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;padding:14px 16px;margin-bottom:10px;background:#fff;border-radius:var(--r);box-shadow:var(--sombra)}
+  .tabela-cli td{display:block;padding:0;border:0;text-align:left !important;max-width:none}
+  .tabela-cli td::before{content:attr(data-r);display:block;font-size:.78rem;color:var(--suave)}
+  .tabela-cli td[data-r="Cliente"]{grid-column:1/-1;font-size:1.05rem}
+  .tabela-cli td[data-r="Cliente"]::before,.tabela-cli td[data-r="Veio de"]{display:none}
+  .tabela-cli td[data-r="E-mail"]{grid-column:1/-1}
+}
+.historico-atalho{margin-top:12px;box-shadow:none;background:rgba(24,96,140,.06);padding:12px 14px}
+.historico-atalho .linha__icone{width:40px;height:40px;font-size:1.2rem}

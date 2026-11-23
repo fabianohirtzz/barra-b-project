@@ -695,13 +695,40 @@
   let etapaAtual = 'novos', busca = '';
   const textoBusca = (l) => [l.nome, l.wa_id, foneTela(l.wa_id), l.email, l.mensagem].join(' ').toLowerCase();
 
+  /* Uma pessoa pode ter vários pedidos ao longo dos anos (um por reserva). Junta pelo
+     WhatsApp; sem WhatsApp, pelo e-mail; sem nenhum dos dois, o pedido fica sozinho. */
+  let vistaClientes = 'funil', filtroTab = 'todos', ordemTab = 'ultimo';
+  const chavePessoa = (c) => { const d = digitos(c.wa_id); return d ? 'w' + d : c.email ? 'e' + c.email.trim().toLowerCase() : 'i' + c.id; };
+  const diaDoPedido = (c) => { const p = passeioDoLead(c.id); return p ? p.dia : c.data_desejada; };
+  function pessoas() {
+    const grupos = new Map();
+    S.leads.forEach((c) => { const k = chavePessoa(c); if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(c); });
+    const hj = iso(hoje());
+    return [...grupos.entries()].map(([k, ls]) => {
+      ls.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+      const res = ls.filter((c) => c.etapa === 'fechados');
+      const dias = res.map(diaDoPedido).filter(Boolean).sort();
+      const prim = ls[ls.length - 1];
+      const achar = (f) => (ls.find((c) => c[f]) || {})[f] || null;
+      return {
+        k, pedidos: ls, nome: achar('nome'), wa: achar('wa_id'), email: achar('email'),
+        reservas: res.length, ultimo: dias.filter((d) => d <= hj).pop() || null, proximo: dias.find((d) => d > hj) || null,
+        total: res.reduce((s, c) => s + (Number(c.valor_fechado) || 0), 0),
+        origem: prim.origem_manual || prim.origem, primeiro: prim.created_at, contato: ls[0].created_at, exemplo: ls.some(exemplo),
+      };
+    });
+  }
+  const pessoaDe = (k) => pessoas().find((x) => x.k === k);
+
   function telaClientes() {
     const termo = busca.trim().toLowerCase();
     const conta = (id) => S.leads.filter((c) => c.etapa === id).length;
     const abas = ETAPAS.map((e) => `<button class="aba" type="button" role="tab" aria-selected="${!termo && e.id === etapaAtual}" data-etapa="${e.id}">${e.nome}<b>${conta(e.id)}</b></button>`).join('');
     const et = ETAPAS.find((e) => e.id === etapaAtual);
+    const vistas = `<div class="chips chips--periodo" role="group" aria-label="Ver os clientes">${[['funil', 'Por etapa'], ['tabela', 'Todos em tabela']].map(([v, n]) => `<button class="chip" type="button" aria-pressed="${v === vistaClientes}" data-vista-cli="${v}">${n}</button>`).join('')}</div>`;
+    if (vistaClientes === 'tabela') { telaTabelaClientes(vistas); return; }
     tela.innerHTML = `
-      <header class="cab"><div><h1>Clientes</h1><p>Cada pessoa que chamou no WhatsApp, do primeiro oi até o passeio.</p></div>
+      <header class="cab"><div><h1>Clientes</h1><p>Cada pessoa que chamou no WhatsApp, do primeiro oi até o passeio.</p>${vistas}</div>
         <button class="botao botao--principal" type="button" data-novo-cliente><svg><use href="#p-mais-um"/></svg>Cadastrar cliente</button></header>
       <label class="busca"><span class="sr">Procurar cliente</span><input type="search" placeholder="Procurar por nome ou telefone" value="${esc(busca)}" data-busca autocomplete="off"></label>
       <div class="abas" role="tablist" aria-label="Etapas">${abas}</div>
@@ -729,6 +756,111 @@
       tela.querySelectorAll('[data-etapa]').forEach((b) => b.setAttribute('aria-selected', String(!busca.trim() && b.dataset.etapa === etapaAtual)));
     });
     pinta();
+  }
+
+  function telaTabelaClientes(vistas) {
+    const FILTROS = [['todos', 'Todos'], ['clientes', 'Já reservaram'], ['nunca', 'Nunca reservaram']];
+    tela.innerHTML = `
+      <header class="cab"><div><h1>Clientes</h1><p>Cada pessoa uma vez só, com todos os pedidos e passeios dela.</p>${vistas}</div>
+        <div class="acoes"><button class="botao botao--leve" type="button" data-csv><svg><use href="#p-baixar"/></svg>Baixar planilha</button>
+        <button class="botao botao--principal" type="button" data-novo-cliente><svg><use href="#p-mais-um"/></svg>Cadastrar cliente</button></div></header>
+      <label class="busca"><span class="sr">Procurar cliente</span><input type="search" placeholder="Procurar por nome, telefone ou e-mail" value="${esc(busca)}" data-busca autocomplete="off"></label>
+      <div class="chips chips--periodo" role="group" aria-label="Mostrar" style="margin:0 0 12px">${FILTROS.map(([v, n]) => `<button class="chip" type="button" aria-pressed="${v === filtroTab}" data-filtro-tab="${v}">${n}</button>`).join('')}</div>
+      <p class="ajuda" data-resumo></p>
+      <div class="tabela-cli" data-tabela></div>`;
+    let lista = [];
+    const pinta = () => {
+      const t = busca.trim().toLowerCase();
+      lista = pessoas().filter((x) => (filtroTab === 'clientes' ? x.reservas > 0 : filtroTab === 'nunca' ? x.reservas === 0 : true)
+        && (!t || x.pedidos.some((c) => textoBusca(c).includes(t))));
+      const por = {
+        nome: (a, b) => String(a.nome || '~').localeCompare(String(b.nome || '~'), 'pt-BR'),
+        ultimo: (a, b) => String(b.proximo || b.ultimo || '').localeCompare(String(a.proximo || a.ultimo || '')) || String(b.contato).localeCompare(String(a.contato)),
+        total: (a, b) => b.total - a.total || b.reservas - a.reservas,
+        reservas: (a, b) => b.reservas - a.reservas || b.total - a.total,
+      };
+      lista.sort(por[ordemTab]);
+      const voltaram = lista.filter((x) => x.reservas > 1).length;
+      tela.querySelector('[data-resumo]').textContent = lista.length
+        ? `${lista.length === 1 ? '1 pessoa' : lista.length + ' pessoas'}. ${voltaram ? `${voltaram === 1 ? '1 voltou' : voltaram + ' voltaram'} para mais de um passeio.` : ''} Toque numa pessoa para ver o histórico.`
+        : '';
+      const th = (id, nome, cls) => `<th${cls ? ` class="${cls}"` : ''} aria-sort="${ordemTab === id ? (id === 'nome' ? 'ascending' : 'descending') : 'none'}"><button type="button" data-ordem-tab="${id}">${nome}</button></th>`;
+      tela.querySelector('[data-tabela]').innerHTML = lista.length ? `<table>
+        <thead><tr>${th('nome', 'Cliente')}<th>WhatsApp</th><th>E-mail</th>${th('reservas', 'Reservas', 'num')}${th('ultimo', 'Último passeio')}${th('total', 'Total gasto', 'num')}<th>Veio de</th></tr></thead>
+        <tbody>${lista.slice(0, 500).map((x) => `<tr data-historico="${esc(x.k)}">
+          <td data-r="Cliente"><button class="tabela-cli__nome" type="button">${esc(x.nome || foneTela(x.wa) || 'Sem nome')}</button>${x.exemplo ? seloExemplo({ origem_import: 'demo' }) : ''}<small>${x.pedidos.length === 1 ? '1 pedido' : x.pedidos.length + ' pedidos'}</small></td>
+          <td data-r="WhatsApp">${esc(foneTela(x.wa)) || '<span class="tabela-cli__nada">sem</span>'}</td>
+          <td data-r="E-mail">${x.email ? esc(x.email) : '<span class="tabela-cli__nada">sem</span>'}</td>
+          <td data-r="Reservas" class="num">${x.reservas}</td>
+          <td data-r="Último passeio">${x.proximo ? `<b>Próximo ${ddIso(x.proximo)}</b>${x.ultimo ? `<small>antes ${ddIso(x.ultimo)}</small>` : ''}` : x.ultimo ? ddIso(x.ultimo) + `<small>${x.ultimo.slice(0, 4)}</small>` : '<span class="tabela-cli__nada">nunca</span>'}</td>
+          <td data-r="Total gasto" class="num">${x.total ? R(x.total) : '<span class="tabela-cli__nada">nada</span>'}</td>
+          <td data-r="Veio de">${esc(nomeOrigem(x.origem))}</td></tr>`).join('')}</tbody></table>`
+        : `<ul class="lista">${vazio(t ? 'Ninguém encontrado com esse nome, telefone ou e-mail.' : 'Ninguém neste filtro.')}</ul>`;
+    };
+    const campo = tela.querySelector('[data-busca]');
+    campo.addEventListener('input', () => { busca = campo.value; pinta(); });
+    tela.querySelectorAll('[data-filtro-tab]').forEach((b) => b.addEventListener('click', () => {
+      filtroTab = b.dataset.filtroTab;
+      tela.querySelectorAll('[data-filtro-tab]').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+      pinta();
+    }));
+    tela.querySelector('[data-tabela]').addEventListener('click', (e) => {
+      const o = e.target.closest('[data-ordem-tab]');
+      if (o) { e.stopPropagation(); ordemTab = o.dataset.ordemTab; pinta(); }
+    });
+    tela.querySelector('[data-csv]').addEventListener('click', () => baixaCsv(lista));
+    pinta();
+  }
+
+  // Planilha das pessoas da tabela (o que está filtrado na tela). Ponto e vírgula e BOM: abre certo no Excel em português.
+  function baixaCsv(lista) {
+    const cel = (v) => {
+      let s = String(v == null ? '' : v);
+      if (/^[=+\-@]/.test(s)) s = "'" + s;   // o Excel não executa nada que venha da planilha
+      return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const fonePlanilha = (w) => { const d = digitos(w); return !d ? '' : d.startsWith('55') ? foneTela(w) : d; };
+    const linhas = [['Nome', 'WhatsApp', 'E-mail', 'Pedidos', 'Reservas', 'Último passeio', 'Próximo passeio', 'Total gasto', 'Veio de', 'Primeiro contato']]
+      .concat(lista.filter((x) => !x.exemplo).map((x) => [x.nome || '', fonePlanilha(x.wa), x.email || '', x.pedidos.length, x.reservas,
+        x.ultimo ? ddIso(x.ultimo) + '/' + x.ultimo.slice(0, 4) : '', x.proximo ? ddIso(x.proximo) + '/' + x.proximo.slice(0, 4) : '',
+        x.total ? x.total.toFixed(2).replace('.', ',') : '0', nomeOrigem(x.origem), x.primeiro ? ddIso(iso(new Date(x.primeiro))) + '/' + String(x.primeiro).slice(0, 4) : '']));
+    const blob = new Blob(['﻿' + linhas.map((l) => l.map(cel).join(';')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `clientes-barra-boat-${iso(hoje())}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    avisa(`Planilha com ${linhas.length - 1} ${linhas.length - 1 === 1 ? 'pessoa' : 'pessoas'} baixada.${lista.some((x) => x.exemplo) ? ' Os clientes de exemplo ficaram de fora.' : ''}`);
+  }
+
+  // Histórico de uma pessoa: todos os pedidos, reservas e quanto ela já gastou.
+  function abreHistorico(k) {
+    const x = pessoaDe(k);
+    if (!x) return;
+    const wa = digitos(x.wa);
+    abreGaveta(x.nome || foneTela(x.wa) || 'Cliente', `
+      <div class="secao-g">
+        ${x.exemplo ? '<p class="selo selo--neutro" style="white-space:normal;margin:0 0 10px">Cliente de exemplo: será apagado antes do lançamento.</p>' : ''}
+        <p style="margin:0;color:var(--suave)">${[foneTela(x.wa), x.email, 'veio de ' + nomeOrigem(x.origem), 'primeiro contato ' + quando(x.primeiro)].filter(Boolean).map(esc).join(' · ')}</p>
+      </div>
+      <div class="numeros secao-g">
+        <div class="numero"><span>Reservas</span><b>${x.reservas}</b><small>${x.pedidos.length === 1 ? '1 pedido' : x.pedidos.length + ' pedidos'}</small></div>
+        <div class="numero"><span>Total gasto</span><b>${R(x.total)}</b>${x.reservas > 1 ? `<small>${R(x.total / x.reservas)} por reserva</small>` : ''}</div>
+        <div class="numero"><span>${x.proximo ? 'Próximo passeio' : 'Último passeio'}</span><b>${x.proximo ? ddIso(x.proximo) : x.ultimo ? ddIso(x.ultimo) : 'nunca'}</b>${(x.proximo || x.ultimo) ? `<small>${(x.proximo || x.ultimo).slice(0, 4)}</small>` : ''}</div>
+      </div>
+      ${wa ? `<div class="acoes secao-g"><a class="botao botao--wa" href="https://wa.me/${wa}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Abrir conversa</a></div>` : ''}
+      <div class="secao-g"><h3>Pedidos</h3>
+        <ul class="lista">${x.pedidos.map((c) => {
+          const p = passeioDoLead(c.id), l = lancha((p && p.lancha_id) || c.lancha_id), r = roteiro(c.roteiro_id);
+          const dia = diaDoPedido(c);
+          const valor = Number(c.valor_fechado) ? R(c.valor_fechado) : Number(c.valor_orcado) ? 'orçado ' + R(c.valor_orcado) : '';
+          return `<li><button class="linha" type="button" data-cliente="${c.id}">
+            <span class="linha__icone"><svg><use href="#${c.etapa === 'fechados' ? 'p-lancha' : 'p-clientes'}"/></svg></span>
+            <span class="linha__corpo"><b>${dia ? `${ddIso(dia)}/${dia.slice(0, 4)}` : esc(c.data_texto || 'Data a definir')}${l ? ' · ' + esc(l.nome) : r ? ' · ' + esc(r.nome) : ''}</b>
+              <span>${esc([ETAPAS.find((e) => e.id === c.etapa).nome, c.pessoas ? c.pessoas + ' pessoas' : '', valor, c.etapa === 'perdidos' ? c.motivo_perda : '', 'pedido ' + quando(c.created_at)].filter(Boolean).join(' · '))}</span></span>
+            <svg><use href="#p-seta"/></svg></button></li>`;
+        }).join('')}</ul>
+      </div>`);
   }
 
   function novoCliente() {
@@ -783,6 +915,12 @@
         <div class="etapas" aria-hidden="true">${ETAPAS.slice(0, 4).map((e, i) => `<span class="${i <= n && c.etapa !== 'perdidos' ? 'on' : ''}"></span>`).join('')}<span class="${c.etapa === 'perdidos' ? 'on perdido' : ''}"></span></div>
         ${exemplo(c) ? '<p class="selo selo--neutro" style="white-space:normal;margin:0 0 10px">Cliente de exemplo: será apagado antes do lançamento, com tudo o que for anotado nele.</p>' : ''}
         <p style="margin:0;color:var(--suave)">Etapa: <b style="color:var(--tinta)">${esc(ETAPAS[n].nome)}</b> · veio de ${esc(nomeOrigem(c.origem_manual || c.origem))} · chegou ${esc(quando(c.created_at))}${c.etapa === 'perdidos' && c.motivo_perda ? ` · ${esc(c.motivo_perda)}` : ''}</p>
+        ${(() => {
+          const x = pessoaDe(chavePessoa(c));
+          if (!x || x.pedidos.length < 2) return '';
+          return `<button class="linha historico-atalho" type="button" data-historico="${esc(x.k)}"><span class="linha__icone"><svg><use href="#p-relogio"/></svg></span>
+            <span class="linha__corpo"><b>Já pediu ${x.pedidos.length} vezes${x.reservas ? `, ${x.reservas === 1 ? '1 reserva' : x.reservas + ' reservas'}` : ''}</b><span>${x.total ? 'Gastou ' + R(x.total) + ' no total. ' : ''}Ver o histórico</span></span><svg><use href="#p-seta"/></svg></button>`;
+        })()}
       </div>
       <div class="acoes secao-g">
         ${digitos ? `<a class="botao botao--wa" href="https://wa.me/${digitos}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Abrir conversa</a>` : ''}
@@ -804,6 +942,7 @@
             <label class="campo"><span>Roteiro</span><select data-f="roteiro_id">${opcoes(S.roteiros, c.roteiro_id, (x) => x.nome, 'A combinar')}</select></label>
             <label class="campo"><span>Lancha</span><select data-f="lancha_id"${p ? ' disabled' : ''}>${opcoes(lanchasAtivas(), c.lancha_id, (x) => `${x.nome} (até ${x.passageiros})`, 'Ainda não escolhida')}</select></label>
           </div>
+          <label class="campo"><span>E-mail <small style="font-weight:400;color:var(--suave)">(se tiver)</small></span><input type="email" data-f="email" value="${esc(c.email || '')}" autocomplete="off"></label>
           ${l && c.pessoas > l.passageiros ? `<p class="selo selo--alerta" style="margin:0 0 12px">A ${esc(l.nome)} leva até ${l.passageiros} pessoas.</p>` : ''}
           ${p ? '<p class="ajuda">Para trocar a lancha ou o dia, abra o passeio na Agenda e toque em "Mudar data, hora ou marinheiro".</p>' : ''}
           <div class="acoes"><button class="botao botao--leve" type="button" data-salvar-pedido>Salvar o pedido</button>
@@ -857,7 +996,9 @@
         const v = (k) => g.querySelector(`[data-f="${k}"]`).value;
         const wa = fone(v('wa_id'));
         if (wa && wa.replace(/\D/g, '').length < 12) { avisa('O WhatsApp precisa ter DDD e número.', true); return; }
-        const muda = { nome: v('nome').trim() || null, wa_id: wa, pessoas: Number(v('pessoas')) || null, roteiro_id: v('roteiro_id') || null };
+        const email = v('email').trim().toLowerCase();
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { avisa('Esse e-mail não parece certo. Confira.', true); return; }
+        const muda = { nome: v('nome').trim() || null, wa_id: wa, email: email || null, pessoas: Number(v('pessoas')) || null, roteiro_id: v('roteiro_id') || null };
         if (!p) { muda.data_desejada = v('data_desejada') || null; muda.lancha_id = v('lancha_id') || null; }
         if (!(await grava(sb.from('bb_leads').update(muda).eq('id', c.id)))) return;
         await reabre('Pedido salvo.');
@@ -1498,7 +1639,7 @@
   window.addEventListener('hashchange', () => { rota(); window.scrollTo(0, 0); tela.focus({ preventScroll: true }); });
 
   document.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-cliente],[data-despesa],[data-dia],[data-etapa],[data-aba-d],[data-conectar],[data-ler-agora],[data-instrucoes],[data-breve],[data-receber],[data-ag],[data-mes],[data-periodo],[data-sair],[data-novo-cliente],[data-pessoa]');
+    const t = e.target.closest('[data-cliente],[data-despesa],[data-dia],[data-etapa],[data-aba-d],[data-conectar],[data-ler-agora],[data-vista-cli],[data-historico],[data-instrucoes],[data-breve],[data-receber],[data-ag],[data-mes],[data-periodo],[data-sair],[data-novo-cliente],[data-pessoa]');
     if (!t) return;
     const d = t.dataset;
     if (d.cliente) abreCliente(d.cliente);
@@ -1507,6 +1648,8 @@
     else if (d.etapa) { etapaAtual = d.etapa; busca = ''; telaClientes(); }
     else if (d.abaD) { abaDinheiro = d.abaD; telaDinheiro(); }
     else if (d.conectar) conectarAgenda(d.conectar);
+    else if (d.vistaCli) { vistaClientes = d.vistaCli; telaClientes(); }
+    else if (d.historico) abreHistorico(d.historico);
     else if (d.lerAgora) {
       if (t.disabled) return;
       t.disabled = true; t.textContent = 'Lendo a agenda';
