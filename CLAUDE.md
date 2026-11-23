@@ -194,6 +194,9 @@ que também tira a leitura do `bb_registro` e apaga os dias lidos quando o link 
 nunca sai). Roda por `cron/agendas.php` (só CLI, cron do cPanel a cada 15 min; pasta `cron/` fechada no
 `.htaccess`) e pelo botão "Ler agora" do painel (`api/agenda.php`, confere o token no Supabase e o papel dona/
 atendente). Testes dos leitores: script no scratchpad da sessão (27 casos); refazer se mexer no `lib/agenda.php`.
+**Cron instalado em 23/11** no crontab do usuário `barraboa` (o cPanel mostra em Cron Jobs):
+`*/15 * * * * /usr/local/bin/php -q /home/barraboa/public_html/novo/cron/agendas.php > /dev/null 2>&1`.
+No dia da troca para a raiz, mudar o caminho para `/home/barraboa/public_html/cron/agendas.php`.
 
 **Ajustes da reunião de 19/11 (feitos em 20/11):** mês no cabeçalho da Agenda; "Próximos dias" (3 dias) na
 tela Hoje; passeio muda de dia e de lancha (o pedido do cliente acompanha); botões "Mandar a reserva ao dono" e
