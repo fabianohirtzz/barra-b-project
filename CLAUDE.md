@@ -184,8 +184,16 @@ estática). `api/disponibilidade.php` entrega as datas ocupadas (passeios, agend
 calendário. **Mudou o HTML de lancha ou de card no gerador? Mude também `lib/lanchas.php` e rode
 `php tools/conferir_php.php`** (compara as 19 páginas com a prévia). `tools/publicar.py` envia todo arquivo
 versionado que mudou na cópia de trabalho, inclusive trabalho ainda não commitado de outra sessão.
-Falta no PHP: leitor das agendas dos donos (cron), fotos pelo painel, acessos da equipe, limpar o cache quando
-o painel salva.
+Falta no PHP: fotos pelo painel, acessos da equipe, limpar o cache quando o painel salva.
+
+**Leitor das agendas dos donos (23/11):** `lib/agenda.php` lê o iCal do Google Agenda (dia inteiro, horário, fuso,
+RRULE, EXDATE, RECURRENCE-ID, cancelado) e a planilha publicada em CSV (linha com data = dia ocupado; duas datas =
+período; "livre"/"cancelado" fora; link de edição ou pubhtml é convertido para CSV). Grava só o dia em
+`bb_agenda_dono` pelas funções `bb_agenda_troca`/`bb_agenda_falha` (migração `2026-11-23-08-leitor-agendas.sql`,
+que também tira a leitura do `bb_registro` e apaga os dias lidos quando o link muda; o que a equipe marcou à mão
+nunca sai). Roda por `cron/agendas.php` (só CLI, cron do cPanel a cada 15 min; pasta `cron/` fechada no
+`.htaccess`) e pelo botão "Ler agora" do painel (`api/agenda.php`, confere o token no Supabase e o papel dona/
+atendente). Testes dos leitores: script no scratchpad da sessão (27 casos); refazer se mexer no `lib/agenda.php`.
 
 **Ajustes da reunião de 19/11 (feitos em 20/11):** mês no cabeçalho da Agenda; "Próximos dias" (3 dias) na
 tela Hoje; passeio muda de dia e de lancha (o pedido do cliente acompanha); botões "Mandar a reserva ao dono" e

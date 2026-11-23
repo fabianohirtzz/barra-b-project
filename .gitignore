@@ -6,3 +6,4 @@ Thumbs.db
 .playwright-mcp/
 .claude/settings.local.json
 .publicado.json
+cache/

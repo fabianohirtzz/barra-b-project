@@ -1231,7 +1231,9 @@
     if (!l) { location.hash = '#lanchas'; return; }
     const dono = parceiro(l.parceiro_id);
     const quem = dono ? primeiroNome(dono.nome) : 'dono';
-    const lida = l.agenda_lida_at ? `Lida pela última vez em ${ddIso(l.agenda_lida_at.slice(0, 10))} às ${new Date(l.agenda_lida_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.` : 'O painel começa a ler essa agenda sozinho, a cada 15 minutos, quando o site novo estiver no ar.';
+    const lidaEm = l.agenda_lida_at ? new Date(l.agenda_lida_at) : null;
+    const ocupados = S.dono.filter((a) => a.lancha_id === l.id && a.origem !== 'manual' && a.dia >= iso(hoje())).length;
+    const lida = lidaEm ? `Lida pela última vez em ${ddIso(iso(lidaEm))} às ${lidaEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}: ${ocupados === 1 ? '1 dia ocupado' : ocupados + ' dias ocupados'} daqui para frente. O painel lê de novo sozinho a cada 15 minutos.` : 'Ainda não foi lida. O painel lê sozinho a cada 15 minutos, ou toque em "Ler agora".';
     const estado = !l.parceiro_id ? '<div class="estado"><svg><use href="#p-ok"/></svg>Lancha sua: a agenda é a deste painel.</div>'
       : l.agenda_tipo === 'google' ? `<div class="estado"><svg><use href="#p-ok"/></svg>Conectada ao Google Agenda do ${esc(quem)}.</div><p class="ajuda">${esc(lida)}</p>`
       : l.agenda_tipo === 'planilha' ? `<div class="estado"><svg><use href="#p-ok"/></svg>Conectada à planilha do ${esc(quem)}.</div><p class="ajuda">${esc(lida)}</p>`
@@ -1249,7 +1251,7 @@
         <section class="cartao agenda-dono"><h3><svg><use href="#p-agenda"/></svg>${l.parceiro_id ? 'Agenda do dono' : 'Agenda'}</h3>
           ${estado}
           ${l.agenda_erro ? `<div class="alerta"><div><b>A última leitura não deu certo.</b><p style="margin:2px 0 0">${esc(l.agenda_erro)}</p></div></div>` : ''}
-          ${l.parceiro_id ? `<div class="acoes"><button class="botao ${l.agenda_tipo ? 'botao--leve' : 'botao--principal'} botao--cheio" type="button" data-conectar="${l.id}">${l.agenda_tipo ? 'Trocar a agenda conectada' : 'Conectar agenda do dono'}</button>
+          ${l.parceiro_id ? `<div class="acoes">${['google', 'planilha'].includes(l.agenda_tipo) ? `<button class="botao botao--principal botao--cheio" type="button" data-ler-agora="${l.id}">Ler agora</button>` : ''}<button class="botao ${l.agenda_tipo ? 'botao--leve' : 'botao--principal'} botao--cheio" type="button" data-conectar="${l.id}">${l.agenda_tipo ? 'Trocar a agenda conectada' : 'Conectar agenda do dono'}</button>
             <button class="botao botao--wa botao--cheio" type="button" data-instrucoes="${l.id}"><svg><use href="#p-wa"/></svg>Mandar instruções ao dono</button></div>`
             : '<p style="margin:0;color:var(--suave)">Os passeios que você marca na Agenda já aparecem no site.</p>'}
         </section>
@@ -1313,6 +1315,7 @@
       <ol class="passos">${google
         ? '<li>O dono abre o Google Agenda no computador e vai em Configurações.</li><li>Clica no nome da agenda da lancha, em "Integrar agenda".</li><li>Copia o "Endereço secreto no formato iCal" e te manda pelo WhatsApp.</li>'
         : '<li>O dono abre a planilha e vai em Arquivo, Compartilhar, Publicar na Web.</li><li>Escolhe "Valores separados por vírgula (.csv)" e clica em Publicar.</li><li>Copia o link e te manda pelo WhatsApp.</li>'}</ol>
+      ${google ? '' : '<p class="ajuda">Como o painel lê a planilha: cada linha com uma data (23/11/2026) é um dia ocupado. Duas datas na mesma linha viram um período, de uma até a outra. Linhas com "livre" ou "cancelado" ficam de fora.</p>'}
       <label class="campo"><span>Cole aqui o link que ele mandou</span><input type="url" data-link placeholder="${google ? 'https://calendar.google.com/calendar/ical/...' : 'https://docs.google.com/spreadsheets/...'}"></label>
       <p class="erro" data-erro hidden></p>
       <button class="botao botao--principal botao--cheio" type="button" data-salvar>Conectar</button>
@@ -1322,9 +1325,32 @@
         const ok = google ? /^https:\/\/calendar\.google\.com\/calendar\/ical\/.+\.ics$/.test(v) || /^https:\/\/.+\.ics(\?.*)?$/.test(v) : /^https:\/\/docs\.google\.com\/spreadsheets\//.test(v);
         if (!ok) return erroCampo(c, google ? 'Esse link não parece o certo. Ele começa com https://calendar.google.com/calendar/ical/ e termina com .ics. Peça de novo ao dono.' : 'Esse link não parece o certo. Ele começa com https://docs.google.com/spreadsheets/. Peça de novo ao dono.');
         if (!(await grava(sb.from('bb_lanchas').update({ agenda_tipo: tipo, agenda_url: v, agenda_erro: null, agenda_lida_at: null }).eq('id', l.id)))) return;
-        fechaGaveta(); await atualiza(); avisa('Agenda do dono conectada.');
+        fechaGaveta(); await atualiza(); avisa('Agenda do dono conectada. Lendo os dias ocupados.');
+        await lerAgora(l.id, true);
       });
     });
+  }
+
+  // Lê na hora a agenda do dono (api/agenda.php, só no servidor). O cron faz o mesmo a cada 15 min.
+  async function lerAgora(id, logoAposConectar) {
+    const l = lancha(id);
+    let r;
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const resp = await fetch('../api/agenda.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + ((session && session.access_token) || '') },
+        body: JSON.stringify({ lancha_id: id }),
+      });
+      r = await resp.json();
+    } catch (e) {
+      // prévia sem PHP (GitHub Pages) ou sem internet
+      if (!logoAposConectar) avisa('A leitura na hora só funciona no site novo. Lá o painel lê sozinho a cada 15 minutos.', true);
+      return;
+    }
+    await atualiza();
+    if (r.ok) avisa(`Agenda da ${l ? l.nome : 'lancha'} lida: ${r.total === 1 ? '1 dia ocupado' : r.total + ' dias ocupados'} daqui para frente.`);
+    else avisa(r.erro || 'Não consegui ler a agenda agora.', true);
   }
 
   function instrucoes(id) {
@@ -1472,7 +1498,7 @@
   window.addEventListener('hashchange', () => { rota(); window.scrollTo(0, 0); tela.focus({ preventScroll: true }); });
 
   document.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-cliente],[data-despesa],[data-dia],[data-etapa],[data-aba-d],[data-conectar],[data-instrucoes],[data-breve],[data-receber],[data-ag],[data-mes],[data-periodo],[data-sair],[data-novo-cliente],[data-pessoa]');
+    const t = e.target.closest('[data-cliente],[data-despesa],[data-dia],[data-etapa],[data-aba-d],[data-conectar],[data-ler-agora],[data-instrucoes],[data-breve],[data-receber],[data-ag],[data-mes],[data-periodo],[data-sair],[data-novo-cliente],[data-pessoa]');
     if (!t) return;
     const d = t.dataset;
     if (d.cliente) abreCliente(d.cliente);
@@ -1481,6 +1507,11 @@
     else if (d.etapa) { etapaAtual = d.etapa; busca = ''; telaClientes(); }
     else if (d.abaD) { abaDinheiro = d.abaD; telaDinheiro(); }
     else if (d.conectar) conectarAgenda(d.conectar);
+    else if (d.lerAgora) {
+      if (t.disabled) return;
+      t.disabled = true; t.textContent = 'Lendo a agenda';
+      lerAgora(d.lerAgora).finally(() => { if (document.contains(t)) { t.disabled = false; t.textContent = 'Ler agora'; } });
+    }
     else if (d.instrucoes) instrucoes(d.instrucoes);
     else if (d.receber) anotarRecebimento(d.receber, 'restante');
     else if (d.ag != null) { agIni = d.ag === '0' ? 0 : Math.max(agIni + Number(d.ag), -56); telaAgenda(); }

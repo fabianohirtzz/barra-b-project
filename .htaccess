@@ -6,8 +6,12 @@ ErrorDocument 404 /site.php
 
 RewriteEngine On
 
+# Login do painel chega ao PHP (api/agenda.php): alguns servidores descartam o cabeçalho
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
 # Código e cache do servidor não são servidos pela web
-RewriteRule ^(lib|cache)(/|$) - [F,L]
+RewriteRule ^(lib|cache|cron)(/|$) - [F,L]
 
 # Páginas (pastas com index.html) são montadas pelo site.php com os dados do banco:
 # "/", "/lanchas/", "/lanchas/<slug>/", "/sobre/"... O painel e a api ficam de fora.
