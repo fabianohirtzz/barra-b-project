@@ -210,6 +210,16 @@ e o Windguru. Parceiro vê a agenda das lanchas dele (`bb_agenda_parceiro`: lanc
 de revenda só livre/ocupado), marca e libera dias da própria lancha (`bb_parceiro_marca_dia`, grava `manual`) e,
 se vende, as comissões. Todos têm Conta (trocar senha). Parceiro e marinheiro continuam sem policy nas tabelas.
 
+**Fotos pelo painel (24/11):** Lanchas > lancha > "Ver e mudar as fotos" (`#fotos/<id>`). O navegador reduz para JPEG
+até 2400 px (rotação certa, funciona no iPhone); `api/fotos.php` recorta o quadrado e grava WebP 1400 e 480 (capa
+900) em `fotos/lanchas/<slug>/` (fora do Git; `.htaccess` não executa código ali). Ordem, capa e apagar pelo painel;
+a legenda segue a posição. Toda mudança limpa o cache do site (`acao: cache`, também ao salvar os dados da lancha).
+**Na troca para a raiz, copiar a pasta `fotos/` de `/novo` para a raiz.** Foto com lado menor que 1400 px entra
+como veio, com `melhorar: true` no JSON e o original em `fotos/lanchas/<slug>/orig/<nome>.jpg`.
+**Falta:** script local que baixa os `orig/` pelo FTP, passa o Real-ESRGAN e sobe `<nome>-ia.webp`, e o cron que troca
+a URL e tira o `melhorar`. O modelo ONNX precisa ser baixado de novo (as cópias nos scratchpads foram limpas):
+guardar em `E:\Clientes\Barra Boat Floripa\Site\ferramentas\esrgan\`, fora do Git e fora de pasta temporária.
+
 **Ajustes da reunião de 19/11 (feitos em 20/11):** mês no cabeçalho da Agenda; "Próximos dias" (3 dias) na
 tela Hoje; passeio muda de dia e de lancha (o pedido do cliente acompanha); botões "Mandar a reserva ao dono" e
 "Mandar ao marinheiro" (wa.me com texto pronto, sem custo; o envio automático pela API, R$ 0,31 cada, fica para
