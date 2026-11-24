@@ -1381,14 +1381,15 @@
       : l.agenda_tipo === 'planilha' ? `<div class="estado"><svg><use href="#p-ok"/></svg>Conectada à planilha do ${esc(quem)}.</div><p class="ajuda">${esc(lida)}</p>`
       : l.agenda_tipo === 'manual' ? `<div class="estado"><svg><use href="#p-ok"/></svg>O ${esc(quem)} avisa pelo WhatsApp e você marca na Agenda.</div>`
       : '<div class="estado estado--sem">Ainda não conectada. Enquanto isso, os dias ocupados do dono não aparecem no site.</div>';
-    const fotos = (Array.isArray(l.fotos) ? l.fotos : []).slice(0, 4);
+    const todas = Array.isArray(l.fotos) ? l.fotos : [];
+    const fotos = (l.capa_url ? [{ url_p: l.capa_url, alt: 'Capa' }] : []).concat(todas.slice(0, l.capa_url ? 3 : 4));
     tela.innerHTML = `<a class="voltar" href="#lanchas"><svg><use href="#p-volta"/></svg>Lanchas</a>
       <header class="cab"><div><h1>${esc(l.nome)}</h1><p>${l.passageiros} pessoas${l.pes ? ` · ${String(l.pes).replace('.', ',')} pés` : ''} · ${esc(donoNome(l))}</p></div>
         <a class="botao botao--leve botao--pequeno" href="../lanchas/${esc(l.slug)}/" target="_blank" rel="noopener">Ver no site</a></header>
       <div class="lancha-topo">
         <section class="cartao"><h2 style="font-size:1.1rem;margin-bottom:12px">Fotos</h2>
           <div class="fotos">${fotos.map((f) => `<img src="${esc(foto(f.url_p || f.url))}" alt="${esc(f.alt || '')}" loading="lazy">`).join('') || '<p class="ajuda">Sem fotos ainda.</p>'}</div>
-          <button class="botao botao--leve botao--cheio" type="button" data-breve="O envio de fotos pelo painel chega junto com o site novo no servidor." style="margin-top:14px"><svg><use href="#p-foto"/></svg>Adicionar fotos</button>
+          <a class="botao botao--leve botao--cheio" href="#fotos/${l.id}" style="margin-top:14px"><svg><use href="#p-foto"/></svg>${todas.length ? `Ver e mudar as fotos (${todas.length})` : 'Adicionar fotos'}</a>
         </section>
         <section class="cartao agenda-dono"><h3><svg><use href="#p-agenda"/></svg>${l.parceiro_id ? 'Agenda do dono' : 'Agenda'}</h3>
           ${estado}
@@ -1430,7 +1431,118 @@
       if (!v('nome').trim() || !(pax > 0)) { avisa('Preencha o nome e quantas pessoas a lancha leva.', true); return; }
       const ok = await grava(sb.from('bb_lanchas').update({ nome: v('nome').trim(), passageiros: pax, pes: v('pes').trim() ? num(v('pes')) : null, parceiro_id: v('parceiro_id') || null, ativo: v('ativo') === '1' }).eq('id', l.id));
       if (!ok) return;
+      api('fotos.php', { acao: 'cache' });   // o site mostra o nome e o número de pessoas novos na hora
       await atualiza(); avisa('Lancha salva.');
+    });
+  }
+
+  /* ---------- fotos da lancha ---------- */
+  // Reduz no navegador (foto de celular tem 12 MP) e acerta a rotação; o servidor recorta e gera os WebP.
+  async function preparaFoto(arq) {
+    let img;
+    try { img = await createImageBitmap(arq); } catch (e) {
+      img = await new Promise((ok, falha) => { const i = new Image(); i.onload = () => ok(i); i.onerror = falha; i.src = URL.createObjectURL(arq); });
+    }
+    const w = img.width || img.naturalWidth, h = img.height || img.naturalHeight;
+    const k = Math.min(1, 2400 / Math.max(w, h));
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(w * k); cv.height = Math.round(h * k);
+    cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+    return new Promise((ok) => cv.toBlob(ok, 'image/jpeg', 0.92));
+  }
+
+  // Grava a lista na ordem da tela; a legenda segue a posição ("Phantom 29, foto 3").
+  async function salvaFotos(l, lista) {
+    const fotos = lista.map((f, i) => Object.assign({}, f, { alt: `${l.nome}, foto ${i + 1}` }));
+    return grava(sb.from('bb_lanchas').update({ fotos }).eq('id', l.id));
+  }
+
+  function telaFotos(id) {
+    const l = lancha(id);
+    if (!l) { location.hash = '#lanchas'; return; }
+    const fotos = Array.isArray(l.fotos) ? l.fotos : [];
+    const fila = fotos.filter((f) => f.melhorar).length;
+    tela.innerHTML = `<a class="voltar" href="#lancha/${l.id}"><svg><use href="#p-volta"/></svg>${esc(l.nome)}</a>
+      <header class="cab"><div><h1>Fotos da ${esc(l.nome)}</h1><p>A primeira foto abre a galeria do site. Toque numa foto para mudar a ordem, usar como capa ou apagar.</p></div>
+        <label class="botao botao--principal"><svg><use href="#p-foto"/></svg>Adicionar fotos<input type="file" accept="image/*" multiple data-arquivos class="sr"></label></header>
+      <p class="ajuda" data-progresso hidden></p>
+      <section class="cartao fotos-capa">
+        ${l.capa_url ? `<img src="${esc(foto(l.capa_url))}" alt="">` : '<span class="fotos-capa__sem">Sem capa</span>'}
+        <div><b>Capa</b><p>Aparece na lista de lanchas do site e quando alguém compartilha a página. Para trocar, toque numa foto e em "Usar como capa".</p></div>
+      </section>
+      ${fila ? `<p class="ajuda">${fila === 1 ? '1 foto está pequena e vai' : fila + ' fotos estão pequenas e vão'} para a melhoria com inteligência artificial. Enquanto isso, ${fila === 1 ? 'ela aparece no site como chegou' : 'elas aparecem no site como chegaram'}.</p>` : ''}
+      ${fotos.length ? `<ol class="fotos-grade">${fotos.map((f, i) => `<li><button type="button" data-foto-i="${i}" aria-label="Foto ${i + 1}">
+          <img src="${esc(foto(f.url_p || f.url))}" alt="" loading="lazy"><span class="fotos-grade__n">${i + 1}</span>
+          ${f.melhorar ? '<span class="fotos-grade__selo">vai melhorar</span>' : ''}</button></li>`).join('')}</ol>`
+        : '<p class="cartao vazio">Sem fotos ainda. Toque em "Adicionar fotos" e escolha as fotos no celular ou no computador.</p>'}
+      <p class="ajuda" style="margin-top:14px">Pode mandar a foto como saiu do celular: o painel recorta em quadrado e deixa leve para o site. Prefira fotos com a lancha no centro.</p>`;
+    tela.querySelector('[data-arquivos]').addEventListener('change', (e) => { const arqs = [...e.target.files]; e.target.value = ''; if (arqs.length) enviaFotos(l, arqs); });
+    tela.querySelectorAll('[data-foto-i]').forEach((b) => b.addEventListener('click', () => abreFoto(l, Number(b.dataset.fotoI))));
+  }
+
+  async function enviaFotos(l, arqs) {
+    const prog = tela.querySelector('[data-progresso]');
+    const entrada = tela.querySelector('[data-arquivos]');
+    entrada.disabled = true;
+    let lista = (Array.isArray(l.fotos) ? l.fotos : []).slice();
+    let capa = l.capa_url;
+    let foram = 0, pequenas = 0;
+    const erros = [];
+    for (let i = 0; i < arqs.length; i++) {
+      prog.hidden = false; prog.textContent = `Enviando a foto ${i + 1} de ${arqs.length}. Não feche esta tela.`;
+      let blob;
+      try { blob = await preparaFoto(arqs[i]); } catch (e) { erros.push(`${arqs[i].name}: esse formato não abre aqui. Envie em JPG.`); continue; }
+      const fd = new FormData();
+      fd.append('acao', 'enviar'); fd.append('lancha_id', l.id); fd.append('foto', blob, 'foto.jpg');
+      const r = await api('fotos.php', fd);
+      if (!r.ok) { erros.push(r.erro || 'Não deu certo.'); if (/só funciona/.test(r.erro || '')) break; continue; }
+      lista.push(r.foto); foram++; if (r.foto.melhorar) pequenas++;
+      // grava a cada foto: se a internet cair no meio, as que já subiram ficam
+      if (!(await salvaFotos(l, lista))) break;
+      if (!capa) {
+        const c = await api('fotos.php', { acao: 'capa', lancha_id: l.id, url: r.foto.url });
+        if (c.ok && (await grava(sb.from('bb_lanchas').update({ capa_url: c.capa_url }).eq('id', l.id)))) capa = c.capa_url;
+      }
+    }
+    if (foram) await api('fotos.php', { acao: 'cache' });
+    await atualiza();
+    if (foram) avisa(`${foram === 1 ? '1 foto adicionada' : foram + ' fotos adicionadas'}.${pequenas ? ` ${pequenas === 1 ? '1 estava pequena e vai' : pequenas + ' estavam pequenas e vão'} para a melhoria com IA.` : ''}`);
+    if (erros.length) setTimeout(() => avisa(erros[0] + (erros.length > 1 ? ` (e mais ${erros.length - 1})` : ''), true), foram ? 2900 : 0);
+  }
+
+  function abreFoto(l, i) {
+    const fotos = (Array.isArray(l.fotos) ? l.fotos : []).slice();
+    const f = fotos[i];
+    if (!f) return;
+    const n = fotos.length;
+    abreGaveta(`Foto ${i + 1} de ${n}`, `
+      <img class="foto-grande" src="${esc(foto(f.url))}" alt="">
+      ${f.melhorar ? '<p class="ajuda">Foto pequena: vai para a melhoria com inteligência artificial.</p>' : ''}
+      <div class="acoes" style="margin-top:14px">
+        ${i > 0 ? '<button class="botao botao--leve botao--pequeno" type="button" data-mover="0">Passar para a primeira</button><button class="botao botao--leve botao--pequeno" type="button" data-mover="-1">Uma para trás</button>' : ''}
+        ${i < n - 1 ? '<button class="botao botao--leve botao--pequeno" type="button" data-mover="1">Uma para a frente</button>' : ''}
+      </div>
+      <button class="botao botao--principal botao--cheio" type="button" data-capa style="margin-top:14px">Usar como capa</button>
+      <section class="bloco"><button class="botao botao--leve" type="button" data-apagar-foto>Apagar esta foto</button></section>`, (c) => {
+      const termina = async (msg) => { await api('fotos.php', { acao: 'cache' }); fechaGaveta(); await atualiza(); avisa(msg); };
+      c.querySelectorAll('[data-mover]').forEach((b) => aoSalvar(b, async () => {
+        const para = b.dataset.mover === '0' ? 0 : i + Number(b.dataset.mover);
+        const [x] = fotos.splice(i, 1); fotos.splice(para, 0, x);
+        if (!(await salvaFotos(l, fotos))) return;
+        await termina(`Foto passou para a posição ${para + 1}.`);
+      }));
+      aoSalvar(c.querySelector('[data-capa]'), async () => {
+        const r = await api('fotos.php', { acao: 'capa', lancha_id: l.id, url: f.url, antiga: l.capa_url });
+        if (!r.ok) { avisa(r.erro || 'Não deu certo.', true); return; }
+        if (!(await grava(sb.from('bb_lanchas').update({ capa_url: r.capa_url }).eq('id', l.id)))) return;
+        await termina('Capa trocada.');
+      });
+      confirmaNoBotao(c.querySelector('[data-apagar-foto]'), 'Toque de novo para apagar', async () => {
+        fotos.splice(i, 1);
+        if (!(await salvaFotos(l, fotos))) return;
+        await api('fotos.php', { acao: 'apagar', lancha_id: l.id, url: f.url });
+        await termina('Foto apagada.');
+      });
     });
   }
 
@@ -1620,11 +1732,10 @@
   async function api(arquivo, corpo) {
     try {
       const { data: { session } } = await sb.auth.getSession();
-      const r = await fetch('../api/' + arquivo, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + ((session && session.access_token) || '') },
-        body: JSON.stringify(corpo),
-      });
+      const arquivoJunto = corpo instanceof FormData;   // envio de foto: o navegador monta o multipart
+      const headers = { Authorization: 'Bearer ' + ((session && session.access_token) || '') };
+      if (!arquivoJunto) headers['Content-Type'] = 'application/json';
+      const r = await fetch('../api/' + arquivo, { method: 'POST', headers, body: arquivoJunto ? corpo : JSON.stringify(corpo) });
       return await r.json();
     } catch (e) {
       return { ok: false, erro: 'Isso só funciona no painel do site novo, com internet.' };
@@ -1925,12 +2036,12 @@
       telas[b]();
       return;
     }
-    const nav = ['lanchas', 'lancha', 'parceiros', 'marinheiros', 'acessos', 'conta'].includes(base) ? 'mais' : base;
+    const nav = ['lanchas', 'lancha', 'fotos', 'parceiros', 'marinheiros', 'acessos', 'conta'].includes(base) ? 'mais' : base;
     document.querySelectorAll('[data-nav]').forEach((a) => { if (a.dataset.nav === nav) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     ({
       hoje: telaHoje, agenda: telaAgenda, clientes: telaClientes, dinheiro: telaDinheiro, mais: telaMais, lanchas: telaLanchas,
       lancha: () => telaLancha(arg), parceiros: () => telaPessoas('parceiros'), marinheiros: () => telaPessoas('marinheiros'),
-      acessos: telaAcessos, conta: telaConta,
+      acessos: telaAcessos, conta: telaConta, fotos: () => telaFotos(arg),
     }[base] || telaHoje)();
   }
   window.addEventListener('hashchange', () => { rota(); window.scrollTo(0, 0); tela.focus({ preventScroll: true }); });
