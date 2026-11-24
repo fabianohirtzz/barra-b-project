@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="painel.css?v=9">
+  <link rel="stylesheet" href="painel.css?v=10">
 </head>
 <body>
   <svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -54,6 +54,10 @@
       <a class="nav__item" href="#clientes" data-nav="clientes"><svg><use href="#p-clientes"/></svg><span>Clientes</span></a>
       <a class="nav__item" href="#dinheiro" data-nav="dinheiro"><svg><use href="#p-dinheiro"/></svg><span>Dinheiro</span></a>
       <a class="nav__item" href="#mais" data-nav="mais"><svg><use href="#p-mais"/></svg><span>Mais</span></a>
+      <a class="nav__item" href="#escala" data-nav="escala" hidden><svg><use href="#p-lancha"/></svg><span>Passeios</span></a>
+      <a class="nav__item" href="#minha-agenda" data-nav="minha-agenda" hidden><svg><use href="#p-agenda"/></svg><span>Agenda</span></a>
+      <a class="nav__item" href="#comissoes" data-nav="comissoes" hidden><svg><use href="#p-dinheiro"/></svg><span>Comissões</span></a>
+      <a class="nav__item" href="#conta" data-nav="conta" hidden><svg><use href="#p-clientes"/></svg><span>Conta</span></a>
       <button class="nav__sair" type="button" data-sair>Sair</button>
     </nav>
     <main class="tela" id="tela" tabindex="-1"></main>
@@ -74,6 +78,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script src="config.js?v=1"></script>
-  <script src="app.js?v=6" defer></script>
+  <script src="app.js?v=7" defer></script>
 </body>
 </html>

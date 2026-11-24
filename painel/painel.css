@@ -352,3 +352,16 @@ details.tabela td:first-child,details.tabela th:first-child{text-align:left}
 }
 .historico-atalho{margin-top:12px;box-shadow:none;background:rgba(24,96,140,.06);padding:12px 14px}
 .historico-atalho .linha__icone{width:40px;height:40px;font-size:1.2rem}
+
+/* ---------- acessos, conta e painéis de parceiro e marinheiro ---------- */
+.papeis{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.papeis li{display:grid;gap:2px}
+.papeis b{color:var(--tinta)}
+.papeis span{color:var(--suave);font-size:.95rem}
+.credenciais{display:grid;gap:10px;padding:14px 16px;border-radius:14px;background:rgba(24,96,140,.07)}
+.credenciais div{display:grid;gap:2px}
+.credenciais span{font-size:.82rem;color:var(--suave)}
+.credenciais b{color:var(--tinta);overflow-wrap:anywhere}
+.credenciais__senha{font-size:1.35rem;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.passeio-m{align-items:flex-start}
+.passeio-m__hora{min-width:64px;font-size:1.35rem;font-weight:700;color:var(--abismo);line-height:1.2}

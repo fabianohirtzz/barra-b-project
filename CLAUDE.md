@@ -198,6 +198,18 @@ atendente). Testes dos leitores: script no scratchpad da sessão (27 casos); ref
 `*/15 * * * * /usr/local/bin/php -q /home/barraboa/public_html/novo/cron/agendas.php > /dev/null 2>&1`.
 No dia da troca para a raiz, mudar o caminho para `/home/barraboa/public_html/cron/agendas.php`.
 
+**Clientes em tabela (23/11):** em Clientes, "Todos em tabela" junta os pedidos da mesma pessoa pelo WhatsApp
+(sem WhatsApp, pelo e-mail): reservas, último/próximo passeio, total gasto, origem; toque abre o histórico; "Baixar
+planilha" gera CSV (ponto e vírgula, BOM, sem os de exemplo, protegido contra fórmula). A ficha ganhou e-mail.
+
+**Acessos de parceiro e marinheiro (23/11):** migração `2026-11-23-09-acessos.sql`. Mais > "Quem acessa o painel"
+(só a dona): cria login pelo `api/equipe.php` (service_role; senha provisória mostrada uma vez, com mensagem pronta
+para o WhatsApp), gera senha nova (só em login criado aqui: `app_metadata.bb_criado`) e tira o acesso (apaga a linha
+em `bb_equipe`, o login fica, porque o projeto é compartilhado). Marinheiro vê "Seus passeios" (`bb_meus_passeios`)
+e o Windguru. Parceiro vê a agenda das lanchas dele (`bb_agenda_parceiro`: lancha própria com hora/roteiro/pessoas,
+de revenda só livre/ocupado), marca e libera dias da própria lancha (`bb_parceiro_marca_dia`, grava `manual`) e,
+se vende, as comissões. Todos têm Conta (trocar senha). Parceiro e marinheiro continuam sem policy nas tabelas.
+
 **Ajustes da reunião de 19/11 (feitos em 20/11):** mês no cabeçalho da Agenda; "Próximos dias" (3 dias) na
 tela Hoje; passeio muda de dia e de lancha (o pedido do cliente acompanha); botões "Mandar a reserva ao dono" e
 "Mandar ao marinheiro" (wa.me com texto pronto, sem custo; o envio automático pela API, R$ 0,31 cada, fica para

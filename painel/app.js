@@ -120,6 +120,7 @@
   const um = (q) => q.then(({ data, error }) => { if (error) throw error; return data || []; });
 
   async function carrega() {
+    if (restrito()) return carregaRestrito();
     const anoPassado = `${hoje().getFullYear() - 1}-01-01`;
     const recente = iso(somaDias(hoje(), -60));
     const [lanchas, parceiros, marinheiros, roteiros, leads, receb, passeios, bloqueios, dono] = await Promise.all([
@@ -1605,6 +1606,293 @@
     });
   }
 
+  /* ================= ACESSOS (só a dona) ================= */
+  const WA_BARRA = '5548991153172';
+  const PAPEIS = {
+    dona: ['Dona', 'Vê e mexe em tudo.'],
+    atendente: ['Atendente', 'Vê tudo, menos Dinheiro.'],
+    parceiro: ['Parceiro', 'Vê só a agenda das lanchas dele e as comissões. Nada de clientes nem valores da Barra Boat.'],
+    marinheiro: ['Marinheiro', 'Vê só os passeios em que ele é o marinheiro e a previsão do tempo.'],
+  };
+  const linkPainel = () => location.origin + location.pathname;
+
+  // Chama um PHP do painel (api/). Sem PHP (prévia) devolve um erro em português.
+  async function api(arquivo, corpo) {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const r = await fetch('../api/' + arquivo, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + ((session && session.access_token) || '') },
+        body: JSON.stringify(corpo),
+      });
+      return await r.json();
+    } catch (e) {
+      return { ok: false, erro: 'Isso só funciona no painel do site novo, com internet.' };
+    }
+  }
+
+  let equipe = null;
+  async function telaAcessos() {
+    if (!dona()) { location.hash = '#mais'; return; }
+    tela.innerHTML = `<a class="voltar" href="#mais"><svg><use href="#p-volta"/></svg>Mais</a>
+      <header class="cab"><div><h1>Quem acessa o painel</h1><p>Cada pessoa entra com o próprio e-mail e senha e vê só a parte dela.</p></div>
+        <button class="botao botao--principal" type="button" data-dar-acesso><svg><use href="#p-mais-um"/></svg>Dar acesso a alguém</button></header>
+      <ul class="lista" data-equipe><li class="cartao vazio">Carregando</li></ul>
+      <section class="bloco cartao"><h2 style="font-size:1.1rem;margin-bottom:10px">O que cada um vê</h2>
+        <ul class="papeis">${Object.values(PAPEIS).map(([n, t]) => `<li><b>${n}</b><span>${t}</span></li>`).join('')}</ul></section>`;
+    tela.querySelector('[data-dar-acesso]').addEventListener('click', () => darAcesso());
+    const { data, error } = await sb.rpc('bb_equipe_lista');
+    const ul = tela.querySelector('[data-equipe]');
+    if (!ul) return;
+    if (error) { console.error(error); ul.innerHTML = vazio('Não consegui carregar a lista agora. Tente de novo.'); return; }
+    equipe = data || [];
+    ul.innerHTML = equipe.map((x) => {
+      const de = x.papel === 'parceiro' ? (parceiro(x.parceiro_id) || {}).nome : x.papel === 'marinheiro' ? (marinheiro(x.marinheiro_id) || {}).nome : '';
+      return `<li><button class="linha" type="button" data-acesso="${x.user_id}">
+        <span class="avatar">${esc((x.nome || '?')[0].toUpperCase())}</span>
+        <span class="linha__corpo"><b>${esc(x.nome)}${x.user_id === S.user.id ? ' (você)' : ''}</b><span>${esc([PAPEIS[x.papel][0] + (de && de !== x.nome ? ' · ' + de : ''), x.email, x.ultimo_acesso ? 'entrou ' + quando(x.ultimo_acesso) : 'ainda não entrou'].join(' · '))}</span></span>
+        <svg><use href="#p-seta"/></svg></button></li>`;
+    }).join('') || vazio('Só você tem acesso por enquanto.');
+    ul.querySelectorAll('[data-acesso]').forEach((b) => b.addEventListener('click', () => abreAcesso(equipe.find((x) => x.user_id === b.dataset.acesso))));
+  }
+
+  function darAcesso() {
+    let papel = 'parceiro';
+    const jaTem = (campo, id) => (equipe || []).some((x) => x[campo] === id);
+    const opcoesPessoa = (lista, campo) => lista.filter((x) => x.ativo !== false).map((x) => `<option value="${x.id}"${jaTem(campo, x.id) ? ' disabled' : ''}>${esc(x.nome)}${jaTem(campo, x.id) ? ' (já tem acesso)' : ''}</option>`).join('');
+    abreGaveta('Dar acesso ao painel', `
+      <div class="campo"><span>Quem é a pessoa?</span><div class="chips">${[['parceiro', 'Parceiro'], ['marinheiro', 'Marinheiro'], ['atendente', 'Atendente']].map(([v, n]) => `<button class="chip" type="button" aria-pressed="${v === papel}" data-papel-ac="${v}">${n}</button>`).join('')}</div></div>
+      <p class="ajuda" data-explica>${PAPEIS.parceiro[1]}</p>
+      <label class="campo" data-bloco="parceiro"><span>Parceiro</span><select data-parceiro><option value="">Escolha</option>${opcoesPessoa(S.parceiros, 'parceiro_id')}</select>
+        <small>Não está na lista? Cadastre antes em Mais, Parceiros.</small></label>
+      <label class="campo" data-bloco="marinheiro" hidden><span>Marinheiro</span><select data-marinheiro><option value="">Escolha</option>${opcoesPessoa(S.marinheiros, 'marinheiro_id')}</select>
+        <small>Não está na lista? Cadastre antes em Mais, Marinheiros.</small></label>
+      <label class="campo" data-bloco="atendente" hidden><span>Nome</span><input data-nome autocomplete="off"></label>
+      <label class="campo"><span>E-mail da pessoa</span><input type="email" data-email autocomplete="off" placeholder="nome@gmail.com"><small>É com ele que a pessoa entra. A senha o painel cria e você manda pelo WhatsApp.</small></label>
+      <p class="erro" data-erro hidden></p>
+      <button class="botao botao--principal botao--cheio" type="button" data-salvar>Criar o acesso</button>`, (c) => {
+      chips(c, '[data-papel-ac]', (b) => {
+        papel = b.dataset.papelAc;
+        c.querySelector('[data-explica]').textContent = PAPEIS[papel][1];
+        c.querySelectorAll('[data-bloco]').forEach((x) => { x.hidden = x.dataset.bloco !== papel; });
+      });
+      aoSalvar(c.querySelector('[data-salvar]'), async () => {
+        const email = c.querySelector('[data-email]').value.trim().toLowerCase();
+        const corpo = { acao: 'criar', papel, email };
+        let pessoa = null;
+        if (papel === 'parceiro') { pessoa = parceiro(c.querySelector('[data-parceiro]').value); if (!pessoa) return erroCampo(c, 'Escolha o parceiro.'); corpo.parceiro_id = pessoa.id; corpo.nome = pessoa.nome; }
+        else if (papel === 'marinheiro') { pessoa = marinheiro(c.querySelector('[data-marinheiro]').value); if (!pessoa) return erroCampo(c, 'Escolha o marinheiro.'); corpo.marinheiro_id = pessoa.id; corpo.nome = pessoa.nome; }
+        else { corpo.nome = c.querySelector('[data-nome]').value.trim(); if (!corpo.nome) return erroCampo(c, 'Escreva o nome da pessoa.'); }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return erroCampo(c, 'Esse e-mail não parece certo. Confira.');
+        erroCampo(c, '');
+        const r = await api('equipe.php', corpo);
+        if (!r.ok) return erroCampo(c, r.erro || 'Não deu certo. Tente de novo.');
+        mostraSenha({ nome: corpo.nome, email, senha: r.senha, telefone: pessoa && pessoa.telefone, jaTinha: r.ja_tinha });
+        telaAcessos();
+      });
+    });
+  }
+
+  // Mostra o acesso uma vez só, com a mensagem pronta para o WhatsApp.
+  function mostraSenha({ nome, email, senha, telefone, jaTinha }) {
+    const txt = jaTinha
+      ? `Oi, ${primeiroNome(nome)}! Liberei seu acesso ao painel da Barra Boat: ${linkPainel()} Entre com o e-mail ${email} e a senha que você já usa nesse e-mail.`
+      : `Oi, ${primeiroNome(nome)}! Seu acesso ao painel da Barra Boat: ${linkPainel()} E-mail: ${email} Senha: ${senha} No primeiro acesso, troque a senha em Conta.`;
+    abreGaveta(jaTinha ? 'Acesso liberado' : 'Acesso criado', `
+      ${jaTinha ? '<p style="margin-top:0">Esse e-mail já tinha login em outro sistema nosso. A pessoa entra com a senha que já usa.</p>'
+        : `<p style="margin-top:0">Mande agora: a senha não aparece de novo. Se perder, gere uma senha nova.</p>
+        <div class="credenciais"><div><span>E-mail</span><b>${esc(email)}</b></div><div><span>Senha</span><b class="credenciais__senha">${esc(senha)}</b></div></div>`}
+      <div class="conversa" style="margin-top:14px"><div class="msg msg--nos">${esc(txt)}</div></div>
+      <a class="botao botao--wa botao--cheio" href="${linkWa(telefone || '', txt)}" target="_blank" rel="noopener" style="margin-top:14px"><svg><use href="#p-wa"/></svg>Mandar pelo WhatsApp</a>
+      <button class="botao botao--leve botao--cheio" type="button" data-copiar style="margin-top:10px">Copiar a mensagem</button>
+      ${telefone ? '' : '<p class="ajuda" style="margin-top:12px">Sem telefone no cadastro: o WhatsApp vai pedir para escolher o contato.</p>'}`, (c) => {
+      c.querySelector('[data-copiar]').addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(txt); avisa('Mensagem copiada.'); } catch (e) { avisa('Não consegui copiar. Selecione o texto e copie.', true); }
+      });
+    });
+  }
+
+  function abreAcesso(x) {
+    if (!x) return;
+    const eu = x.user_id === S.user.id;
+    const pessoa = x.papel === 'parceiro' ? parceiro(x.parceiro_id) : x.papel === 'marinheiro' ? marinheiro(x.marinheiro_id) : null;
+    abreGaveta(x.nome, `
+      <p style="margin-top:0;color:var(--suave)">${esc(PAPEIS[x.papel][0])} · ${esc(x.email)} · ${x.ultimo_acesso ? 'entrou ' + esc(quando(x.ultimo_acesso)) : 'ainda não entrou'}</p>
+      <p class="ajuda">${esc(PAPEIS[x.papel][1])}</p>
+      ${eu ? '<a class="botao botao--leve botao--cheio" href="#conta" data-fechar>Trocar minha senha</a>' : `
+        ${x.criado_aqui ? '<button class="botao botao--leve botao--cheio" type="button" data-nova-senha>Gerar uma senha nova</button><p class="ajuda" style="margin-top:8px">Para quando a pessoa esqueceu a senha. A antiga para de funcionar.</p>' : '<p class="ajuda">Este e-mail tem login de outro sistema nosso: a senha a pessoa troca por lá.</p>'}
+        ${x.papel !== 'dona' ? `<section class="bloco"><h3 style="margin-bottom:6px">Tirar o acesso</h3><p style="margin:0 0 12px;color:var(--suave)">A pessoa não entra mais no painel. Os cadastros e passeios dela continuam.</p>
+          <button class="botao botao--leve" type="button" data-tirar>Tirar o acesso de ${esc(primeiroNome(x.nome))}</button></section>` : ''}`}`, (c) => {
+      const ns = c.querySelector('[data-nova-senha]');
+      if (ns) aoSalvar(ns, async () => {
+        const r = await api('equipe.php', { acao: 'nova_senha', user_id: x.user_id });
+        if (!r.ok) { avisa(r.erro || 'Não deu certo. Tente de novo.', true); return; }
+        mostraSenha({ nome: x.nome, email: x.email, senha: r.senha, telefone: pessoa && pessoa.telefone });
+      });
+      const ti = c.querySelector('[data-tirar]');
+      if (ti) confirmaNoBotao(ti, 'Toque de novo para tirar', async () => {
+        if (!(await grava(sb.from('bb_equipe').delete().eq('user_id', x.user_id)))) return;
+        fechaGaveta(); avisa(`${primeiroNome(x.nome)} não acessa mais o painel.`); telaAcessos();
+      });
+    });
+  }
+
+  /* ================= CONTA (todos) ================= */
+  function telaConta() {
+    const restr = restrito();
+    tela.innerHTML = `${restr ? '' : '<a class="voltar" href="#mais"><svg><use href="#p-volta"/></svg>Mais</a>'}
+      <header class="cab"><div><h1>${restr ? 'Conta' : 'Sua conta'}</h1><p>${esc(S.nome || '')}${S.nome ? ' · ' : ''}${esc((S.user && S.user.email) || '')}</p></div></header>
+      <section class="cartao"><h2 style="font-size:1.1rem;margin-bottom:12px">Trocar a senha</h2>
+        <div class="grade-2">
+          <label class="campo"><span>Senha nova</span><input type="password" data-s1 autocomplete="new-password" minlength="8"></label>
+          <label class="campo"><span>Repita a senha nova</span><input type="password" data-s2 autocomplete="new-password" minlength="8"></label>
+        </div>
+        <p class="erro" data-erro hidden></p>
+        <button class="botao botao--principal" type="button" data-trocar>Trocar a senha</button></section>
+      <section class="bloco cartao"><h2 style="font-size:1.1rem;margin-bottom:8px">Usar como aplicativo no celular</h2>
+        <p style="margin:0;color:var(--suave)">No iPhone: abra no Safari, toque em Compartilhar e em "Adicionar à Tela de Início". No Android: abra no Chrome, toque nos três pontinhos e em "Instalar app".</p></section>
+      <button class="botao botao--leve" type="button" data-sair style="margin-top:20px">Sair do painel</button>`;
+    aoSalvar(tela.querySelector('[data-trocar]'), async () => {
+      const s1 = tela.querySelector('[data-s1]').value, s2 = tela.querySelector('[data-s2]').value;
+      if (s1.length < 8) return erroCampo(tela, 'A senha precisa ter pelo menos 8 letras ou números.');
+      if (s1 !== s2) return erroCampo(tela, 'As duas senhas não estão iguais.');
+      erroCampo(tela, '');
+      const { error } = await sb.auth.updateUser({ password: s1 });
+      if (error) { console.error(error); erroCampo(tela, /different|same/i.test(error.message || '') ? 'A senha nova precisa ser diferente da atual.' : msgErro(error)); return; }
+      tela.querySelector('[data-s1]').value = ''; tela.querySelector('[data-s2]').value = '';
+      avisa('Senha trocada. Use a nova no próximo acesso.');
+    });
+  }
+
+  /* ================= MARINHEIRO ================= */
+  const restrito = () => S.papel === 'parceiro' || S.papel === 'marinheiro';
+  const nomeDia = (s) => { const hs = iso(hoje()); return s === hs ? 'Hoje' : s === iso(somaDias(hoje(), 1)) ? 'Amanhã' : `${DIAS_LONGOS[deIso(s).getDay()]}, ${ddIso(s)}`; };
+
+  async function carregaRestrito() {
+    if (S.papel === 'marinheiro') { S.escala = await um(sb.rpc('bb_meus_passeios')); return; }
+    const [agp, comissoes] = await Promise.all([
+      um(sb.rpc('bb_agenda_parceiro', { de: iso(hoje()), ate: iso(somaDias(hoje(), 120)) })),
+      um(sb.rpc('bb_minhas_comissoes')).catch(() => []),
+    ]);
+    S.agp = agp; S.comissoes = comissoes;
+  }
+
+  function telaEscala() {
+    const hs = iso(hoje());
+    const ps = (S.escala || []).filter((p) => p.dia >= hs);
+    const dias = [...new Set(ps.map((p) => p.dia))];
+    tela.innerHTML = `
+      <header class="cab"><div><h1>Seus passeios</h1><p>Olá${S.nome ? ', ' + esc(primeiroNome(S.nome)) : ''}. Os passeios em que você é o marinheiro, dos próximos 60 dias.</p></div>
+        <a class="botao botao--wa" href="${linkWa(WA_BARRA, 'Oi, equipe! Aqui é ' + (primeiroNome(S.nome) || 'o marinheiro') + '.')}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Falar com a equipe</a></header>
+      ${dias.length ? dias.map((d) => `<section class="bloco"><h2>${nomeDia(d)}</h2><ul class="lista">${ps.filter((p) => p.dia === d).map((p) => `<li class="linha passeio-m">
+          <span class="passeio-m__hora">${p.hora_saida ? hora(p.hora_saida) : 'a definir'}</span>
+          <span class="linha__corpo"><b>${esc(p.lancha)}${p.roteiro ? ' · ' + esc(p.roteiro) : ''}</b>
+            <span>${esc([p.pessoas ? p.pessoas + ' pessoas' : '', p.cliente ? 'cliente ' + p.cliente : '', Number(p.passageiros) ? `${p.passageiros} na lista de passageiros` : ''].filter(Boolean).join(' · '))}</span></span></li>`).join('')}</ul></section>`).join('')
+        : '<p class="cartao vazio">Nenhum passeio marcado para você nos próximos 60 dias. Quando a equipe marcar, ele aparece aqui.</p>'}
+      <section class="bloco"><h2>Previsão do Windguru <small>próximos 4 dias, vento em km/h</small></h2>
+        <div class="cartao windguru"><div data-windguru></div>
+          <a class="windguru__link" href="https://www.windguru.cz/${WINDGURU}" target="_blank" rel="noopener">Abrir no Windguru</a></div></section>`;
+    montaWindguru();
+  }
+
+  /* ================= PARCEIRO ================= */
+  let pgIni = 0;
+  function lanchasDoParceiro() {
+    const m = new Map();
+    (S.agp || []).forEach((x) => { if (!m.has(x.lancha_id)) m.set(x.lancha_id, { id: x.lancha_id, nome: x.lancha, passageiros: x.passageiros, propria: x.propria }); });
+    return [...m.values()].sort((a, b) => (b.propria - a.propria) || a.nome.localeCompare(b.nome, 'pt-BR'));
+  }
+  const diaParceiro = (lid, s) => (S.agp || []).filter((x) => x.lancha_id === lid && x.dia === s);
+
+  function telaMinhaAgenda() {
+    const ls = lanchasDoParceiro();
+    const temPropria = ls.some((l) => l.propria), temRevenda = ls.some((l) => !l.propria);
+    const base = somaDias(hoje(), pgIni);
+    const dias = Array.from({ length: 14 }, (_, i) => somaDias(base, i));
+    const hs = iso(hoje());
+    const cab = dias.map((d) => `<th scope="col" class="${iso(d) === hs ? 'is-hoje' : ''} ${d.getDay() % 6 === 0 ? 'is-fds' : ''} ${d.getDate() === 1 ? 'is-mes' : ''}">${DIAS[d.getDay()]}<b>${d.getDate()}</b><small>${MESES[d.getMonth()]}</small></th>`).join('');
+    const linhas = ls.map((l) => `<tr><th scope="row">${esc(l.nome)}<small>${l.passageiros} pessoas · ${l.propria ? 'sua' : 'você vende'}</small></th>${dias.map((d) => {
+      const s = iso(d), es = diaParceiro(l.id, s);
+      const q = `${esc(l.nome)}, ${DIAS[d.getDay()]} ${dd(d)}`;
+      const bt = (cls, txt, rot) => `<td><button class="dia dia--${cls}" type="button" data-pdia="${l.id}|${s}" aria-label="${q}, ${rot}"><span>${txt}</span></button></td>`;
+      if (!es.length) return bt('livre', 'livre', 'livre');
+      const e = es.find((x) => x.motivo === 'passeio') || es.find((x) => x.motivo === 'fechado') || es[0];
+      if (!l.propria) return bt('dono', 'ocupada', 'ocupada');
+      if (e.motivo === 'passeio') return bt('reservada', e.hora_saida ? hora(e.hora_saida) : 'passeio', 'passeio da Barra Boat');
+      if (e.motivo === 'fechado') return bt('fechado', 'fech.', 'agenda da Barra Boat fechada');
+      return bt('dono', e.motivo === 'dono' ? 'sua' : 'agenda', 'ocupada por você');
+    }).join('')}</tr>`).join('');
+    tela.innerHTML = `
+      <header class="cab"><div><h1>Agenda</h1><p>Olá${S.nome ? ', ' + esc(primeiroNome(S.nome)) : ''}. ${temPropria ? 'Toque num dia livre da sua lancha para marcar que ela não está disponível.' : 'Toque num dia livre para mandar um pedido à equipe.'}</p></div></header>
+      <div class="ag-nav">
+        <button class="botao botao--leve botao--pequeno" type="button" data-pg="-14"${pgIni <= 0 ? ' disabled' : ''}><svg><use href="#p-volta"/></svg>Antes</button>
+        ${pgIni !== 0 ? '<button class="botao botao--leve botao--pequeno" type="button" data-pg="0">Voltar para hoje</button>' : ''}
+        <button class="botao botao--leve botao--pequeno" type="button" data-pg="14"${pgIni >= 112 ? ' disabled' : ''}>Depois<svg><use href="#p-seta"/></svg></button>
+      </div>
+      <ul class="agenda-legenda">
+        ${temPropria ? '<li><i class="amostra amostra--reservada"></i>Passeio da Barra Boat</li><li><i class="amostra amostra--dono"></i>Ocupada por você</li><li><i class="amostra amostra--fechado"></i>Barra Boat fechada</li>' : '<li><i class="amostra amostra--dono"></i>Ocupada</li>'}
+        <li><i class="amostra amostra--livre"></i>Livre</li>
+      </ul>
+      ${ls.length ? `<div class="agenda-grade"><table><thead><tr><th scope="col" class="sr">Lancha</th>${cab}</tr></thead><tbody>${linhas}</tbody></table></div>`
+        : '<p class="cartao vazio">Ainda não tem lancha ligada ao seu nome. Fale com a equipe da Barra Boat.</p>'}
+      <p class="ajuda" style="margin-top:14px">${temRevenda ? 'Nas lanchas que você vende aparece só se o dia está livre ou ocupado. ' : ''}Os dias ocupados aparecem ocupados no site da Barra Boat.</p>`;
+    tela.querySelectorAll('[data-pg]').forEach((b) => b.addEventListener('click', () => {
+      pgIni = b.dataset.pg === '0' ? 0 : Math.min(Math.max(pgIni + Number(b.dataset.pg), 0), 112); telaMinhaAgenda();
+    }));
+    tela.querySelectorAll('[data-pdia]').forEach((b) => b.addEventListener('click', () => abreDiaParceiro(...b.dataset.pdia.split('|'))));
+  }
+
+  function abreDiaParceiro(lid, s) {
+    const l = lanchasDoParceiro().find((x) => x.id === lid);
+    if (!l) return;
+    const es = diaParceiro(lid, s);
+    const titulo = `${l.nome}: ${nomeDia(s)}`;
+    const passeio = es.find((x) => x.motivo === 'passeio'), fechado = es.find((x) => x.motivo === 'fechado');
+    const seu = es.find((x) => x.motivo === 'dono'), agenda = es.find((x) => x.motivo === 'agenda');
+    const pedido = `Oi, equipe! Aqui é ${primeiroNome(S.nome) || 'o parceiro'}. Tenho um cliente para a ${l.nome} no dia ${ddIso(s)}. Posso fechar?`;
+    let corpo;
+    if (!l.propria) {
+      corpo = es.length ? '<div class="estado estado--sem">Este dia está ocupado.</div>'
+        : `<div class="estado"><svg><use href="#p-ok"/></svg>Este dia está livre.</div>
+          <a class="botao botao--wa botao--cheio" href="${linkWa(WA_BARRA, pedido)}" target="_blank" rel="noopener" style="margin-top:14px"><svg><use href="#p-wa"/></svg>Mandar o pedido à equipe</a>`;
+    } else if (passeio) {
+      corpo = `<div class="estado"><svg><use href="#p-ok"/></svg>Passeio da Barra Boat${passeio.hora_saida ? ', saída ' + hora(passeio.hora_saida) : ''}.</div>
+        <p style="color:var(--suave)">${esc([passeio.roteiro, passeio.pessoas ? passeio.pessoas + ' pessoas' : ''].filter(Boolean).join(' · ') || 'Detalhes com a equipe.')}</p>
+        <a class="botao botao--wa botao--cheio" href="${linkWa(WA_BARRA, `Oi, equipe! Sobre o passeio da ${l.nome} no dia ${ddIso(s)}:`)}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Falar com a equipe</a>`;
+    } else if (fechado) {
+      corpo = '<div class="estado estado--sem">A Barra Boat fechou a agenda neste dia.</div>';
+    } else if (seu) {
+      corpo = `<div class="estado"><svg><use href="#p-ok"/></svg>Você marcou este dia como ocupado.</div>
+        <button class="botao botao--principal botao--cheio" type="button" data-liberar style="margin-top:14px">Liberar o dia</button>`;
+    } else if (agenda) {
+      corpo = '<div class="estado"><svg><use href="#p-ok"/></svg>Ocupado pela sua agenda do Google.</div><p class="ajuda">Para liberar, apague o evento na sua agenda. O painel lê de novo a cada 15 minutos.</p>';
+    } else {
+      corpo = `<div class="estado"><svg><use href="#p-ok"/></svg>Este dia está livre.</div>
+        <p style="color:var(--suave)">Vai usar a lancha ou ela não pode sair? Marque como ocupado: o site mostra o dia ocupado e a Barra Boat não marca passeio nela.</p>
+        <button class="botao botao--principal botao--cheio" type="button" data-ocupar>Marcar como ocupado</button>`;
+    }
+    abreGaveta(titulo, corpo, (c) => {
+      const marca = async (ocupado) => {
+        if (!(await grava(sb.rpc('bb_parceiro_marca_dia', { p_lancha: lid, p_dia: s, p_ocupado: ocupado })))) return;
+        fechaGaveta(); await atualiza(); avisa(ocupado ? `${l.nome} ocupada em ${ddIso(s)}.` : `${ddIso(s)} liberado na ${l.nome}.`);
+      };
+      const oc = c.querySelector('[data-ocupar]'); if (oc) aoSalvar(oc, () => marca(true));
+      const li = c.querySelector('[data-liberar]'); if (li) aoSalvar(li, () => marca(false));
+    });
+  }
+
+  function telaComissoes() {
+    const cs = S.comissoes || [];
+    const aPagar = cs.filter((c) => c.status !== 'pago').reduce((s, c) => s + Number(c.valor_comissao || 0), 0);
+    const pago = cs.filter((c) => c.status === 'pago').reduce((s, c) => s + Number(c.valor_comissao || 0), 0);
+    tela.innerHTML = `
+      <header class="cab"><div><h1>Comissões</h1><p>Os passeios que você vendeu e o que a Barra Boat te paga por eles.</p></div></header>
+      <div class="numeros"><div class="numero"><span>A receber</span><b>${R(aPagar)}</b></div><div class="numero"><span>Já recebido</span><b>${R(pago)}</b></div></div>
+      <ul class="lista" style="margin-top:16px">${cs.map((c) => `<li class="linha"><span class="linha__icone"><svg><use href="#p-dinheiro"/></svg></span>
+        <span class="linha__corpo"><b>${R(c.valor_comissao)}${c.lancha ? ' · ' + esc(c.lancha) : ''}</b><span>${c.dia ? 'passeio em ' + ddIso(c.dia) + '/' + c.dia.slice(0, 4) : 'data a definir'} · ${c.status === 'pago' ? 'pago' + (c.pago_em ? ' em ' + ddIso(c.pago_em) : '') : 'a receber'}</span></span></li>`).join('')
+        || vazio('Nenhuma venda sua ainda. Quando a equipe registrar uma venda sua, ela aparece aqui.')}</ul>`;
+  }
+
   /* ================= MAIS ================= */
   function telaMais() {
     const itens = [
@@ -1615,7 +1903,8 @@
       ['', 'p-wa', 'Robô do WhatsApp', 'O que ele responde e quando fica quieto'],
       ['', 'p-wa', 'Mensagens para muita gente', 'Avisar a base de clientes de uma vez'],
       ['', 'p-hoje', 'Textos do site', 'Perguntas frequentes, avaliações e vídeos'],
-      ['', 'p-clientes', 'Quem acessa o painel', 'Você, a equipe, parceiros e marinheiros'],
+      ...(dona() ? [['#acessos', 'p-clientes', 'Quem acessa o painel', 'Você, a equipe, parceiros e marinheiros']] : []),
+      ['#conta', 'p-relogio', 'Sua conta', 'Trocar a senha e usar como aplicativo'],
     ];
     tela.innerHTML = `<header class="cab"><div><h1>Mais</h1><p>O que você mexe de vez em quando.</p></div></header>
       <ul class="lista">${itens.map(([h, i, t, s]) => `<li><${h ? `a href="${h}"` : 'button type="button" data-breve="Esta parte chega nas próximas etapas do painel."'} class="linha">
@@ -1629,11 +1918,19 @@
     if (!S.papel) return;
     const h = (location.hash || '#hoje').slice(1);
     const [base, arg] = h.split('/');
-    const nav = ['lanchas', 'lancha', 'parceiros', 'marinheiros'].includes(base) ? 'mais' : base;
+    if (restrito()) {
+      const telas = S.papel === 'marinheiro' ? { escala: telaEscala, conta: telaConta } : { 'minha-agenda': telaMinhaAgenda, comissoes: telaComissoes, conta: telaConta };
+      const b = telas[base] ? base : Object.keys(telas)[0];
+      document.querySelectorAll('[data-nav]').forEach((a) => { if (a.dataset.nav === b) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+      telas[b]();
+      return;
+    }
+    const nav = ['lanchas', 'lancha', 'parceiros', 'marinheiros', 'acessos', 'conta'].includes(base) ? 'mais' : base;
     document.querySelectorAll('[data-nav]').forEach((a) => { if (a.dataset.nav === nav) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     ({
       hoje: telaHoje, agenda: telaAgenda, clientes: telaClientes, dinheiro: telaDinheiro, mais: telaMais, lanchas: telaLanchas,
       lancha: () => telaLancha(arg), parceiros: () => telaPessoas('parceiros'), marinheiros: () => telaPessoas('marinheiros'),
+      acessos: telaAcessos, conta: telaConta,
     }[base] || telaHoje)();
   }
   window.addEventListener('hashchange', () => { rota(); window.scrollTo(0, 0); tela.focus({ preventScroll: true }); });
@@ -1698,11 +1995,12 @@
     S.user = user;
     const { data: papel, error } = await sb.rpc('bb_papel');
     if (error || !papel) { await sb.auth.signOut(); mostraEntrada('Este login não tem acesso ao painel da Barra Boat.'); return; }
-    if (!['dona', 'atendente'].includes(papel)) { await sb.auth.signOut(); mostraEntrada('O acesso de parceiros e marinheiros chega nas próximas semanas.'); return; }
     S.papel = papel;
     const { data: eu } = await sb.from('bb_equipe').select('nome').eq('user_id', user.id).maybeSingle();
     S.nome = eu ? eu.nome : '';
-    document.querySelector('[data-nav="dinheiro"]').hidden = !dona();
+    // cada papel vê só o próprio menu
+    const menu = papel === 'marinheiro' ? ['escala', 'conta'] : papel === 'parceiro' ? ['minha-agenda', 'conta'] : ['hoje', 'agenda', 'clientes', 'mais'].concat(dona() ? ['dinheiro'] : []);
+    document.querySelectorAll('[data-nav]').forEach((a) => { a.hidden = !menu.includes(a.dataset.nav); });
     entrada.hidden = true; app.hidden = false;
     tela.innerHTML = '<p class="carregando">Carregando o painel</p>';
     try { await carrega(); } catch (err) {
@@ -1710,6 +2008,8 @@
       tela.innerHTML = `<p class="cartao vazio">${esc(msgErro(err))}</p><button class="botao botao--leve" type="button" onclick="location.reload()">Tentar de novo</button>`;
       return;
     }
+    // comissões só para quem vende passeio (tem lancha de revenda ou já tem comissão)
+    if (papel === 'parceiro') $('[data-nav="comissoes"]').hidden = !((S.comissoes || []).length || (S.agp || []).some((x) => !x.propria));
     rota();
   }
 
