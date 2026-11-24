@@ -94,3 +94,16 @@ function bb_ocupadas()
         return ($st === 200 && is_array($d)) ? $d : null;
     });
 }
+
+/* Perguntas, avaliações e roteiros que o painel edita. null se o banco não respondeu
+   (o site fica com o texto do molde). */
+function bb_conteudo()
+{
+    return bb_cache('conteudo', 120, function () {
+        list($s1, $faq) = bb_supabase('GET', 'bb_faq?select=pergunta,resposta&ativo=eq.true&order=ordem,pergunta');
+        list($s2, $av) = bb_supabase('GET', 'bb_avaliacoes?select=nome,texto,nota,data_label,idioma&ativo=eq.true&order=ordem,created_at');
+        list($s3, $rt) = bb_supabase('GET', 'bb_roteiros?select=slug,nome,paradas,regras&order=ordem');
+        if ($s1 !== 200 || $s2 !== 200 || $s3 !== 200 || !is_array($faq) || !is_array($av) || !is_array($rt)) return null;
+        return ['faq' => $faq, 'avaliacoes' => $av, 'roteiros' => $rt];
+    });
+}

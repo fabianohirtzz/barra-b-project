@@ -14,7 +14,7 @@ WA = '5548991153172'
 INDEX = open(os.path.join(PROJ, 'index.html'), encoding='utf-8').read()
 L_JSON = {l['slug']: l for l in json.load(open(os.path.join(PROJ, 'docs/conteudo-site-atual/lanchas.json'), encoding='utf-8'))}
 IMGS = json.load(open(os.path.join(PROJ, 'tools/imagens.json'), encoding='utf-8'))
-V_CSS, V_JS = '10', '8'
+V_CSS, V_JS = '11', '8'
 e = html.escape
 
 
@@ -654,7 +654,7 @@ pagina_roteiro(
      'description': 'Passeio de lancha privativa em águas calmas pela Lagoa da Conceição e a Costa da Lagoa, com marinheiro e combustível inclusos.',
      'provider': EMPRESA_REF, 'url': DOM + 'costa-da-lagoa/',
      'itinerary': {'@type': 'ItemList', 'itemListElement': [{'@type': 'ListItem', 'position': i + 1, 'item': {'@type': 'Place', 'name': n}} for i, n in enumerate(
-         ['Castelinho', 'Praia do Saquinho', 'Cachoeira da Costa da Lagoa', 'Pedra do Navio', 'Restaurantes da Costa da Lagoa'])]}},
+         ['Castelinho', 'Praia do Saquinho', 'Cachoeira da Costa', 'Pedra do Navio', 'Restaurantes da Costa'])]}},
     'assets/img/fotos/costa-da-lagoa.webp')
 
 # ---------------------------------------------------------------- /sobre/

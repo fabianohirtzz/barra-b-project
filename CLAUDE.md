@@ -220,6 +220,16 @@ como veio, com `melhorar: true` no JSON e o original em `fotos/lanchas/<slug>/or
 a URL e tira o `melhorar`. O modelo ONNX precisa ser baixado de novo (as cópias nos scratchpads foram limpas):
 guardar em `E:\Clientes\Barra Boat Floripa\Site\ferramentas\esrgan\`, fora do Git e fora de pasta temporária.
 
+**Roteiros, perguntas e avaliações pelo painel (24/11):** Mais > Roteiros (paradas: nome, texto, foto 4:3 em
+`fotos/roteiros/<slug>/`, ordem; regras, uma por linha) e Mais > Perguntas e avaliações. O PHP troca só esses trechos
+(`lib/conteudo.php`, chamado por `bb_render` com `bb_conteudo()`): FAQ e avaliações da home (e o JSON-LD FAQPage),
+paradas, regras (some o quadro sem regras; cria o quadro se a Costa ganhar regras) e itinerário do TouristTrip; a
+amostra de 4 lanchas dos roteiros passou a sair das ativas. Sem linha no banco, vale o molde. Conteúdo inicial:
+`python tools/extrair_conteudo.py` gera `supabase/seed/02-conteudo.sql` a partir do HTML (o conferidor usa o mesmo
+JSON; 21 páginas iguais). Duração, distância e tempo de trajeto **não** são editáveis no painel: aparecem em até 22
+páginas e ainda dependem das respostas da cliente; mudar no gerador. **Conteúdo editável no painel ainda não tem
+tradução** (pensar nisso quando entrar o i18n).
+
 **Ajustes da reunião de 19/11 (feitos em 20/11):** mês no cabeçalho da Agenda; "Próximos dias" (3 dias) na
 tela Hoje; passeio muda de dia e de lancha (o pedido do cliente acompanha); botões "Mandar a reserva ao dono" e
 "Mandar ao marinheiro" (wa.me com texto pronto, sem custo; o envio automático pela API, R$ 0,31 cada, fica para

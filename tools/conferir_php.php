@@ -14,6 +14,13 @@ $lanchas = json_decode($m[1], true);
 foreach ($lanchas as &$l) $l['descricao'] = null;
 unset($l);
 
+// perguntas, avaliações e roteiros da carga 02 (extraídos do HTML por tools/extrair_conteudo.py)
+$sql2 = file_get_contents(BB_RAIZ . '/supabase/seed/02-conteudo.sql');
+preg_match('/\$carga\$(.*?)\$carga\$/s', $sql2, $m2);
+$conteudo = json_decode($m2[1], true);
+foreach ($conteudo['roteiros'] as &$r) $r['nome'] = $r['slug'] === 'ilha-do-campeche' ? 'Ilha do Campeche' : 'Costa da Lagoa';
+unset($r);
+
 function normaliza($h)
 {
     $lds = [];
@@ -26,11 +33,11 @@ function normaliza($h)
     return [$h, $lds];
 }
 
-$paginas = ['', 'lanchas/'];
+$paginas = ['', 'lanchas/', 'ilha-do-campeche/', 'costa-da-lagoa/'];
 foreach ($lanchas as $l) $paginas[] = 'lanchas/' . $l['slug'] . '/';
 $falhas = 0;
 foreach ($paginas as $p) {
-    list($st, $php) = bb_render($p, $lanchas);
+    list($st, $php) = bb_render($p, $lanchas, 'api/disponibilidade.php', $conteudo);
     $est = bb_molde($p . 'index.html');   // já troca CRLF por LF
     list($a, $la) = normaliza($php);
     list($b, $lb) = normaliza($est);

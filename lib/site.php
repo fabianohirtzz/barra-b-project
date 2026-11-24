@@ -7,6 +7,7 @@
    com os dados da carga. */
 
 require_once __DIR__ . '/lanchas.php';
+require_once __DIR__ . '/conteudo.php';
 
 function bb_molde($rel)
 {
@@ -89,8 +90,9 @@ function bb_404()
 
 /* $p: caminho pedido sem a barra inicial ("", "lanchas/", "lanchas/1564/", "sobre/").
    $lanchas: lanchas ativas na ordem do site, ou null se o banco não respondeu.
+   $conteudo: ['faq' => [...], 'avaliacoes' => [...], 'roteiros' => [...]] do painel, ou null.
    Devolve [status, html]. */
-function bb_render($p, $lanchas, $fonte_api = 'api/disponibilidade.php')
+function bb_render($p, $lanchas, $fonte_api = 'api/disponibilidade.php', $conteudo = null)
 {
     $p = ltrim($p, '/');
     if ($p !== '' && substr($p, -1) !== '/') $p .= '/';
@@ -120,7 +122,15 @@ function bb_render($p, $lanchas, $fonte_api = 'api/disponibilidade.php')
 
     $h = bb_molde($p . 'index.html');
     if ($h === null) return bb_404();
+    $h = bb_conteudo_na_pagina($h, $p, $pre, $conteudo);
     if ($lanchas === null) return [200, $h];
+
+    // página de roteiro: a amostra de lanchas sai das ativas
+    if (strpos($h, '<h2 id="escolha-titulo"') !== false) {
+        $h = bb_troca_ul($h, '<ul class="grade-lanchas" data-grade-lanchas>', "
+" . bb_cards(bb_lanchas_amostra($lanchas), $pre) . "
+          ");
+    }
 
     if ($p === '') {
         $h = bb_troca_ul($h, '<ul class="trilho__lista" data-trilho-lista>', "\n" . bb_cards($lanchas, $pre) . "\n        ");
@@ -141,4 +151,33 @@ function bb_render($p, $lanchas, $fonte_api = 'api/disponibilidade.php')
         });
     }
     return [200, bb_textos_frota($h, bb_frota($lanchas))];
+}
+
+/* Perguntas e avaliações (home) e paradas e regras (página do roteiro), quando o banco tem. */
+function bb_conteudo_na_pagina($h, $p, $pre, $c)
+{
+    if (!is_array($c)) return $h;
+    if ($p === '') {
+        if (!empty($c['faq'])) {
+            $h = bb_troca_entre($h, '<div class="faq__lista">' . "
+", "
+      </div>
+    </section>", bb_faq_html($c['faq']));
+            $ld = bb_faq_ld($c['faq']);
+            $h = bb_mexe_ld($h, function ($g) use ($ld) {
+                foreach ($g as &$n) if (isset($n['@type']) && $n['@type'] === 'FAQPage') $n['mainEntity'] = $ld;
+                return $g;
+            });
+        }
+        if (!empty($c['avaliacoes'])) {
+            $h = bb_troca_entre($h, '<div class="avaliacoes__galeria">' . "
+", "
+      </div>
+    </section>", bb_avaliacoes_html($c['avaliacoes']));
+        }
+    }
+    foreach (isset($c['roteiros']) ? $c['roteiros'] : [] as $r) {
+        if ($p === $r['slug'] . '/') $h = bb_pagina_roteiro($h, $r, $pre);
+    }
+    return $h;
 }

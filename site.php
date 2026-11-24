@@ -10,7 +10,7 @@ $p = isset($_GET['p']) ? (string) $_GET['p'] : '';
 if (getenv('REDIRECT_STATUS') === '404' || isset($_SERVER['REDIRECT_STATUS']) && $_SERVER['REDIRECT_STATUS'] == 404) {
     list($st, $html) = bb_404();
 } else {
-    list($st, $html) = bb_render($p, bb_lanchas());
+    list($st, $html) = bb_render($p, bb_lanchas(), 'api/disponibilidade.php', bb_conteudo());
 }
 
 http_response_code($st);

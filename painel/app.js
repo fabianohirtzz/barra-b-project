@@ -1718,6 +1718,188 @@
     });
   }
 
+  /* ================= CONTEÚDO DO SITE ================= */
+  // Depois de mudar algo que o site mostra: o servidor tira a cópia guardada e o site mostra na hora.
+  const limpaSite = () => api('fotos.php', { acao: 'cache' });
+  const curto = (t, n = 110) => { const s = String(t || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1).trim() + '…' : s; };
+  const moveNaLista = (lista, i, d) => { const j = i + d; if (j < 0 || j >= lista.length) return lista; const c = lista.slice(); [c[i], c[j]] = [c[j], c[i]]; return c; };
+
+  /* ---------- roteiros ---------- */
+  let roteirosCompletos = null;
+  async function carregaRoteiros() {
+    const { data, error } = await sb.from('bb_roteiros').select('*').order('ordem');
+    if (error) { console.error(error); avisa(msgErro(error), true); return null; }
+    roteirosCompletos = data || [];
+    return roteirosCompletos;
+  }
+
+  async function telaRoteiros() {
+    tela.innerHTML = `<a class="voltar" href="#mais"><svg><use href="#p-volta"/></svg>Mais</a>
+      <header class="cab"><div><h1>Roteiros</h1><p>As paradas e as regras que aparecem na página de cada roteiro no site.</p></div></header>
+      <ul class="lista" data-lista><li class="cartao vazio">Carregando</li></ul>`;
+    const rs = await carregaRoteiros();
+    const ul = tela.querySelector('[data-lista]');
+    if (!rs || !ul) return;
+    ul.innerHTML = rs.map((r) => `<li><a class="linha" href="#roteiro/${r.id}"><span class="linha__icone"><svg><use href="#p-agenda"/></svg></span>
+      <span class="linha__corpo"><b>${esc(r.nome)}</b><span>${(r.paradas || []).length} paradas · ${(r.regras || []).length ? (r.regras || []).length + ' regras' : 'sem regras'}</span></span><svg><use href="#p-seta"/></svg></a></li>`).join('');
+  }
+
+  async function telaRoteiro(id) {
+    const r = (roteirosCompletos || []).find((x) => x.id === id) || ((await carregaRoteiros()) || []).find((x) => x.id === id);
+    if (!r) { location.hash = '#roteiros'; return; }
+    const paradas = Array.isArray(r.paradas) ? r.paradas : [];
+    const regras = Array.isArray(r.regras) ? r.regras : [];
+    const num = (v, suf) => (v != null ? `${String(Number(v)).replace('.', ',')} ${suf}` : null);
+    tela.innerHTML = `<a class="voltar" href="#roteiros"><svg><use href="#p-volta"/></svg>Roteiros</a>
+      <header class="cab"><div><h1>${esc(r.nome)}</h1><p>${esc([num(r.duracao_horas, 'horas'), num(r.distancia_milhas, 'milhas'), r.trajeto_texto].filter(Boolean).join(' · '))}</p></div>
+        <a class="botao botao--leve botao--pequeno" href="../${esc(r.slug)}/" target="_blank" rel="noopener">Ver no site</a></header>
+      <p class="ajuda">A duração, a distância e o tempo de navegação aparecem em várias páginas do site. Para mudar, fale com a Freela, que a gente troca em todas de uma vez.</p>
+      <section class="bloco"><h2>Paradas <small>a ordem é a do passeio</small></h2>
+        <ol class="lista paradas-l">${paradas.map((p, i) => `<li><button class="linha" type="button" data-parada="${i}">
+          ${p.foto ? `<img class="paradas-l__foto" src="${esc(foto(p.foto))}" alt="">` : '<span class="paradas-l__foto paradas-l__foto--sem">sem foto</span>'}
+          <span class="linha__corpo"><b>${i + 1}. ${esc(p.nome)}</b><span>${esc(curto(p.texto))}</span></span><svg><use href="#p-seta"/></svg></button></li>`).join('') || vazio('Nenhuma parada.')}</ol>
+        <button class="botao botao--leve" type="button" data-nova-parada style="margin-top:12px"><svg><use href="#p-mais-um"/></svg>Adicionar parada</button>
+      </section>
+      <section class="bloco cartao"><h2 style="font-size:1.1rem;margin-bottom:6px">Regras do roteiro</h2>
+        <p class="ajuda" style="margin-top:0">Uma regra por linha. Aparecem num quadro de aviso na página do roteiro. Sem nenhuma regra, o quadro some.</p>
+        <label class="campo"><span class="sr">Regras</span><textarea data-regras rows="${Math.max(4, regras.length + 1)}">${esc(regras.join('\n'))}</textarea></label>
+        <button class="botao botao--principal" type="button" data-salvar-regras>Salvar as regras</button>
+      </section>`;
+    const salvaRoteiro = async (muda, msg) => {
+      if (!(await grava(sb.from('bb_roteiros').update(muda).eq('id', r.id)))) return false;
+      Object.assign(r, muda); limpaSite(); fechaGaveta(); telaRoteiro(r.id); avisa(msg); return true;
+    };
+    aoSalvar(tela.querySelector('[data-salvar-regras]'), async () => {
+      const novas = tela.querySelector('[data-regras]').value.split('\n').map((x) => x.trim().replace(/^[-•*]\s*/, '')).filter(Boolean);
+      await salvaRoteiro({ regras: novas }, novas.length ? 'Regras salvas. O site já mostra.' : 'Regras apagadas. O quadro saiu do site.');
+    });
+    tela.querySelectorAll('[data-parada]').forEach((b) => b.addEventListener('click', () => editaParada(r, Number(b.dataset.parada), salvaRoteiro)));
+    tela.querySelector('[data-nova-parada]').addEventListener('click', () => editaParada(r, -1, salvaRoteiro));
+  }
+
+  function editaParada(r, i, salvaRoteiro) {
+    const paradas = (Array.isArray(r.paradas) ? r.paradas : []).slice();
+    const nova = i < 0;
+    const p = nova ? { nome: '', texto: '', foto: null, alt: '' } : Object.assign({}, paradas[i]);
+    let fotoNova = null;   // arquivo escolhido, ainda não enviado
+    abreGaveta(nova ? 'Nova parada' : `Parada ${i + 1}`, `
+      <div class="parada-foto" data-foto-area>${p.foto ? `<img src="${esc(foto(p.foto))}" alt="">` : '<span>Sem foto</span>'}</div>
+      <div class="acoes" style="margin:10px 0 16px">
+        <label class="botao botao--leve botao--pequeno"><svg><use href="#p-foto"/></svg>${p.foto ? 'Trocar a foto' : 'Escolher foto'}<input type="file" accept="image/*" data-arq class="sr"></label>
+        ${p.foto ? '<button class="botao botao--leve botao--pequeno" type="button" data-tira-foto>Tirar a foto</button>' : ''}
+      </div>
+      <label class="campo"><span>Nome da parada</span><input data-nome value="${esc(p.nome)}" maxlength="80"></label>
+      <label class="campo"><span>O que tem lá</span><textarea data-texto rows="4" maxlength="400">${esc(p.texto)}</textarea><small>Uma ou duas frases. Fatos ajudam quem procura no Google: o que dá para fazer, o que é proibido.</small></label>
+      <label class="campo"><span>O que aparece na foto <small style="font-weight:400;color:var(--suave)">(para quem não enxerga)</small></span><input data-alt value="${esc(p.alt || '')}" maxlength="160" placeholder="Ex.: lancha ancorada em frente à areia branca"></label>
+      <p class="erro" data-erro hidden></p>
+      <button class="botao botao--principal botao--cheio" type="button" data-salvar>${nova ? 'Adicionar a parada' : 'Salvar a parada'}</button>
+      ${nova ? '' : `<div class="acoes" style="margin-top:14px">
+        ${i > 0 ? '<button class="botao botao--leve botao--pequeno" type="button" data-mov="-1">Passar para antes</button>' : ''}
+        ${i < paradas.length - 1 ? '<button class="botao botao--leve botao--pequeno" type="button" data-mov="1">Passar para depois</button>' : ''}</div>
+      <section class="bloco"><button class="botao botao--leve" type="button" data-apagar-parada>Apagar esta parada</button></section>`}`, (c) => {
+      c.querySelector('[data-arq]').addEventListener('change', (e) => {
+        fotoNova = e.target.files[0] || null;
+        if (fotoNova) c.querySelector('[data-foto-area]').innerHTML = `<img src="${URL.createObjectURL(fotoNova)}" alt="">`;
+      });
+      const tira = c.querySelector('[data-tira-foto]');
+      if (tira) tira.addEventListener('click', () => { p.foto = null; fotoNova = null; c.querySelector('[data-foto-area]').innerHTML = '<span>Sem foto</span>'; });
+      aoSalvar(c.querySelector('[data-salvar]'), async () => {
+        const nome = c.querySelector('[data-nome]').value.trim(), texto = c.querySelector('[data-texto]').value.trim();
+        if (!nome || !texto) return erroCampo(c, 'Preencha o nome da parada e o que tem lá.');
+        erroCampo(c, '');
+        if (fotoNova) {
+          let blob;
+          try { blob = await preparaFoto(fotoNova); } catch (e) { return erroCampo(c, 'Esse formato de foto não abre aqui. Envie em JPG.'); }
+          const fd = new FormData();
+          fd.append('acao', 'parada'); fd.append('roteiro_id', r.id); fd.append('foto', blob, 'foto.jpg');
+          if (!nova && paradas[i].foto) fd.append('antiga', paradas[i].foto);
+          const res = await api('fotos.php', fd);
+          if (!res.ok) return erroCampo(c, res.erro || 'A foto não subiu. Tente de novo.');
+          p.foto = res.url;
+        }
+        const pronta = { nome, texto, foto: p.foto || null, alt: c.querySelector('[data-alt]').value.trim() || (p.foto ? nome : '') };
+        if (nova) paradas.push(pronta); else paradas[i] = pronta;
+        await salvaRoteiro({ paradas }, nova ? 'Parada adicionada. O site já mostra.' : 'Parada salva. O site já mostra.');
+      });
+      c.querySelectorAll('[data-mov]').forEach((b) => aoSalvar(b, () => salvaRoteiro({ paradas: moveNaLista(paradas, i, Number(b.dataset.mov)) }, 'Ordem das paradas trocada.')));
+      const ap = c.querySelector('[data-apagar-parada]');
+      if (ap) confirmaNoBotao(ap, 'Toque de novo para apagar', () => { paradas.splice(i, 1); salvaRoteiro({ paradas }, 'Parada apagada.'); });
+    });
+  }
+
+  /* ---------- perguntas frequentes e avaliações ---------- */
+  let abaTextos = 'faq';
+  const IDIOMAS = [['pt', 'Português'], ['es', 'Espanhol'], ['en', 'Inglês']];
+  const TABELA_TEXTO = { faq: 'bb_faq', avaliacoes: 'bb_avaliacoes' };
+
+  async function telaTextosSite() {
+    tela.innerHTML = `<a class="voltar" href="#mais"><svg><use href="#p-volta"/></svg>Mais</a>
+      <header class="cab"><div><h1>Perguntas e avaliações</h1><p>O que aparece na página inicial do site. Muda na hora.</p>
+        <div class="chips chips--periodo" role="group" aria-label="Mostrar">${[['faq', 'Perguntas frequentes'], ['avaliacoes', 'Avaliações']].map(([v, n]) => `<button class="chip" type="button" aria-pressed="${v === abaTextos}" data-aba-t="${v}">${n}</button>`).join('')}</div></div>
+        <button class="botao botao--principal" type="button" data-novo-texto><svg><use href="#p-mais-um"/></svg>${abaTextos === 'faq' ? 'Nova pergunta' : 'Nova avaliação'}</button></header>
+      <p class="ajuda">${abaTextos === 'faq' ? 'As perguntas que mais chegam no WhatsApp. O Google também lê estas respostas.' : 'Copie avaliações reais do Google, com o nome e o mês. A primeira da lista aparece em destaque.'}${abaTextos === 'avaliacoes' ? ' <a href="https://search.google.com/local/reviews?placeid=ChIJweQXY-8_J5URa4sYsQVDMTc" target="_blank" rel="noopener">Abrir as avaliações no Google</a>' : ''}</p>
+      <ol class="lista" data-lista><li class="cartao vazio">Carregando</li></ol>`;
+    tela.querySelectorAll('[data-aba-t]').forEach((b) => b.addEventListener('click', () => { abaTextos = b.dataset.abaT; telaTextosSite(); }));
+    tela.querySelector('[data-novo-texto]').onclick = () => editaTexto(null, []);
+    const aba = abaTextos;
+    const { data, error } = await sb.from(TABELA_TEXTO[aba]).select('*').order('ordem').order(aba === 'faq' ? 'pergunta' : 'created_at');
+    const ul = tela.querySelector('[data-lista]');
+    if (!ul || aba !== abaTextos) return;
+    if (error) { console.error(error); ul.innerHTML = vazio('Não consegui carregar agora. Tente de novo.'); return; }
+    const lista = data || [];
+    ul.innerHTML = lista.map((x, i) => `<li><button class="linha" type="button" data-texto-i="${i}">
+      <span class="linha__corpo"><b>${esc(aba === 'faq' ? x.pergunta : `${x.nome}${x.data_label ? ', ' + x.data_label : ''}`)}${x.ativo ? '' : ' <span class="selo selo--neutro">fora do site</span>'}${aba === 'avaliacoes' && i === 0 ? ' <span class="selo selo--bom">em destaque</span>' : ''}</b>
+        <span>${esc(curto(aba === 'faq' ? x.resposta : x.texto))}</span></span><svg><use href="#p-seta"/></svg></button></li>`).join('')
+      || vazio(aba === 'faq' ? 'Nenhuma pergunta ainda. O site mostra as perguntas de sempre até você cadastrar a primeira.' : 'Nenhuma avaliação ainda. O site mostra as de sempre até você cadastrar a primeira.');
+    ul.querySelectorAll('[data-texto-i]').forEach((b) => b.addEventListener('click', () => editaTexto(lista[Number(b.dataset.textoI)], lista)));
+    tela.querySelector('[data-novo-texto]').onclick = () => editaTexto(null, lista);
+  }
+
+  function editaTexto(x, lista) {
+    const faq = abaTextos === 'faq', tab = TABELA_TEXTO[abaTextos];
+    const i = x ? lista.indexOf(x) : -1;
+    let idioma = (x && x.idioma) || 'pt';
+    abreGaveta(x ? (faq ? 'Pergunta' : 'Avaliação') : (faq ? 'Nova pergunta' : 'Nova avaliação'), `${faq ? `
+      <label class="campo"><span>Pergunta</span><input data-a value="${esc(x ? x.pergunta : '')}" maxlength="140" placeholder="Ex.: Pode levar criança de colo?"></label>
+      <label class="campo"><span>Resposta</span><textarea data-b rows="6" maxlength="900">${esc(x ? x.resposta : '')}</textarea><small>Direto ao ponto, com números quando der. Linha em branco separa parágrafos. Nada de preço: o valor é sempre pelo WhatsApp.</small></label>` : `
+      <label class="campo"><span>Nome de quem avaliou</span><input data-a value="${esc(x ? x.nome : '')}" maxlength="60"></label>
+      <label class="campo"><span>Avaliação</span><textarea data-b rows="6" maxlength="900">${esc(x ? x.texto : '')}</textarea><small>Copie do Google do jeito que a pessoa escreveu.</small></label>
+      <label class="campo"><span>Quando</span><input data-c value="${esc(x ? x.data_label || '' : '')}" maxlength="30" placeholder="Ex.: março de 2025"></label>
+      <div class="campo"><span>Em que língua está escrita</span><div class="chips">${IDIOMAS.map(([v, n]) => `<button class="chip" type="button" aria-pressed="${v === idioma}" data-idioma="${v}">${n}</button>`).join('')}</div></div>`}
+      <label class="campo"><span>Mostrar no site</span><select data-ativo><option value="1"${!x || x.ativo ? ' selected' : ''}>Sim</option><option value="0"${x && !x.ativo ? ' selected' : ''}>Não, deixar guardada</option></select></label>
+      <p class="erro" data-erro hidden></p>
+      <button class="botao botao--principal botao--cheio" type="button" data-salvar>${x ? 'Salvar' : 'Adicionar'}</button>
+      ${x ? `<div class="acoes" style="margin-top:14px">
+        ${i > 0 ? '<button class="botao botao--leve botao--pequeno" type="button" data-mov="-1">Subir na lista</button>' : ''}
+        ${i < lista.length - 1 ? '<button class="botao botao--leve botao--pequeno" type="button" data-mov="1">Descer na lista</button>' : ''}</div>
+        <section class="bloco"><button class="botao botao--leve" type="button" data-apagar-t>Apagar</button></section>` : ''}`, (c) => {
+      if (!faq) chips(c, '[data-idioma]', (b) => { idioma = b.dataset.idioma; });
+      const fim = async (msg) => { limpaSite(); fechaGaveta(); await telaTextosSite(); avisa(msg); };
+      aoSalvar(c.querySelector('[data-salvar]'), async () => {
+        const a = c.querySelector('[data-a]').value.trim(), b = c.querySelector('[data-b]').value.trim();
+        if (!a || !b) return erroCampo(c, faq ? 'Preencha a pergunta e a resposta.' : 'Preencha o nome e a avaliação.');
+        if (faq && /R\$\s*\d/.test(b) && !/acréscimo/i.test(b)) return erroCampo(c, 'A resposta tem um valor em reais. No site, preço é sempre pelo WhatsApp.');
+        erroCampo(c, '');
+        const dados = faq ? { pergunta: a, resposta: b } : { nome: a, texto: b, data_label: c.querySelector('[data-c]').value.trim() || null, idioma };
+        dados.ativo = c.querySelector('[data-ativo]').value === '1';
+        if (!x) dados.ordem = lista.length ? Math.max(...lista.map((y) => y.ordem || 0)) + 1 : 0;
+        if (!(await grava(x ? sb.from(tab).update(dados).eq('id', x.id) : sb.from(tab).insert(dados)))) return;
+        await fim(x ? 'Salvo. O site já mostra.' : (faq ? 'Pergunta adicionada.' : 'Avaliação adicionada.'));
+      });
+      c.querySelectorAll('[data-mov]').forEach((bt) => aoSalvar(bt, async () => {
+        const nova = moveNaLista(lista, i, Number(bt.dataset.mov));
+        // regrava a ordem de todos (lista curta): 0, 1, 2...
+        for (let k = 0; k < nova.length; k++) if (nova[k].ordem !== k) { if (!(await grava(sb.from(tab).update({ ordem: k }).eq('id', nova[k].id)))) return; }
+        await fim('Ordem trocada.');
+      }));
+      const ap = c.querySelector('[data-apagar-t]');
+      if (ap) confirmaNoBotao(ap, 'Toque de novo para apagar', async () => {
+        if (!(await grava(sb.from(tab).delete().eq('id', x.id)))) return;
+        await fim('Apagado.');
+      });
+    });
+  }
+
   /* ================= ACESSOS (só a dona) ================= */
   const WA_BARRA = '5548991153172';
   const PAPEIS = {
@@ -2010,10 +2192,11 @@
       ['#lanchas', 'p-lancha', 'Lanchas', 'Dados, dono e agenda de cada lancha'],
       ['#parceiros', 'p-dinheiro', 'Parceiros', 'Donos de lancha e quem vende passeios'],
       ['#marinheiros', 'p-clientes', 'Marinheiros', 'Quem leva os passeios'],
-      ['', 'p-agenda', 'Roteiros', 'Campeche, Costa da Lagoa e as paradas'],
+      ['#roteiros', 'p-agenda', 'Roteiros', 'As paradas e as regras de cada roteiro'],
+      ['#site-textos', 'p-hoje', 'Perguntas e avaliações', 'O que aparece na página inicial do site'],
       ['', 'p-wa', 'Robô do WhatsApp', 'O que ele responde e quando fica quieto'],
       ['', 'p-wa', 'Mensagens para muita gente', 'Avisar a base de clientes de uma vez'],
-      ['', 'p-hoje', 'Textos do site', 'Perguntas frequentes, avaliações e vídeos'],
+      ['', 'p-play', 'Vídeos do Instagram', 'Os vídeos da página inicial'],
       ...(dona() ? [['#acessos', 'p-clientes', 'Quem acessa o painel', 'Você, a equipe, parceiros e marinheiros']] : []),
       ['#conta', 'p-relogio', 'Sua conta', 'Trocar a senha e usar como aplicativo'],
     ];
@@ -2036,12 +2219,13 @@
       telas[b]();
       return;
     }
-    const nav = ['lanchas', 'lancha', 'fotos', 'parceiros', 'marinheiros', 'acessos', 'conta'].includes(base) ? 'mais' : base;
+    const nav = ['lanchas', 'lancha', 'fotos', 'parceiros', 'marinheiros', 'acessos', 'conta', 'roteiros', 'roteiro', 'site-textos'].includes(base) ? 'mais' : base;
     document.querySelectorAll('[data-nav]').forEach((a) => { if (a.dataset.nav === nav) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     ({
       hoje: telaHoje, agenda: telaAgenda, clientes: telaClientes, dinheiro: telaDinheiro, mais: telaMais, lanchas: telaLanchas,
       lancha: () => telaLancha(arg), parceiros: () => telaPessoas('parceiros'), marinheiros: () => telaPessoas('marinheiros'),
       acessos: telaAcessos, conta: telaConta, fotos: () => telaFotos(arg),
+      roteiros: telaRoteiros, roteiro: () => telaRoteiro(arg), 'site-textos': telaTextosSite,
     }[base] || telaHoje)();
   }
   window.addEventListener('hashchange', () => { rota(); window.scrollTo(0, 0); tela.focus({ preventScroll: true }); });
