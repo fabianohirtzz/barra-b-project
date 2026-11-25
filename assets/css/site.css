@@ -543,3 +543,28 @@ body.menu-aberto{overflow:hidden}
   *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
   .rota{clip-path:none}
 }
+
+/* ---------- letra no celular (pedido da cliente em 19/11) ----------
+   Texto corrido fica em 17 px. Aqui só sobe o que era secundário (11 a 14 px):
+   selos em cima de foto >= 13,5 px; rótulos, notas, itens e rodapé >= 14 px. */
+@media (max-width:640px){
+  .lancha__regiao{font-size:.86rem;padding:5px 11px}
+  .lancha__specs{font-size:1rem}
+  .lancha__itens li{font-size:.88rem;height:32px}
+  .roteiro__fama{font-size:.98rem}
+  .roteiro__dados dt{font-size:.9rem}
+  .roteiro__paradas{font-size:.86rem}
+  .planejar__campo,.planejar__roteiro legend{font-size:.95rem}
+  .planejar__roteiro span{font-size:.98rem}
+  .planejar__nota{font-size:.95rem}
+  .faixa__lista li{font-size:1rem}
+  .filtro button{font-size:.98rem}
+  .incluso__lista span{font-size:.98rem}
+  .avaliacao figcaption{font-size:.92rem}
+  .avaliacao figcaption b{font-size:1rem}
+  .rodape__cad span{font-size:.88rem}
+  .rodape__legal{font-size:.9rem}
+  .assinatura__txt{font-size:.82rem}
+}
+/* paradas do card de roteiro em celular estreito: 5 nomes numa linha, sem quebrar em 3 */
+@media (max-width:370px){.roteiro__paradas{font-size:.78rem}}
