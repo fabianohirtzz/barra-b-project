@@ -222,6 +222,12 @@ baixa os `orig/` pelo FTP, roda o Real-ESRGAN (`tools/esrgan.py`; entrada até 5
 `melhorar`, refaz a capa se for a primeira e apaga a versão pequena e o original. Modelo **v0.67.0** em
 `E:\Clientes\Barra Boat Floripa\Siteerramentas\esrgan\` (fora do Git; ~1 min por foto). Primeira rodada: 5 fotos da
 Phantom 30 BB (562 a 1085 px). O painel relê as fotos antes de gravar, para não voltar a URL antiga.
+**Menu do painel (25/11, aprovado pelo Fabiano):** a aba "Mais" saiu. Menu lateral por categoria (sem título: Hoje,
+Agenda; Vendas: Clientes, Dinheiro; Frota e equipe: Lanchas, Parceiros, Marinheiros; Site: Roteiros, Perguntas e
+avaliações, Vídeos do Instagram; WhatsApp: Robô e Mensagens em massa, "em breve"; rodapé fixo: Quem acessa o painel,
+Sua conta, Sair). Fixo no computador (264 px); no celular a barra de baixo tem Hoje, Agenda, Clientes, Dinheiro e
+Menu, que abre o mesmo menu deslizando. Papéis: `entra()` monta a lista de `data-nav` por papel e `arrumaGrupos()`
+esconde categoria vazia; `marcaMenu()` destaca o item (e "Menu" na barra quando a página só está no menu).
 **Tela de fotos (25/11, pedido da Michele):** arrastar para ordenar (mouse; no celular segurar 250 ms e arrastar;
 Alt+setas no teclado), caixa de seleção para apagar em massa, a **primeira foto é sempre a capa** (refeita quando muda).
 

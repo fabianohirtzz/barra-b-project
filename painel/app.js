@@ -1357,8 +1357,7 @@
   const foto = (u) => (u ? (/^https?:/.test(u) ? u : '..' + u) : '');
 
   function telaLanchas() {
-    tela.innerHTML = `<a class="voltar" href="#mais"><svg><use href="#p-volta"/></svg>Mais</a>
-      <header class="cab"><div><h1>Lanchas</h1><p>${lanchasAtivas().length} lanchas no site${S.lanchas.length > lanchasAtivas().length ? `, ${S.lanchas.length - lanchasAtivas().length} escondidas` : ''}. Toque numa para mudar os dados ou a agenda do dono.</p></div></header>
+    tela.innerHTML = `<header class="cab"><div><h1>Lanchas</h1><p>${lanchasAtivas().length} lanchas no site${S.lanchas.length > lanchasAtivas().length ? `, ${S.lanchas.length - lanchasAtivas().length} escondidas` : ''}. Toque numa para mudar os dados ou a agenda do dono.</p></div></header>
       <div class="lanchas">${S.lanchas.map((l) => `<a class="lancha-c${l.ativo ? '' : ' is-oculta'}" href="#lancha/${l.id}">
         <img src="${esc(foto(l.capa_url))}" alt="" loading="lazy">
         <div><b>${esc(l.nome)}</b><span>${l.passageiros} pessoas · ${esc(donoNome(l))}</span>
@@ -1742,8 +1741,7 @@
   function telaPessoas(tipo) {
     const parc = tipo === 'parceiros';
     const lista = parc ? S.parceiros : S.marinheiros;
-    tela.innerHTML = `<a class="voltar" href="#mais"><svg><use href="#p-volta"/></svg>Mais</a>
-      <header class="cab"><div><h1>${parc ? 'Parceiros' : 'Marinheiros'}</h1><p>${parc ? 'Donos das lanchas de parceiros e quem vende passeios para vocês.' : 'Quem leva os passeios. Aparece na agenda e no dia do passeio.'}</p></div>
+    tela.innerHTML = `<header class="cab"><div><h1>${parc ? 'Parceiros' : 'Marinheiros'}</h1><p>${parc ? 'Donos das lanchas de parceiros e quem vende passeios para vocês.' : 'Quem leva os passeios. Aparece na agenda e no dia do passeio.'}</p></div>
         <button class="botao botao--principal" type="button" data-pessoa="${tipo}|"><svg><use href="#p-mais-um"/></svg>Cadastrar</button></header>
       <ul class="lista">${lista.map((x) => {
         const lanchasDele = parc ? S.lanchas.filter((l) => l.parceiro_id === x.id).map((l) => l.nome) : [];
@@ -1854,8 +1852,7 @@
   }
 
   async function telaRoteiros() {
-    tela.innerHTML = `<a class="voltar" href="#mais"><svg><use href="#p-volta"/></svg>Mais</a>
-      <header class="cab"><div><h1>Roteiros</h1><p>As paradas e as regras que aparecem na página de cada roteiro no site.</p></div></header>
+    tela.innerHTML = `<header class="cab"><div><h1>Roteiros</h1><p>As paradas e as regras que aparecem na página de cada roteiro no site.</p></div></header>
       <ul class="lista" data-lista><li class="cartao vazio">Carregando</li></ul>`;
     const rs = await carregaRoteiros();
     const ul = tela.querySelector('[data-lista]');
@@ -1953,8 +1950,7 @@
   const TABELA_TEXTO = { faq: 'bb_faq', avaliacoes: 'bb_avaliacoes' };
 
   async function telaTextosSite() {
-    tela.innerHTML = `<a class="voltar" href="#mais"><svg><use href="#p-volta"/></svg>Mais</a>
-      <header class="cab"><div><h1>Perguntas e avaliações</h1><p>O que aparece na página inicial do site. Muda na hora.</p>
+    tela.innerHTML = `<header class="cab"><div><h1>Perguntas e avaliações</h1><p>O que aparece na página inicial do site. Muda na hora.</p>
         <div class="chips chips--periodo" role="group" aria-label="Mostrar">${[['faq', 'Perguntas frequentes'], ['avaliacoes', 'Avaliações']].map(([v, n]) => `<button class="chip" type="button" aria-pressed="${v === abaTextos}" data-aba-t="${v}">${n}</button>`).join('')}</div></div>
         <button class="botao botao--principal" type="button" data-novo-texto><svg><use href="#p-mais-um"/></svg>${abaTextos === 'faq' ? 'Nova pergunta' : 'Nova avaliação'}</button></header>
       <p class="ajuda">${abaTextos === 'faq' ? 'As perguntas que mais chegam no WhatsApp. O Google também lê estas respostas.' : 'Copie avaliações reais do Google, com o nome e o mês. A primeira da lista aparece em destaque.'}${abaTextos === 'avaliacoes' ? ' <a href="https://search.google.com/local/reviews?placeid=ChIJweQXY-8_J5URa4sYsQVDMTc" target="_blank" rel="noopener">Abrir as avaliações no Google</a>' : ''}</p>
@@ -2037,8 +2033,7 @@
 
   let videos = [];
   async function telaVideos() {
-    tela.innerHTML = `<a class="voltar" href="#mais"><svg><use href="#p-volta"/></svg>Mais</a>
-      <header class="cab"><div><h1>Vídeos do Instagram</h1><p>Os vídeos da página inicial do site, na ordem em que aparecem.</p></div>
+    tela.innerHTML = `<header class="cab"><div><h1>Vídeos do Instagram</h1><p>Os vídeos da página inicial do site, na ordem em que aparecem.</p></div>
         <button class="botao botao--principal" type="button" data-novo-video><svg><use href="#p-mais-um"/></svg>Adicionar vídeo</button></header>
       <p class="ajuda">Mande o vídeo como baixou do Instagram ou como gravou no celular. O servidor deixa ele leve para o site e tira a capa sozinho; em uns minutos ele aparece.</p>
       <ol class="videos-l" data-lista><li class="cartao vazio">Carregando</li></ol>`;
@@ -2152,9 +2147,8 @@
 
   let equipe = null;
   async function telaAcessos() {
-    if (!dona()) { location.hash = '#mais'; return; }
-    tela.innerHTML = `<a class="voltar" href="#mais"><svg><use href="#p-volta"/></svg>Mais</a>
-      <header class="cab"><div><h1>Quem acessa o painel</h1><p>Cada pessoa entra com o próprio e-mail e senha e vê só a parte dela.</p></div>
+    if (!dona()) { location.hash = '#hoje'; return; }
+    tela.innerHTML = `<header class="cab"><div><h1>Quem acessa o painel</h1><p>Cada pessoa entra com o próprio e-mail e senha e vê só a parte dela.</p></div>
         <button class="botao botao--principal" type="button" data-dar-acesso><svg><use href="#p-mais-um"/></svg>Dar acesso a alguém</button></header>
       <ul class="lista" data-equipe><li class="cartao vazio">Carregando</li></ul>
       <section class="bloco cartao"><h2 style="font-size:1.1rem;margin-bottom:10px">O que cada um vê</h2>
@@ -2259,8 +2253,7 @@
   /* ================= CONTA (todos) ================= */
   function telaConta() {
     const restr = restrito();
-    tela.innerHTML = `${restr ? '' : '<a class="voltar" href="#mais"><svg><use href="#p-volta"/></svg>Mais</a>'}
-      <header class="cab"><div><h1>${restr ? 'Conta' : 'Sua conta'}</h1><p>${esc(S.nome || '')}${S.nome ? ' · ' : ''}${esc((S.user && S.user.email) || '')}</p></div></header>
+    tela.innerHTML = `<header class="cab"><div><h1>${restr ? 'Conta' : 'Sua conta'}</h1><p>${esc(S.nome || '')}${S.nome ? ' · ' : ''}${esc((S.user && S.user.email) || '')}</p></div></header>
       <section class="cartao"><h2 style="font-size:1.1rem;margin-bottom:12px">Trocar a senha</h2>
         <div class="grade-2">
           <label class="campo"><span>Senha nova</span><input type="password" data-s1 autocomplete="new-password" minlength="8"></label>
@@ -2413,26 +2406,6 @@
   }
 
   /* ================= MAIS ================= */
-  function telaMais() {
-    const itens = [
-      ['#lanchas', 'p-lancha', 'Lanchas', 'Dados, dono e agenda de cada lancha'],
-      ['#parceiros', 'p-dinheiro', 'Parceiros', 'Donos de lancha e quem vende passeios'],
-      ['#marinheiros', 'p-clientes', 'Marinheiros', 'Quem leva os passeios'],
-      ['#roteiros', 'p-agenda', 'Roteiros', 'As paradas e as regras de cada roteiro'],
-      ['#site-textos', 'p-hoje', 'Perguntas e avaliações', 'O que aparece na página inicial do site'],
-      ['', 'p-wa', 'Robô do WhatsApp', 'O que ele responde e quando fica quieto'],
-      ['', 'p-wa', 'Mensagens para muita gente', 'Avisar a base de clientes de uma vez'],
-      ['#videos', 'p-play', 'Vídeos do Instagram', 'Os vídeos da página inicial'],
-      ...(dona() ? [['#acessos', 'p-clientes', 'Quem acessa o painel', 'Você, a equipe, parceiros e marinheiros']] : []),
-      ['#conta', 'p-relogio', 'Sua conta', 'Trocar a senha e usar como aplicativo'],
-    ];
-    tela.innerHTML = `<header class="cab"><div><h1>Mais</h1><p>O que você mexe de vez em quando.</p></div></header>
-      <ul class="lista">${itens.map(([h, i, t, s]) => `<li><${h ? `a href="${h}"` : 'button type="button" data-breve="Esta parte chega nas próximas etapas do painel."'} class="linha">
-        <span class="linha__icone"><svg><use href="#${i}"/></svg></span><span class="linha__corpo"><b>${t}</b><span>${s}</span></span>${h ? '<svg><use href="#p-seta"/></svg>' : '<span class="selo selo--neutro">em breve</span>'}</${h ? 'a' : 'button'}></li>`).join('')}</ul>
-      <p style="margin-top:28px;color:var(--suave)">Entrou como ${esc(S.nome || (S.user && S.user.email) || '')} (${S.papel === 'dona' ? 'dona' : 'equipe'}).</p>
-      <button class="botao botao--leve" type="button" data-sair>Sair do painel</button>`;
-  }
-
   /* ================= rotas e cliques ================= */
   function rota() {
     if (!S.papel) return;
@@ -2441,20 +2414,48 @@
     if (restrito()) {
       const telas = S.papel === 'marinheiro' ? { escala: telaEscala, conta: telaConta } : { 'minha-agenda': telaMinhaAgenda, comissoes: telaComissoes, conta: telaConta };
       const b = telas[base] ? base : Object.keys(telas)[0];
-      document.querySelectorAll('[data-nav]').forEach((a) => { if (a.dataset.nav === b) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+      marcaMenu(b);
       telas[b]();
       return;
     }
-    const nav = ['lanchas', 'lancha', 'fotos', 'parceiros', 'marinheiros', 'acessos', 'conta', 'roteiros', 'roteiro', 'site-textos', 'videos'].includes(base) ? 'mais' : base;
-    document.querySelectorAll('[data-nav]').forEach((a) => { if (a.dataset.nav === nav) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    marcaMenu({ lancha: 'lanchas', fotos: 'lanchas', roteiro: 'roteiros' }[base] || base);
     ({
-      hoje: telaHoje, agenda: telaAgenda, clientes: telaClientes, dinheiro: telaDinheiro, mais: telaMais, lanchas: telaLanchas,
+      hoje: telaHoje, agenda: telaAgenda, clientes: telaClientes, dinheiro: telaDinheiro, lanchas: telaLanchas,
       lancha: () => telaLancha(arg), parceiros: () => telaPessoas('parceiros'), marinheiros: () => telaPessoas('marinheiros'),
       acessos: telaAcessos, conta: telaConta, fotos: () => telaFotos(arg),
       roteiros: telaRoteiros, roteiro: () => telaRoteiro(arg), 'site-textos': telaTextosSite, videos: telaVideos,
     }[base] || telaHoje)();
   }
-  window.addEventListener('hashchange', () => { rota(); window.scrollTo(0, 0); tela.focus({ preventScroll: true }); });
+  // Item atual em destaque no menu lateral e na barra de baixo; na barra, "Menu" fica marcado
+  // quando a página está só no menu (Lanchas, Roteiros, Sua conta...).
+  function marcaMenu(chave) {
+    document.querySelectorAll('[data-nav]').forEach((a) => { if (a.dataset.nav === chave) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    const naBarra = [...document.querySelectorAll('.barra [data-nav]')].some((a) => !a.hidden && a.dataset.nav === chave);
+    const m = $('.barra [data-abre-menu]');
+    if (m && !naBarra) m.setAttribute('aria-current', 'page');
+  }
+
+  // Menu no celular: abre deslizando da esquerda; fecha no X, no fundo, no Esc ou ao trocar de página
+  function abreMenu() {
+    document.body.classList.add('menu-aberto');
+    $('.nav__fundo').hidden = false;
+    $('[data-abre-menu]').setAttribute('aria-expanded', 'true');
+    const atual = $('.nav [aria-current="page"]') || $('.nav .nav__item:not([hidden])');
+    if (atual) atual.focus();
+  }
+  function fechaMenu() {
+    if (!document.body.classList.contains('menu-aberto')) return;
+    document.body.classList.remove('menu-aberto');
+    $('.nav__fundo').hidden = true;
+    $('[data-abre-menu]').setAttribute('aria-expanded', 'false');
+  }
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-abre-menu]')) { abreMenu(); return; }
+    if (e.target.closest('[data-fecha-menu]')) fechaMenu();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fechaMenu(); });
+
+  window.addEventListener('hashchange', () => { fechaMenu(); rota(); window.scrollTo(0, 0); tela.focus({ preventScroll: true }); });
 
   document.addEventListener('click', (e) => {
     const t = e.target.closest('[data-cliente],[data-despesa],[data-dia],[data-etapa],[data-aba-d],[data-conectar],[data-ler-agora],[data-vista-cli],[data-historico],[data-instrucoes],[data-breve],[data-receber],[data-ag],[data-mes],[data-periodo],[data-sair],[data-novo-cliente],[data-pessoa]');
@@ -2512,6 +2513,11 @@
     entra(data.user);
   });
 
+  // categoria sem nenhum item visível some (ex.: Vendas para o marinheiro)
+  function arrumaGrupos() {
+    document.querySelectorAll('.nav__grupo').forEach((g) => { g.hidden = !g.querySelector('.nav__item:not([hidden])'); });
+  }
+
   async function entra(user) {
     S.user = user;
     const { data: papel, error } = await sb.rpc('bb_papel');
@@ -2520,8 +2526,11 @@
     const { data: eu } = await sb.from('bb_equipe').select('nome').eq('user_id', user.id).maybeSingle();
     S.nome = eu ? eu.nome : '';
     // cada papel vê só o próprio menu
-    const menu = papel === 'marinheiro' ? ['escala', 'conta'] : papel === 'parceiro' ? ['minha-agenda', 'conta'] : ['hoje', 'agenda', 'clientes', 'mais'].concat(dona() ? ['dinheiro'] : []);
-    document.querySelectorAll('[data-nav]').forEach((a) => { a.hidden = !menu.includes(a.dataset.nav); });
+    const menu = papel === 'marinheiro' ? ['escala', 'conta'] : papel === 'parceiro' ? ['minha-agenda', 'conta']
+      : ['hoje', 'agenda', 'clientes', 'lanchas', 'parceiros', 'marinheiros', 'roteiros', 'site-textos', 'videos', 'robo', 'massa', 'conta', 'menu']
+        .concat(dona() ? ['dinheiro', 'acessos'] : []);
+    document.querySelectorAll('[data-nav]').forEach((a) => { a.hidden = !menu.includes(a.dataset.nav) || (a.hasAttribute('data-so-restrito') && !restrito()); });
+    arrumaGrupos();
     entrada.hidden = true; app.hidden = false;
     tela.innerHTML = '<p class="carregando">Carregando o painel</p>';
     try { await carrega(); } catch (err) {
@@ -2530,7 +2539,11 @@
       return;
     }
     // comissões só para quem vende passeio (tem lancha de revenda ou já tem comissão)
-    if (papel === 'parceiro') $('[data-nav="comissoes"]').hidden = !((S.comissoes || []).length || (S.agp || []).some((x) => !x.propria));
+    if (papel === 'parceiro') {
+      const vende = !!((S.comissoes || []).length || (S.agp || []).some((x) => !x.propria));
+      document.querySelectorAll('[data-nav="comissoes"]').forEach((a) => { a.hidden = !vende; });
+      arrumaGrupos();
+    }
     rota();
   }
 
