@@ -257,9 +257,13 @@ mostra o selo "exemplo" nos registros fictícios (id `de300000-…` ou `origem_i
 `supabase/demo/apagar.sql`: apaga só os fictícios, as metas com `demo = true` (migração
 `2026-11-20-07-metas-demo.sql`, **aplicar antes de publicar o painel**) e os testes da apresentação (listados por id).
 O que ela lançar fica. O que ela anotar *dentro* de um registro de exemplo some junto.
-**Ainda da reunião:** vídeo/GIF de como conectar o Google Agenda (para os donos); tabela de clientes com histórico;
-foto antiga da Michele e do Neto para a página Sobre (ela envia); QR do Cadastur (ela envia); acessos de parceiro e
-marinheiro; ajustar o site no celular (letra pequena).
+**Ainda da reunião:** vídeo/GIF de como conectar o Google Agenda (para os donos, fica para depois); foto antiga da
+Michele e do Neto para a página Sobre (ela envia); QR do Cadastur (ela envia). Feitos em 23 a 25/11: tabela de clientes,
+acessos de parceiro e marinheiro, letra do site no celular.
+**Letra no celular (25/11):** bloco "letra no celular" no fim do `site.css` e do `paginas.css` (até 640 px): texto
+corrido segue 17 px; selos sobre foto >= 13,5 px; rótulos, notas, itens a bordo, campos e rodapé >= 14 px. Em 360 px:
+paradas do card de roteiro a 12,5 px (até 370 px), ficha da lancha com coluna que encolhe (sumiu a rolagem lateral de
+39 px que já existia) e topo do calendário em duas linhas. Medição: script que lista todo texto visível < 15 px.
 
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.
