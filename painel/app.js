@@ -1457,35 +1457,167 @@
     return grava(sb.from('bb_lanchas').update({ fotos }).eq('id', l.id));
   }
 
+  // A primeira foto é sempre a capa (lista de lanchas do site e compartilhamento).
+  // Depois de mudar a ordem, apagar ou enviar, se a primeira mudou, a capa é refeita a partir dela.
+  async function capaDaPrimeira(l, lista) {
+    const primeira = lista[0];
+    if (!primeira) return true;
+    const r = await api('fotos.php', { acao: 'capa', lancha_id: l.id, url: primeira.url, antiga: l.capa_url });
+    if (!r.ok) { avisa(r.erro || 'Não consegui trocar a capa.', true); return false; }
+    return !!(await grava(sb.from('bb_lanchas').update({ capa_url: r.capa_url }).eq('id', l.id)));
+  }
+
+  const fotoSel = new Set();   // fotos marcadas para apagar em massa (pela url)
+
   function telaFotos(id) {
     const l = lancha(id);
     if (!l) { location.hash = '#lanchas'; return; }
     const fotos = Array.isArray(l.fotos) ? l.fotos : [];
+    for (const u of [...fotoSel]) if (!fotos.some((f) => f.url === u)) fotoSel.delete(u);
     const fila = fotos.filter((f) => f.melhorar).length;
     tela.innerHTML = `<a class="voltar" href="#lancha/${l.id}"><svg><use href="#p-volta"/></svg>${esc(l.nome)}</a>
-      <header class="cab"><div><h1>Fotos da ${esc(l.nome)}</h1><p>A primeira foto abre a galeria do site. Toque numa foto para mudar a ordem, usar como capa ou apagar.</p></div>
+      <header class="cab"><div><h1>Fotos da ${esc(l.nome)}</h1><p>Arraste para mudar a ordem. A primeira foto é a capa e abre a galeria do site.</p></div>
         <label class="botao botao--principal"><svg><use href="#p-foto"/></svg>Adicionar fotos<input type="file" accept="image/*" multiple data-arquivos class="sr"></label></header>
       <p class="ajuda" data-progresso hidden></p>
-      <section class="cartao fotos-capa">
-        ${l.capa_url ? `<img src="${esc(foto(l.capa_url))}" alt="">` : '<span class="fotos-capa__sem">Sem capa</span>'}
-        <div><b>Capa</b><p>Aparece na lista de lanchas do site e quando alguém compartilha a página. Para trocar, toque numa foto e em "Usar como capa".</p></div>
-      </section>
       ${fila ? `<p class="ajuda">${fila === 1 ? '1 foto está pequena e vai' : fila + ' fotos estão pequenas e vão'} para a melhoria com inteligência artificial. Enquanto isso, ${fila === 1 ? 'ela aparece no site como chegou' : 'elas aparecem no site como chegaram'}.</p>` : ''}
-      ${fotos.length ? `<ol class="fotos-grade">${fotos.map((f, i) => `<li><button type="button" data-foto-i="${i}" aria-label="Foto ${i + 1}">
-          <img src="${esc(foto(f.url_p || f.url))}" alt="" loading="lazy"><span class="fotos-grade__n">${i + 1}</span>
-          ${f.melhorar ? '<span class="fotos-grade__selo">vai melhorar</span>' : ''}</button></li>`).join('')}</ol>`
+      <div class="fotos-barra" data-barra hidden>
+        <span data-barra-txt></span>
+        <button class="botao botao--leve botao--pequeno" type="button" data-desmarcar>Desmarcar</button>
+        <button class="botao botao--perigo-leve botao--pequeno" type="button" data-apagar-sel>Apagar as selecionadas</button>
+      </div>
+      ${fotos.length ? `<ol class="fotos-grade" data-grade>${fotos.map((f, i) => `<li class="fotos-grade__item${fotoSel.has(f.url) ? ' is-sel' : ''}" data-i="${i}">
+          <button class="fotos-grade__abre" type="button" data-foto-i="${i}" aria-label="Foto ${i + 1}${i === 0 ? ', capa' : ''}. Arraste para mudar a ordem; Alt e as setas também movem.">
+            <img src="${esc(foto(f.url_p || f.url))}" alt="" loading="lazy" draggable="false"></button>
+          <span class="fotos-grade__n${i === 0 ? ' is-capa' : ''}">${i === 0 ? 'Capa' : i + 1}</span>
+          ${f.melhorar ? '<span class="fotos-grade__selo">vai melhorar</span>' : ''}
+          <label class="fotos-grade__marca"><input type="checkbox" data-sel="${i}"${fotoSel.has(f.url) ? ' checked' : ''}><span class="sr">Selecionar a foto ${i + 1}</span></label>
+        </li>`).join('')}</ol>`
         : '<p class="cartao vazio">Sem fotos ainda. Toque em "Adicionar fotos" e escolha as fotos no celular ou no computador.</p>'}
-      <p class="ajuda" style="margin-top:14px">Pode mandar a foto como saiu do celular: o painel recorta em quadrado e deixa leve para o site. Prefira fotos com a lancha no centro.</p>`;
+      <p class="ajuda" style="margin-top:14px">Pode mandar a foto como saiu do celular: o painel recorta em quadrado e deixa leve para o site. No celular, segure a foto um instante e arraste.</p>`;
     tela.querySelector('[data-arquivos]').addEventListener('change', (e) => { const arqs = [...e.target.files]; e.target.value = ''; if (arqs.length) enviaFotos(l, arqs); });
-    tela.querySelectorAll('[data-foto-i]').forEach((b) => b.addEventListener('click', () => abreFoto(l, Number(b.dataset.fotoI))));
+    const grade = tela.querySelector('[data-grade]');
+    if (!grade) return;
+
+    // seleção para apagar em massa
+    const pintaBarra = () => {
+      const n = fotoSel.size;
+      tela.querySelector('[data-barra]').hidden = !n;
+      tela.querySelector('[data-barra-txt]').textContent = n === 1 ? '1 foto selecionada' : `${n} fotos selecionadas`;
+    };
+    grade.querySelectorAll('[data-sel]').forEach((cx) => cx.addEventListener('change', () => {
+      const f = fotos[Number(cx.dataset.sel)];
+      if (cx.checked) fotoSel.add(f.url); else fotoSel.delete(f.url);
+      cx.closest('li').classList.toggle('is-sel', cx.checked);
+      pintaBarra();
+    }));
+    tela.querySelector('[data-desmarcar]').addEventListener('click', () => { fotoSel.clear(); telaFotos(id); });
+    confirmaNoBotao(tela.querySelector('[data-apagar-sel]'), 'Toque de novo para apagar', async () => {
+      const sai = fotos.filter((f) => fotoSel.has(f.url));
+      const fica = fotos.filter((f) => !fotoSel.has(f.url));
+      if (!(await salvaFotos(l, fica))) return;
+      for (const f of sai) await api('fotos.php', { acao: 'apagar', lancha_id: l.id, url: f.url });
+      fotoSel.clear();
+      if (fica[0] && (!fotos[0] || fotos[0].url !== fica[0].url)) await capaDaPrimeira(l, fica);
+      await api('fotos.php', { acao: 'cache' });
+      await atualiza();
+      avisa(sai.length === 1 ? 'Foto apagada.' : `${sai.length} fotos apagadas.`);
+    });
+    pintaBarra();
+
+    // nova ordem: grava, refaz a capa se a primeira mudou e avisa o site
+    const salvaOrdem = async (nova) => {
+      if (nova.every((f, i) => f.url === fotos[i].url)) return;
+      if (!(await salvaFotos(l, nova))) { telaFotos(id); return; }
+      if (nova[0].url !== fotos[0].url) await capaDaPrimeira(l, nova);
+      await api('fotos.php', { acao: 'cache' });
+      await atualiza();
+      avisa(nova[0].url !== fotos[0].url ? 'Ordem salva. A primeira foto virou a capa.' : 'Ordem salva.');
+    };
+
+    // arrastar: mouse começa ao mover 6 px; dedo começa depois de segurar 250 ms (antes disso, é rolagem da tela)
+    let arr = null;
+    const itens = () => [...grade.querySelectorAll('.fotos-grade__item')];
+    grade.addEventListener('pointerdown', (e) => {
+      const li = e.target.closest('.fotos-grade__item');
+      if (!li || e.target.closest('.fotos-grade__marca') || e.button > 0) return;
+      const ini = { x: e.clientX, y: e.clientY, li, id: e.pointerId, toque: e.pointerType !== 'mouse', ativo: false, t: null };
+      if (ini.toque) ini.t = setTimeout(() => comeca(ini, ini.x, ini.y), 250);
+      arr = ini;
+    });
+    const comeca = (a, x, y) => {
+      if (!arr || arr !== a) return;
+      a.ativo = true;
+      const r = a.li.getBoundingClientRect();
+      a.dx = x - r.left; a.dy = y - r.top;
+      a.fantasma = a.li.cloneNode(true);
+      a.fantasma.classList.add('fotos-grade__fantasma');
+      Object.assign(a.fantasma.style, { width: r.width + 'px', height: r.height + 'px', left: r.left + 'px', top: r.top + 'px' });
+      document.body.appendChild(a.fantasma);
+      a.li.classList.add('is-arrastando');
+      try { grade.setPointerCapture(a.id); } catch (e) { /* sem captura, segue */ }
+      if (navigator.vibrate && a.toque) navigator.vibrate(15);
+    };
+    grade.addEventListener('pointermove', (e) => {
+      const a = arr;
+      if (!a || e.pointerId !== a.id) return;
+      if (!a.ativo) {
+        const longe = Math.hypot(e.clientX - a.x, e.clientY - a.y) > (a.toque ? 10 : 6);
+        if (!longe) return;
+        if (a.toque) { clearTimeout(a.t); arr = null; return; }   // dedo andou antes de segurar: é rolagem
+        comeca(a, a.x, a.y);
+      }
+      e.preventDefault();
+      a.fantasma.style.left = (e.clientX - a.dx) + 'px';
+      a.fantasma.style.top = (e.clientY - a.dy) + 'px';
+      // troca de lugar com a foto que está embaixo do dedo/mouse
+      const alvo = itens().find((x) => { if (x === a.li) return false; const r = x.getBoundingClientRect(); return e.clientX > r.left && e.clientX < r.right && e.clientY > r.top && e.clientY < r.bottom; });
+      if (alvo) {
+        const lista = itens();
+        grade.insertBefore(a.li, lista.indexOf(alvo) > lista.indexOf(a.li) ? alvo.nextSibling : alvo);
+        itens().forEach((x, k) => { const n = x.querySelector('.fotos-grade__n'); n.textContent = k ? k + 1 : 'Capa'; n.classList.toggle('is-capa', !k); });
+      }
+      // perto da borda da tela, rola sozinho
+      if (e.clientY < 70) window.scrollBy(0, -12); else if (e.clientY > innerHeight - 70) window.scrollBy(0, 12);
+    }, { passive: false });
+    const solta = () => {
+      const a = arr; arr = null;
+      if (!a) return;
+      clearTimeout(a.t);
+      if (!a.ativo) return;
+      a.fantasma.remove();
+      a.li.classList.remove('is-arrastando');
+      grade.ultimoArraste = Date.now();
+      salvaOrdem(itens().map((x) => fotos[Number(x.dataset.i)]));
+    };
+    grade.addEventListener('pointerup', solta);
+    grade.addEventListener('pointercancel', solta);
+    // no celular, enquanto arrasta, a tela não rola (sem isso o navegador cancela o arraste)
+    grade.addEventListener('touchmove', (e) => { if (arr && arr.ativo) e.preventDefault(); }, { passive: false });
+    grade.addEventListener('contextmenu', (e) => { if (arr && arr.toque) e.preventDefault(); });   // segurar no celular não abre o menu da imagem
+
+    // toque simples abre a foto; um clique que terminou um arraste não abre
+    grade.querySelectorAll('[data-foto-i]').forEach((b) => b.addEventListener('click', (e) => {
+      if (Date.now() - (grade.ultimoArraste || 0) < 400) return;
+      abreFoto(l, Number(b.dataset.fotoI));
+    }));
+    // teclado: Alt + seta move a foto em foco
+    grade.addEventListener('keydown', (e) => {
+      const b = e.target.closest('[data-foto-i]');
+      if (!b || !e.altKey || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+      e.preventDefault();
+      const i = Number(b.dataset.fotoI), para = i + (e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 1);
+      if (para < 0 || para >= fotos.length) return;
+      const nova = fotos.slice(); const [x] = nova.splice(i, 1); nova.splice(para, 0, x);
+      salvaOrdem(nova).then(() => { const f = tela.querySelector(`[data-foto-i="${para}"]`); if (f) f.focus(); });
+    });
   }
 
   async function enviaFotos(l, arqs) {
     const prog = tela.querySelector('[data-progresso]');
     const entrada = tela.querySelector('[data-arquivos]');
     entrada.disabled = true;
-    let lista = (Array.isArray(l.fotos) ? l.fotos : []).slice();
-    let capa = l.capa_url;
+    const antes = (Array.isArray(l.fotos) ? l.fotos : []).slice();
+    let lista = antes.slice();
     let foram = 0, pequenas = 0;
     const erros = [];
     for (let i = 0; i < arqs.length; i++) {
@@ -1499,11 +1631,9 @@
       lista.push(r.foto); foram++; if (r.foto.melhorar) pequenas++;
       // grava a cada foto: se a internet cair no meio, as que já subiram ficam
       if (!(await salvaFotos(l, lista))) break;
-      if (!capa) {
-        const c = await api('fotos.php', { acao: 'capa', lancha_id: l.id, url: r.foto.url });
-        if (c.ok && (await grava(sb.from('bb_lanchas').update({ capa_url: c.capa_url }).eq('id', l.id)))) capa = c.capa_url;
-      }
     }
+    // lancha que estava sem fotos: a primeira enviada vira a capa
+    if (foram && !antes.length) await capaDaPrimeira(l, lista);
     if (foram) await api('fotos.php', { acao: 'cache' });
     await atualiza();
     if (foram) avisa(`${foram === 1 ? '1 foto adicionada' : foram + ' fotos adicionadas'}.${pequenas ? ` ${pequenas === 1 ? '1 estava pequena e vai' : pequenas + ' estavam pequenas e vão'} para a melhoria com IA.` : ''}`);
@@ -1514,34 +1644,19 @@
     const fotos = (Array.isArray(l.fotos) ? l.fotos : []).slice();
     const f = fotos[i];
     if (!f) return;
-    const n = fotos.length;
-    abreGaveta(`Foto ${i + 1} de ${n}`, `
+    abreGaveta(`Foto ${i + 1} de ${fotos.length}${i === 0 ? ' (capa)' : ''}`, `
       <img class="foto-grande" src="${esc(foto(f.url))}" alt="">
       ${f.melhorar ? '<p class="ajuda">Foto pequena: vai para a melhoria com inteligência artificial.</p>' : ''}
-      <div class="acoes" style="margin-top:14px">
-        ${i > 0 ? '<button class="botao botao--leve botao--pequeno" type="button" data-mover="0">Passar para a primeira</button><button class="botao botao--leve botao--pequeno" type="button" data-mover="-1">Uma para trás</button>' : ''}
-        ${i < n - 1 ? '<button class="botao botao--leve botao--pequeno" type="button" data-mover="1">Uma para a frente</button>' : ''}
-      </div>
-      <button class="botao botao--principal botao--cheio" type="button" data-capa style="margin-top:14px">Usar como capa</button>
+      <p class="ajuda" style="margin-top:12px">Para mudar a ordem, feche e arraste a foto na lista. A primeira é a capa.</p>
       <section class="bloco"><button class="botao botao--leve" type="button" data-apagar-foto>Apagar esta foto</button></section>`, (c) => {
-      const termina = async (msg) => { await api('fotos.php', { acao: 'cache' }); fechaGaveta(); await atualiza(); avisa(msg); };
-      c.querySelectorAll('[data-mover]').forEach((b) => aoSalvar(b, async () => {
-        const para = b.dataset.mover === '0' ? 0 : i + Number(b.dataset.mover);
-        const [x] = fotos.splice(i, 1); fotos.splice(para, 0, x);
-        if (!(await salvaFotos(l, fotos))) return;
-        await termina(`Foto passou para a posição ${para + 1}.`);
-      }));
-      aoSalvar(c.querySelector('[data-capa]'), async () => {
-        const r = await api('fotos.php', { acao: 'capa', lancha_id: l.id, url: f.url, antiga: l.capa_url });
-        if (!r.ok) { avisa(r.erro || 'Não deu certo.', true); return; }
-        if (!(await grava(sb.from('bb_lanchas').update({ capa_url: r.capa_url }).eq('id', l.id)))) return;
-        await termina('Capa trocada.');
-      });
       confirmaNoBotao(c.querySelector('[data-apagar-foto]'), 'Toque de novo para apagar', async () => {
         fotos.splice(i, 1);
         if (!(await salvaFotos(l, fotos))) return;
         await api('fotos.php', { acao: 'apagar', lancha_id: l.id, url: f.url });
-        await termina('Foto apagada.');
+        if (i === 0 && fotos[0]) await capaDaPrimeira(l, fotos);
+        fotoSel.delete(f.url);
+        await api('fotos.php', { acao: 'cache' });
+        fechaGaveta(); await atualiza(); avisa(i === 0 && fotos[0] ? 'Foto apagada. A próxima virou a capa.' : 'Foto apagada.');
       });
     });
   }
