@@ -216,9 +216,14 @@ até 2400 px (rotação certa, funciona no iPhone); `api/fotos.php` recorta o qu
 a legenda segue a posição. Toda mudança limpa o cache do site (`acao: cache`, também ao salvar os dados da lancha).
 **Na troca para a raiz, copiar a pasta `fotos/` de `/novo` para a raiz.** Foto com lado menor que 1400 px entra
 como veio, com `melhorar: true` no JSON e o original em `fotos/lanchas/<slug>/orig/<nome>.jpg`.
-**Falta:** script local que baixa os `orig/` pelo FTP, passa o Real-ESRGAN e sobe `<nome>-ia.webp`, e o cron que troca
-a URL e tira o `melhorar`. O modelo ONNX precisa ser baixado de novo (as cópias nos scratchpads foram limpas):
-guardar em `E:\Clientes\Barra Boat Floripa\Site\ferramentas\esrgan\`, fora do Git e fora de pasta temporária.
+**Melhoria com IA (25/11, feita):** `BB_FTP_SENHA='...' python tools/melhorar_fotos.py` (`--listar` só mostra a fila)
+baixa os `orig/` pelo FTP, roda o Real-ESRGAN (`tools/esrgan.py`; entrada até 560 px, 4x, saída 1400) e sobe
+`<nome>-ia.webp` e `-ia-p.webp`. O `cron/videos.php` (5 min) chama `lib/fotos_ia.php`: troca a URL no banco, tira o
+`melhorar`, refaz a capa se for a primeira e apaga a versão pequena e o original. Modelo **v0.67.0** em
+`E:\Clientes\Barra Boat Floripa\Siteerramentas\esrgan\` (fora do Git; ~1 min por foto). Primeira rodada: 5 fotos da
+Phantom 30 BB (562 a 1085 px). O painel relê as fotos antes de gravar, para não voltar a URL antiga.
+**Tela de fotos (25/11, pedido da Michele):** arrastar para ordenar (mouse; no celular segurar 250 ms e arrastar;
+Alt+setas no teclado), caixa de seleção para apagar em massa, a **primeira foto é sempre a capa** (refeita quando muda).
 
 **Roteiros, perguntas e avaliações pelo painel (24/11):** Mais > Roteiros (paradas: nome, texto, foto 4:3 em
 `fotos/roteiros/<slug>/`, ordem; regras, uma por linha) e Mais > Perguntas e avaliações. O PHP troca só esses trechos
