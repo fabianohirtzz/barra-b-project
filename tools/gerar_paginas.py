@@ -14,7 +14,7 @@ WA = '5548991153172'
 INDEX = open(os.path.join(PROJ, 'index.html'), encoding='utf-8').read()
 L_JSON = {l['slug']: l for l in json.load(open(os.path.join(PROJ, 'docs/conteudo-site-atual/lanchas.json'), encoding='utf-8'))}
 IMGS = json.load(open(os.path.join(PROJ, 'tools/imagens.json'), encoding='utf-8'))
-V_CSS, V_JS = '13', '9'
+V_CSS, V_JS = '14', '10'
 e = html.escape
 
 
@@ -254,7 +254,7 @@ EMPRESA_REF = {'@id': DOM + '#empresa'}
 # ---------------------------------------------------------------- /lanchas/
 migs, ld_m = migalhas([('Início', './'), ('Lanchas', None)])
 corpo = capa_faixa('Aluguel de lancha em Florianópolis: escolha a sua',
-                   '17 lanchas privativas de 23 a 37 pés, para grupos de 7 a 13 pessoas. Todas com marinheiro e combustível do roteiro inclusos, saindo da Barra da Lagoa.',
+                   '17 lanchas privativas de 23 a 37 pés, para grupos de 7 a 13 pessoas. Todas com marinheiro e combustível do roteiro inclusos. Escolha a lancha que mais combina com o seu dia de diversão!',
                    migs) + f'''
     <section class="secao" aria-labelledby="frota-titulo">
       <div class="secao__cabeca secao__cabeca--linha">
@@ -266,7 +266,7 @@ corpo = capa_faixa('Aluguel de lancha em Florianópolis: escolha a sua',
           <button type="button" aria-pressed="true" data-pax="0">Todas</button>
           <button type="button" aria-pressed="false" data-pax="7">Até 7</button>
           <button type="button" aria-pressed="false" data-pax="10">8 a 10</button>
-          <button type="button" aria-pressed="false" data-pax="13">11 a 13</button>
+          <button type="button" aria-pressed="false" data-pax="13">11 ou mais</button>
         </div>
       </div>
 {grade_lanchas(ORDEM)}
@@ -290,7 +290,7 @@ corpo = capa_faixa('Aluguel de lancha em Florianópolis: escolha a sua',
 ld = [ld_m, {'@type': 'ItemList', 'name': 'Lanchas para aluguel em Florianópolis', 'numberOfItems': 17,
              'itemListElement': [{'@type': 'ListItem', 'position': i + 1, 'url': f'{DOM}lanchas/{s}/', 'name': CARDS[s]['nome']} for i, s in enumerate(ORDEM)]}]
 gerados.append(pagina('lanchas/', 'Lanchas para alugar em Florianópolis | Barra Boat Floripa',
-                      'Escolha entre 17 lanchas privativas de 23 a 37 pés, para 7 a 13 pessoas, com marinheiro e combustível inclusos. Saída da Barra da Lagoa.', corpo, ld))
+                      'Escolha entre 17 lanchas privativas de 23 a 37 pés, para 7 a 13 pessoas, com marinheiro e combustível inclusos.', corpo, ld))
 
 # ---------------------------------------------------------------- /lanchas/<slug>/
 disponibilidade_exemplo()
@@ -420,7 +420,7 @@ for s in ORDEM:
 # ---------------------------------------------------------------- /roteiros/
 migs, ld_m = migalhas([('Início', './'), ('Roteiros', None)])
 corpo = capa_foto('roteiros', 'Lanchas ancoradas em frente a uma praia de areia branca, vistas de cima', 'Roteiros de lancha em Florianópolis',
-                  'Dois passeios de dia inteiro saindo do Canal da Barra da Lagoa: mar aberto até a Ilha do Campeche ou águas calmas pela Costa da Lagoa.', migs) + '''
+                  'Dois passeios de dia inteiro saindo do Canal da Barra da Lagoa: mar aberto até a Ilha do Campeche ou águas calmas pela Costa da Lagoa. Ou um roteiro personalizado, do seu jeito.', migs) + '''
     <section class="secao" aria-labelledby="comparar-titulo">
       <div class="secao__cabeca">
         <h2 id="comparar-titulo" class="titulo">Qual roteiro combina com o seu grupo</h2>
@@ -462,11 +462,29 @@ corpo = capa_foto('roteiros', 'Lanchas ancoradas em frente a uma praia de areia 
       </div>
     </section>
 
+    <section class="secao" id="personalizado" aria-labelledby="pers-titulo">
+      <div class="secao__cabeca secao__cabeca--linha">
+        <div>
+          <h2 id="pers-titulo" class="titulo">Roteiro personalizado</h2>
+          <p class="secao__intro">Quer embarcar em outro lugar, conhecer outras praias ou passear em outro horário? A nossa equipe monta o passeio com você.</p>
+        </div>
+        <div class="pers__acoes">
+          <a class="botao botao--mar" data-wa data-wa-texto="Olá! Vim pelo site da Barra Boat. Quero montar um passeio de lancha personalizado." href="https://wa.me/5548991153172" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-wa"/></svg><span>Montar no WhatsApp</span></a>
+          <a class="botao botao--contorno" href="contato/?roteiro=personalizado"><span>Preencher o pedido</span><svg aria-hidden="true"><use href="#i-seta"/></svg></a>
+        </div>
+      </div>
+      <ul class="valores">
+        <li><svg aria-hidden="true"><use href="#i-pin"/></svg><h3>Embarque em outro ponto</h3><p>A lancha pode buscar o grupo em outro lugar da Ilha, como um trapiche ou uma marina perto de onde vocês estão. O deslocamento é combinado na reserva.</p></li>
+        <li><svg aria-hidden="true"><use href="#i-leme"/></svg><h3>Paradas do seu jeito</h3><p>Diga quais praias e ilhas quer conhecer. O marinheiro monta o caminho conforme o vento e a maré do dia.</p></li>
+        <li><svg aria-hidden="true"><use href="#i-relogio"/></svg><h3>Horário combinado</h3><p>Saída e volta em outro horário, acertados com a nossa equipe conforme a lancha livre na data.</p></li>
+      </ul>
+    </section>
+
     <section class="secao" aria-labelledby="dia-titulo">
       <div class="duas-colunas">
         <div>
           <h2 id="dia-titulo" class="titulo">Como é o dia a bordo</h2>
-          <p class="secao__intro">Vale para os dois roteiros.</p>
+          <p class="secao__intro">Vale para os roteiros da Ilha do Campeche e da Costa da Lagoa.</p>
         </div>
         <ol class="lista-passos">
           <li><b>Embarque no Canal da Barra</b><span>Às 9h ou às 10h, na Rod. Jorn. Manoel de Menezes, 3007. Pontualidade conta: o tempo de atraso não é reposto no fim do dia.</span></li>
@@ -480,7 +498,7 @@ corpo = capa_foto('roteiros', 'Lanchas ancoradas em frente a uma praia de areia 
               'Olá! Vim pelo site da Barra Boat. Quero consultar um passeio de lancha.')
 ld = [ld_m]
 gerados.append(pagina('roteiros/', 'Roteiros de lancha em Florianópolis: Campeche e Costa da Lagoa | Barra Boat Floripa',
-                      'Compare os passeios de lancha saindo da Barra da Lagoa: Ilha do Campeche em mar aberto (10,4 milhas) ou Costa da Lagoa em águas calmas. Diária com marinheiro.',
+                      'Compare os passeios de lancha saindo da Barra da Lagoa: Ilha do Campeche em mar aberto (10,4 milhas) ou Costa da Lagoa em águas calmas. Também montamos roteiro personalizado.',
                       corpo, ld, og_img='assets/img/capas/roteiros.webp'))
 
 
@@ -675,7 +693,7 @@ corpo = capa_foto('sobre', 'Lancha navegando entre as casas coloridas e os barco
         </div>
         <ul class="numeros">
           <li><b>2010</b><span>o ano em que começamos</span></li>
-          <li><b>17</b><span>lanchas de 23 a 37 pés</span></li>
+          <li><b data-frota-n>17</b><span>lanchas de 23 a 37 pés</span></li>
           <li><b>4,8</b><span>de nota no Google</span></li>
           <li><b>30+</b><span>anos de mar do fundador</span></li>
         </ul>
@@ -731,7 +749,7 @@ corpo = capa_faixa('Fale com a Barra Boat', 'Atendimento 24 horas pelo WhatsApp.
           </a>
           <a class="canal" href="tel:+5548991153172"><svg aria-hidden="true"><use href="#i-tel"/></svg><span><b>Telefone</b>(48) 99115-3172</span></a>
           <a class="canal" href="mailto:contato@barraboatfloripa.com.br"><svg aria-hidden="true"><use href="#i-mail"/></svg><span><b>E-mail</b>contato@barraboatfloripa.com.br</span></a>
-          <a class="canal" href="https://maps.app.goo.gl/BpSAjwD4joPXAXKb7" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-pin"/></svg><span><b>Embarque</b>Rod. Jorn. Manoel de Menezes, 3007, Barra da Lagoa, Florianópolis, SC</span></a>
+          <a class="canal" href="https://maps.app.goo.gl/BpSAjwD4joPXAXKb7" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-pin"/></svg><span><b>Sede e embarque</b>Rod. Jorn. Manoel de Menezes, 3007, Barra da Lagoa, Florianópolis, SC</span></a>
           <div class="canal canal--redes">
             <svg aria-hidden="true"><use href="#i-relogio"/></svg><span><b>Atendimento 24 horas</b>Siga também:</span>
             <span class="canal__redes">
@@ -773,19 +791,26 @@ corpo = capa_faixa('Fale com a Barra Boat', 'Atendimento 24 horas pelo WhatsApp.
     </section>
 
     <section class="secao" aria-labelledby="mapa-titulo">
-      <div class="secao__cabeca">
-        <h2 id="mapa-titulo" class="titulo">Onde é o embarque</h2>
-        <p class="secao__intro">No Canal da Barra da Lagoa, na Rod. Jorn. Manoel de Menezes, 3007. Embarque em outro ponto pode ser combinado, desde que a lancha consiga manobrar.</p>
+      <div class="duas-colunas embarque">
+        <div>
+          <h2 id="mapa-titulo" class="titulo">Onde é o embarque</h2>
+          <p class="secao__intro">A sede da Barra Boat fica na Rod. Jorn. Manoel de Menezes, 3007, na Barra da Lagoa. É dali, pelo canal, que sai a maior parte dos passeios. O local certo do seu embarque, com o link do mapa, vai na confirmação da reserva pelo WhatsApp.</p>
+        </div>
+        <ul class="lista-passos lista-passos--pontos">
+          <li><b>Ilha do Campeche</b><span>Embarque no Canal da Barra da Lagoa, junto à sede.</span></li>
+          <li><b>Costa da Lagoa</b><span>Saída pelo Canal da Barra ou direto da Lagoa da Conceição, combinada na reserva.</span></li>
+          <li><b>Lanchas de outras regiões e roteiro personalizado</b><span>O ponto de embarque é combinado com a nossa equipe. A lancha também pode buscar o grupo em outro lugar, desde que consiga chegar e manobrar com segurança.</span></li>
+        </ul>
       </div>
       <div class="mapa">
-        <iframe title="Mapa do embarque no Canal da Barra da Lagoa" src="https://maps.google.com/maps?q=Rod.+Jorn.+Manoel+de+Menezes,+3007,+Barra+da+Lagoa,+Florian%C3%B3polis&z=15&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <iframe title="Mapa da sede da Barra Boat, no Canal da Barra da Lagoa" src="https://maps.google.com/maps?q=Rod.+Jorn.+Manoel+de+Menezes,+3007,+Barra+da+Lagoa,+Florian%C3%B3polis&z=15&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
       </div>
     </section>
 '''
 gerados.append(pagina('contato/', 'Contato e embarque | Barra Boat Floripa',
-                      'Fale com a Barra Boat Floripa pelo WhatsApp (48) 99115-3172, atendimento 24 horas. Embarque no Canal da Barra da Lagoa, Rod. Jorn. Manoel de Menezes, 3007.',
+                      'Fale com a Barra Boat Floripa pelo WhatsApp (48) 99115-3172, atendimento 24 horas. Sede e embarque no Canal da Barra da Lagoa, Rod. Jorn. Manoel de Menezes, 3007.',
                       corpo, [ld_m, {'@type': 'ContactPage', 'url': DOM + 'contato/', 'about': EMPRESA_REF}],
-                      js_extra='\n  <script src="{pre}assets/js/contato.js?v=2" defer></script>'))
+                      js_extra='\n  <script src="{pre}assets/js/contato.js?v=3" defer></script>'))
 
 
 # ---------------------------------------------------------------- políticas

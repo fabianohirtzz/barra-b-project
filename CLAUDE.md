@@ -304,5 +304,27 @@ cliente (pt/es, com embarque, mapa, nome do marinheiro, valor e quanto falta; se
 dono (só o nome do cliente). Site: "Ainda não sei" virou "Personalizado" na home e no Contato, com "a lancha busca o grupo
 em outro lugar?" e o pedido indo na mensagem do WhatsApp.
 
+**Ajustes de 25/11 (noite, pedidos do Fabiano):**
+- Painel, menu: Vendas = Clientes (tabela com filtros: passeio marcado, já reservaram, voltaram, nunca, "veio de"; "Exportar
+  clientes"), **Funil de vendas** (`#funil`, as etapas) e **Relatórios** (era Dinheiro; `#dinheiro` ainda abre). Frota e equipe ganhou
+  **Locais de embarque** (`#embarques`, tabela `bb_embarques`, migração `2026-11-25-14-locais-de-embarque.sql`; o primeiro da lista é o
+  ponto de sempre). WhatsApp ganhou **Mensagens do passeio** (`#mensagens`): modelos com `{campos}` em `bb_wa_textos`
+  (chave `passeio_cliente|marinheiro|parceiro|vendedor`, idioma pt/es); linha com campo vazio sai da mensagem; sem linha no banco vale
+  `MSG_PADRAO` no `app.js`.
+- Marcar passeio: busca de cliente pelo nome/WhatsApp (sem escolher, cadastra o nome digitado); "Cliente de parceiro" cria o pedido
+  com `parceiro_id` do vendedor e `origem = 'parceiro'` (só o nome do cliente); marinheiro já ocupado no dia fica desabilitado com a
+  lancha ao lado; local de embarque escolhido da lista traz o mapa. Botões: cliente, marinheiro, "Mandar ao parceiro" (dono) e, se
+  outro parceiro vendeu, "Mandar ao parceiro que vendeu".
+- Roteiros: cadastrar, desativar (`ativo`) e apagar (só se nenhum passeio/cliente usou; o banco faria set null). Roteiro novo existe só
+  no painel: **ainda não ganha página no site** (só Ilha do Campeche e Costa da Lagoa têm página, `ROTEIRO_COM_PAGINA`).
+- Botões de apagar em vermelho claro (`botao--perigo-leve`). Fotos: arraste não deixa mais o fantasma na tela (pointerup na janela,
+  `buttons === 0`) e a grade trava enquanto grava.
+- Leitor das agendas: nome aproximado também vale (`bb_agenda_acha_perto`: sem espaços, 1 erro de digitação a cada 8 letras, no
+  máximo 2, números nunca trocam; nomes com menos de 6 letras só valem exatos). Testes: `teste-perto.php` no scratchpad.
+- Site: faixa azul clara com borda em onda nas seções pares (`main > section.secao:nth-of-type(even)`, sem `.chamada`; seção nova
+  muda quais ficam com faixa); /lanchas/ sem "saindo da Barra da Lagoa"; filtro "11 ou mais"; /roteiros/ com seção "Roteiro
+  personalizado" (`contato/?roteiro=personalizado` abre o formulário com Personalizado); /sobre/ com o número da frota do banco
+  (`<b data-frota-n>`); /contato/ "Sede e embarque" reescrito; cabeçalho fica sólido antes de o texto da capa encostar no logo.
+
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.

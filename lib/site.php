@@ -45,8 +45,8 @@ function bb_troca_entre($html, $ini, $fim, $novo)
 function bb_textos_frota($html, $f)
 {
     return preg_replace(
-        ['/\b17 lanchas\b/u', '/\bde 23 a 37 pés\b/u', '/\b(de|para) 7 a 13 pessoas\b/u'],
-        [$f['n'] . ' lanchas', 'de ' . $f['pes_min'] . ' a ' . $f['pes_max'] . ' pés', '$1 ' . $f['pax_min'] . ' a ' . $f['pax_max'] . ' pessoas'],
+        ['/\b17 lanchas\b/u', '/\bde 23 a 37 pés\b/u', '/\b(de|para) 7 a 13 pessoas\b/u', '#<b data-frota-n>\d+</b>#'],
+        [$f['n'] . ' lanchas', 'de ' . $f['pes_min'] . ' a ' . $f['pes_max'] . ' pés', '$1 ' . $f['pax_min'] . ' a ' . $f['pax_max'] . ' pessoas', '<b data-frota-n>' . $f['n'] . '</b>'],
         $html
     );
 }

@@ -19,6 +19,7 @@
     rotulo.textContent = p ? 'Conte como você quer o passeio' : 'Mensagem';
     form.elements.mensagem.placeholder = p ? 'Paradas, horário, ocasião especial...' : 'Alguma dúvida ou pedido especial?';
   };
+  if (new URLSearchParams(location.search).get('roteiro') === 'personalizado') form.elements.roteiro.value = 'Personalizado';
   form.elements.roteiro.addEventListener('change', mostraPers);
   form.elements.desloc.addEventListener('change', mostraPers);
   mostraPers();

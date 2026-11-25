@@ -221,9 +221,23 @@
   const flutuante = $('.wa-flutuante');
   let ancora = window.scrollY;   // ponto onde a direção mudou pela última vez
   let escondido = false;
+  // O cabeçalho fica transparente sobre a capa só enquanto não encosta no texto dela;
+  // antes de o texto passar por baixo do logo, ele fica sólido.
+  const primeiroTexto = hero && hero.querySelector('.migalhas, h1');
+  let limite = 80;
+  function medeLimite() {
+    if (!hero) return;
+    limite = Math.min(hero.offsetHeight * .55, 520);
+    if (primeiroTexto) {
+      const topoTexto = primeiroTexto.getBoundingClientRect().top + window.scrollY;
+      limite = Math.max(0, Math.min(limite, topoTexto - topo.offsetHeight - 12));
+    }
+  }
+  medeLimite();
+  window.addEventListener('resize', () => { medeLimite(); aoRolar(); });
+  window.addEventListener('load', () => { medeLimite(); aoRolar(); });
   function aoRolar() {
     const y = window.scrollY;
-    const limite = hero ? Math.min(hero.offsetHeight * .55, 520) : 80;
     topo.classList.toggle('is-solido', !hero || y > limite);
     if (!document.body.classList.contains('menu-aberto')) {
       if (y < 600) { escondido = false; ancora = y; }
@@ -422,7 +436,7 @@
       setas();
     }
 
-    const faixas = { 0: [1, 99], 7: [1, 7], 10: [8, 10], 13: [11, 13] };
+    const faixas = { 0: [1, 99], 7: [1, 7], 10: [8, 10], 13: [11, 99] };
     const contagem = $('[data-contagem]');
     $$('[data-filtro] button').forEach((b) => b.addEventListener('click', () => {
       $$('[data-filtro] button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));

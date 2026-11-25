@@ -395,6 +395,52 @@ function bb_agenda_acha(array $pal, $texto)
     return $achadas;
 }
 
+/* Quando o nome não aparece certinho: compara sem espaços e aceita um erro de digitação a cada
+   8 letras (no máximo 2), sem nunca trocar números ("phanton30bbf" acha a Phantom 30 BBF, mas
+   "Phantom 29" nunca vira "Phantom 30" nem "Phantom 300"). Ganha o nome mais longo. */
+function bb_agenda_acha_perto(array $pal, $texto)
+{
+    $t = str_replace(' ', '', bb_agenda_norm($texto));
+    $T = strlen($t);
+    if ($T === 0) return [];
+    $melhor = 0; $achadas = [];
+    foreach ($pal as $id => $ps) {
+        $n = 0;
+        foreach ($ps as $p) {
+            $p = str_replace(' ', '', $p);
+            $L = strlen($p);
+            if ($L < 6) continue;
+            $tol = $L >= 8 ? min(2, intdiv($L, 8)) : 0;
+            preg_match_all('/\d+/', $p, $m); $num = implode(' ', $m[0]);
+            $ok = false;
+            for ($i = 0; $i < $T && !$ok; $i++) {
+                for ($k = max(1, $L - $tol); $k <= $L + $tol && $i + $k <= $T; $k++) {
+                    $s = substr($t, $i, $k);
+                    if ($i > 0 && ctype_digit($s[0]) && ctype_digit($t[$i - 1])) continue;
+                    if ($i + $k < $T && ctype_digit($s[$k - 1]) && ctype_digit($t[$i + $k])) continue;
+                    preg_match_all('/\d+/', $s, $m2);
+                    if (implode(' ', $m2[0]) !== $num) continue;
+                    if (levenshtein($s, $p) <= $tol) { $ok = true; break; }
+                }
+            }
+            if ($ok) $n = max($n, $L);
+        }
+        if ($n === 0) continue;
+        if ($n > $melhor) { $melhor = $n; $achadas = [$id]; } elseif ($n === $melhor) $achadas[] = $id;
+    }
+    return $achadas;
+}
+
+/* Nome certinho ou aproximado: ganha o nome mais longo; no empate, o certinho. */
+function bb_agenda_acha_tudo(array $pal, $texto)
+{
+    $a = bb_agenda_acha($pal, $texto);
+    $b = bb_agenda_acha_perto($pal, $texto);
+    if (!$a || !$b) return $a ?: $b;
+    $tam = function ($ids) use ($pal) { return max(array_map(function ($p) { return strlen(str_replace(' ', '', $p)); }, $pal[$ids[0]])); };
+    return $tam($b) > $tam($a) ? $b : $a;
+}
+
 /* Função (título, descrição) -> [ids]. Procura no título; se não achar, na descrição; se não achar
    em nenhum, todas as lanchas dele ('todas') ou nenhuma ('nenhuma'). Uma lancha só: sempre ela. */
 function bb_agenda_classificador(array $lanchas, $sem_nome)
@@ -404,8 +450,8 @@ function bb_agenda_classificador(array $lanchas, $sem_nome)
     $pal = [];
     foreach ($lanchas as $l) $pal[$l['id']] = bb_agenda_palavras($l);
     return function ($titulo, $desc = '') use ($pal, $ids, $sem_nome) {
-        $a = bb_agenda_acha($pal, $titulo);
-        if (!$a && $desc !== '') $a = bb_agenda_acha($pal, $desc);
+        $a = bb_agenda_acha_tudo($pal, $titulo);
+        if (!$a && $desc !== '') $a = bb_agenda_acha_tudo($pal, $desc);
         if ($a) return $a;
         return $sem_nome === 'nenhuma' ? [] : $ids;
     };
