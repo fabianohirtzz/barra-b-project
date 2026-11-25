@@ -1900,6 +1900,112 @@
     });
   }
 
+  /* ---------- vídeos do Instagram (home) ---------- */
+  // Envio com barra de progresso (o fetch não mostra o progresso do envio; o XMLHttpRequest mostra).
+  function enviaComProgresso(arquivo, fd, aoAndar) {
+    return new Promise(async (ok) => {
+      const { data: { session } } = await sb.auth.getSession();
+      const x = new XMLHttpRequest();
+      x.open('POST', '../api/' + arquivo);
+      x.setRequestHeader('Authorization', 'Bearer ' + ((session && session.access_token) || ''));
+      x.upload.onprogress = (e) => { if (e.lengthComputable) aoAndar(e.loaded / e.total); };
+      x.onload = () => { try { ok(JSON.parse(x.responseText)); } catch (e) { ok({ ok: false, erro: x.status === 413 ? 'Vídeo grande demais para enviar.' : 'O servidor não respondeu direito. Tente de novo.' }); } };
+      x.onerror = () => ok({ ok: false, erro: 'O envio caiu. Confira a internet e tente de novo.' });
+      x.send(fd);
+    });
+  }
+
+  let videos = [];
+  async function telaVideos() {
+    tela.innerHTML = `<a class="voltar" href="#mais"><svg><use href="#p-volta"/></svg>Mais</a>
+      <header class="cab"><div><h1>Vídeos do Instagram</h1><p>Os vídeos da página inicial do site, na ordem em que aparecem.</p></div>
+        <button class="botao botao--principal" type="button" data-novo-video><svg><use href="#p-mais-um"/></svg>Adicionar vídeo</button></header>
+      <p class="ajuda">Mande o vídeo como baixou do Instagram ou como gravou no celular. O servidor deixa ele leve para o site e tira a capa sozinho; em uns minutos ele aparece.</p>
+      <ol class="videos-l" data-lista><li class="cartao vazio">Carregando</li></ol>`;
+    tela.querySelector('[data-novo-video]').addEventListener('click', () => novoVideo());
+    const { data, error } = await sb.from('bb_instagram').select('*').order('ordem').order('created_at');
+    const ul = tela.querySelector('[data-lista]');
+    if (!ul) return;
+    if (error) { console.error(error); ul.innerHTML = vazio('Não consegui carregar agora. Tente de novo.'); return; }
+    videos = data || [];
+    ul.innerHTML = videos.map((v, i) => `<li><button type="button" data-video-i="${i}">
+        ${v.poster_url ? `<img src="${esc(foto(v.poster_url))}" alt="" loading="lazy">` : '<span class="videos-l__sem">capa em preparo</span>'}
+        <span class="videos-l__n">${i + 1}</span>
+        ${v.erro ? '<span class="videos-l__selo videos-l__selo--erro">não deu certo</span>' : !v.pronto ? '<span class="videos-l__selo">preparando</span>' : !v.ativo ? '<span class="videos-l__selo videos-l__selo--fora">fora do site</span>' : ''}
+        <span class="videos-l__leg">${esc(curto(v.legenda || 'Sem legenda', 70))}</span></button></li>`).join('')
+      || vazio('Nenhum vídeo ainda. O site mostra os vídeos de sempre até você adicionar o primeiro.');
+    ul.querySelectorAll('[data-video-i]').forEach((b) => b.addEventListener('click', () => editaVideo(videos[Number(b.dataset.videoI)], Number(b.dataset.videoI))));
+    // vídeo em preparo: confere de novo em 30 s, enquanto a tela estiver aberta
+    if (videos.some((v) => !v.pronto && !v.erro)) setTimeout(() => { if (location.hash === '#videos' && gaveta.hidden) telaVideos(); }, 30000);
+  }
+
+  function novoVideo() {
+    abreGaveta('Adicionar vídeo', `
+      <label class="campo"><span>Vídeo</span><input type="file" accept="video/*" data-arq><small>MP4 ou MOV, até 400 MB.</small></label>
+      <label class="campo"><span>O que aparece no vídeo</span><input data-leg maxlength="140" placeholder="Ex.: churrasco a bordo em frente à Ilha do Campeche"><small>Uma frase. Quem não enxerga ouve esse texto, e o Google também lê.</small></label>
+      <label class="campo"><span>Link do post no Instagram <small style="font-weight:400;color:var(--suave)">(se quiser)</small></span><input type="url" data-link placeholder="https://www.instagram.com/reel/..."></label>
+      <div class="progresso" data-prog hidden><span></span></div>
+      <p class="erro" data-erro hidden></p>
+      <button class="botao botao--principal botao--cheio" type="button" data-salvar>Enviar o vídeo</button>`, (c) => {
+      aoSalvar(c.querySelector('[data-salvar]'), async () => {
+        const arq = c.querySelector('[data-arq]').files[0];
+        const leg = c.querySelector('[data-leg]').value.trim(), link = c.querySelector('[data-link]').value.trim();
+        if (!arq) return erroCampo(c, 'Escolha o vídeo.');
+        if (!/^video\//.test(arq.type) && !/\.(mp4|mov|m4v|webm)$/i.test(arq.name)) return erroCampo(c, 'Esse arquivo não é um vídeo.');
+        if (arq.size > 400 * 1048576) return erroCampo(c, 'Vídeo grande demais (mais de 400 MB). Envie um trecho menor.');
+        if (!leg) return erroCampo(c, 'Escreva em uma frase o que aparece no vídeo.');
+        if (link && !/^https:\/\/(www\.)?instagram\.com\//.test(link)) return erroCampo(c, 'O link precisa ser de um post do Instagram.');
+        erroCampo(c, '');
+        const prog = c.querySelector('[data-prog]'), barra = prog.querySelector('span');
+        prog.hidden = false;
+        const fd = new FormData();
+        fd.append('acao', 'enviar'); fd.append('video', arq, arq.name);
+        const r = await enviaComProgresso('videos.php', fd, (p) => { barra.style.width = Math.round(p * 100) + '%'; });
+        if (!r.ok) { prog.hidden = true; return erroCampo(c, r.erro || 'Não deu certo. Tente de novo.'); }
+        // entra em primeiro na lista (o mais novo aparece antes no site)
+        const ordem = videos.length ? Math.min(...videos.map((v) => v.ordem || 0)) - 1 : 0;
+        if (!(await grava(sb.from('bb_instagram').insert({ video_url: r.video_url, poster_url: null, legenda: leg, url: link || null, ordem, pronto: false, ativo: true })))) return;
+        fechaGaveta(); await telaVideos();
+        avisa('Vídeo enviado. Em uns minutos ele aparece no site.');
+      });
+    });
+  }
+
+  function editaVideo(v, i) {
+    if (!v) return;
+    abreGaveta(`Vídeo ${i + 1}`, `
+      ${v.pronto && !v.erro ? `<video class="video-previa" src="${esc(foto(v.video_url))}"${v.poster_url ? ` poster="${esc(foto(v.poster_url))}"` : ''} controls playsinline preload="none"></video>` : ''}
+      ${v.erro ? `<div class="alerta"><div><b>Não deu certo preparar este vídeo.</b><p style="margin:2px 0 0">${esc(v.erro)}</p></div></div>` : !v.pronto ? '<p class="ajuda">O servidor está preparando este vídeo. Ele aparece no site em uns minutos.</p>' : ''}
+      <label class="campo"><span>O que aparece no vídeo</span><input data-leg value="${esc(v.legenda || '')}" maxlength="140"></label>
+      <label class="campo"><span>Link do post no Instagram</span><input type="url" data-link value="${esc(v.url || '')}"></label>
+      <label class="campo"><span>Mostrar no site</span><select data-ativo><option value="1"${v.ativo ? ' selected' : ''}>Sim</option><option value="0"${v.ativo ? '' : ' selected'}>Não, deixar guardado</option></select></label>
+      <p class="erro" data-erro hidden></p>
+      <button class="botao botao--principal botao--cheio" type="button" data-salvar>Salvar</button>
+      <div class="acoes" style="margin-top:14px">
+        ${i > 0 ? '<button class="botao botao--leve botao--pequeno" type="button" data-mov="-1">Passar para antes</button>' : ''}
+        ${i < videos.length - 1 ? '<button class="botao botao--leve botao--pequeno" type="button" data-mov="1">Passar para depois</button>' : ''}</div>
+      <section class="bloco"><button class="botao botao--leve" type="button" data-apagar-v>Apagar este vídeo</button></section>`, (c) => {
+      const fim = async (msg) => { limpaSite(); fechaGaveta(); await telaVideos(); avisa(msg); };
+      aoSalvar(c.querySelector('[data-salvar]'), async () => {
+        const leg = c.querySelector('[data-leg]').value.trim(), link = c.querySelector('[data-link]').value.trim();
+        if (!leg) return erroCampo(c, 'Escreva em uma frase o que aparece no vídeo.');
+        if (link && !/^https:\/\/(www\.)?instagram\.com\//.test(link)) return erroCampo(c, 'O link precisa ser de um post do Instagram.');
+        if (!(await grava(sb.from('bb_instagram').update({ legenda: leg, url: link || null, ativo: c.querySelector('[data-ativo]').value === '1' }).eq('id', v.id)))) return;
+        await fim('Vídeo salvo.');
+      });
+      c.querySelectorAll('[data-mov]').forEach((b) => aoSalvar(b, async () => {
+        const nova = moveNaLista(videos, i, Number(b.dataset.mov));
+        for (let k = 0; k < nova.length; k++) if (nova[k].ordem !== k) { if (!(await grava(sb.from('bb_instagram').update({ ordem: k }).eq('id', nova[k].id)))) return; }
+        await fim('Ordem trocada.');
+      }));
+      confirmaNoBotao(c.querySelector('[data-apagar-v]'), 'Toque de novo para apagar', async () => {
+        if (!(await grava(sb.from('bb_instagram').delete().eq('id', v.id)))) return;
+        await api('videos.php', { acao: 'apagar', video_url: v.video_url });
+        await fim('Vídeo apagado.');
+      });
+    });
+  }
+
   /* ================= ACESSOS (só a dona) ================= */
   const WA_BARRA = '5548991153172';
   const PAPEIS = {
@@ -2196,7 +2302,7 @@
       ['#site-textos', 'p-hoje', 'Perguntas e avaliações', 'O que aparece na página inicial do site'],
       ['', 'p-wa', 'Robô do WhatsApp', 'O que ele responde e quando fica quieto'],
       ['', 'p-wa', 'Mensagens para muita gente', 'Avisar a base de clientes de uma vez'],
-      ['', 'p-play', 'Vídeos do Instagram', 'Os vídeos da página inicial'],
+      ['#videos', 'p-play', 'Vídeos do Instagram', 'Os vídeos da página inicial'],
       ...(dona() ? [['#acessos', 'p-clientes', 'Quem acessa o painel', 'Você, a equipe, parceiros e marinheiros']] : []),
       ['#conta', 'p-relogio', 'Sua conta', 'Trocar a senha e usar como aplicativo'],
     ];
@@ -2219,13 +2325,13 @@
       telas[b]();
       return;
     }
-    const nav = ['lanchas', 'lancha', 'fotos', 'parceiros', 'marinheiros', 'acessos', 'conta', 'roteiros', 'roteiro', 'site-textos'].includes(base) ? 'mais' : base;
+    const nav = ['lanchas', 'lancha', 'fotos', 'parceiros', 'marinheiros', 'acessos', 'conta', 'roteiros', 'roteiro', 'site-textos', 'videos'].includes(base) ? 'mais' : base;
     document.querySelectorAll('[data-nav]').forEach((a) => { if (a.dataset.nav === nav) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     ({
       hoje: telaHoje, agenda: telaAgenda, clientes: telaClientes, dinheiro: telaDinheiro, mais: telaMais, lanchas: telaLanchas,
       lancha: () => telaLancha(arg), parceiros: () => telaPessoas('parceiros'), marinheiros: () => telaPessoas('marinheiros'),
       acessos: telaAcessos, conta: telaConta, fotos: () => telaFotos(arg),
-      roteiros: telaRoteiros, roteiro: () => telaRoteiro(arg), 'site-textos': telaTextosSite,
+      roteiros: telaRoteiros, roteiro: () => telaRoteiro(arg), 'site-textos': telaTextosSite, videos: telaVideos,
     }[base] || telaHoje)();
   }
   window.addEventListener('hashchange', () => { rota(); window.scrollTo(0, 0); tela.focus({ preventScroll: true }); });

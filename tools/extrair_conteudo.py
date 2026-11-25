@@ -37,6 +37,17 @@ def avaliacoes(h):
     return out
 
 
+def instagram(h):
+    lista = re.search(r'<ul class="trilho__lista insta__lista">(.*?)\n        </ul>', h, re.S).group(1)
+    out = []
+    for i, (src, poster, w, alt) in enumerate(re.findall(
+            r'<video class="reel__video" src="([^"]+)" poster="([^"]+)" width="(\d+)" height="\d+"[^>]*aria-label="([^"]*)"', lista)):
+        hgt = re.findall(r'<video class="reel__video"[^>]*height="(\d+)"', lista)[i]
+        out.append({'video_url': '/' + src, 'poster_url': '/' + poster, 'legenda': html.unescape(alt),
+                    'largura': int(w), 'altura': int(hgt), 'ordem': i})
+    return out
+
+
 def roteiro(slug):
     h = (RAIZ / slug / 'index.html').read_text(encoding='utf-8')
     paradas = []
@@ -82,6 +93,18 @@ drop table _carga;
 select (select count(*) from public.bb_faq) as perguntas, (select count(*) from public.bb_avaliacoes) as avaliacoes,
        (select string_agg(slug || ': ' || jsonb_array_length(paradas) || ' paradas, ' || jsonb_array_length(regras) || ' regras', '; ') from public.bb_roteiros) as roteiros;
 """
+    vids = instagram(h)
+    jv = json.dumps(vids, ensure_ascii=False, indent=1)
+    (RAIZ / 'supabase' / 'seed' / '03-instagram.sql').write_text(f"""-- Os vídeos do Instagram que estavam fixos na home (gerado por tools/extrair_conteudo.py).
+-- Só entra se a tabela estiver vazia. Depende da migração 2026-11-25-11-instagram.sql.
+insert into public.bb_instagram (video_url, poster_url, legenda, largura, altura, ordem, pronto)
+select x->>'video_url', x->>'poster_url', x->>'legenda', (x->>'largura')::int, (x->>'altura')::int, (x->>'ordem')::int, true
+  from jsonb_array_elements($carga${jv}$carga$::jsonb) x
+ where not exists (select 1 from public.bb_instagram);
+
+select count(*) as videos from public.bb_instagram;
+""", encoding='utf-8')
+    print(f"{len(vids)} vídeos")
     destino = RAIZ / 'supabase' / 'seed' / '02-conteudo.sql'
     destino.write_text(sql, encoding='utf-8')
     print(f"{len(dados['faq'])} perguntas, {len(dados['avaliacoes'])} avaliações, "

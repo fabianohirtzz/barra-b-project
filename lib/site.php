@@ -169,6 +169,11 @@ function bb_conteudo_na_pagina($h, $p, $pre, $c)
                 return $g;
             });
         }
+        if (!empty($c['instagram'])) {
+            $h = bb_troca_entre($h, '<ul class="trilho__lista insta__lista">' . "
+", "
+        </ul>", bb_reels_html($c['instagram'], $pre));
+        }
         if (!empty($c['avaliacoes'])) {
             $h = bb_troca_entre($h, '<div class="avaliacoes__galeria">' . "
 ", "

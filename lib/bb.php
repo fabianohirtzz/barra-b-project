@@ -104,6 +104,8 @@ function bb_conteudo()
         list($s2, $av) = bb_supabase('GET', 'bb_avaliacoes?select=nome,texto,nota,data_label,idioma&ativo=eq.true&order=ordem,created_at');
         list($s3, $rt) = bb_supabase('GET', 'bb_roteiros?select=slug,nome,paradas,regras&order=ordem');
         if ($s1 !== 200 || $s2 !== 200 || $s3 !== 200 || !is_array($faq) || !is_array($av) || !is_array($rt)) return null;
-        return ['faq' => $faq, 'avaliacoes' => $av, 'roteiros' => $rt];
+        // vídeos: só os prontos (o cron já comprimiu); antes da migração de 25/11 a coluna não existe e fica o molde
+        list($s4, $ig) = bb_supabase('GET', 'bb_instagram?select=video_url,poster_url,legenda,largura,altura&ativo=eq.true&pronto=eq.true&order=ordem,created_at');
+        return ['faq' => $faq, 'avaliacoes' => $av, 'roteiros' => $rt, 'instagram' => ($s4 === 200 && is_array($ig)) ? $ig : []];
     });
 }

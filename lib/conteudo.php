@@ -120,3 +120,30 @@ function bb_lanchas_amostra($lanchas)
     $idx = array_unique([0, min(3, $n - 1), min(8, $n - 1), $n - 1]);
     return array_map(function ($i) use ($l) { return $l[$i]; }, $idx);
 }
+
+/* ---------- home: vídeos do Instagram ---------- */
+function bb_reels_html($vids, $pre)
+{
+    $out = [];
+    foreach ($vids as $v) {
+        $leg = bb_e((string) $v['legenda']);
+        $w = (int) ($v['largura'] ?: 720);
+        $h = (int) ($v['altura'] ?: 1280);
+        $poster = !empty($v['poster_url']) ? ' poster="' . bb_e(bb_url($v['poster_url'], $pre)) . '"' : '';
+        $out[] = '          <li class="reel">' . "\n" .
+            '            <figure class="reel__quadro">' . "\n" .
+            '              <video class="reel__video" src="' . bb_e(bb_url($v['video_url'], $pre)) . '"' . $poster . ' width="' . $w . '" height="' . $h . '" preload="none" playsinline aria-label="' . $leg . '"></video>' . "\n" .
+            '              <button class="reel__play" type="button" data-reel-play aria-label="Reproduzir vídeo"><span><svg aria-hidden="true"><use href="#i-play"/></svg></span></button>' . "\n" .
+            '              <div class="reel__barra">' . "\n" .
+            '                <button class="reel__btn" type="button" data-reel-play aria-label="Reproduzir vídeo"><svg class="reel__i-play" aria-hidden="true"><use href="#i-play"/></svg><svg class="reel__i-pausa" aria-hidden="true"><use href="#i-pausa"/></svg></button>' . "\n" .
+            '                <button class="reel__btn" type="button" data-reel-som aria-label="Desativar som" aria-pressed="false"><svg class="reel__i-vol" aria-hidden="true"><use href="#i-volume"/></svg><svg class="reel__i-mudo" aria-hidden="true"><use href="#i-mudo"/></svg></button>' . "\n" .
+            '                <input class="reel__vol" type="range" min="0" max="1" step="0.05" value="0.8" data-reel-vol aria-label="Volume">' . "\n" .
+            '                <button class="reel__btn reel__btn--ampliar" type="button" data-reel-ampliar aria-label="Ver em tela cheia"><svg aria-hidden="true"><use href="#i-ampliar"/></svg></button>' . "\n" .
+            '              </div>' . "\n" .
+            '              <span class="reel__progresso" aria-hidden="true"></span>' . "\n" .
+            '              <figcaption class="sr">' . $leg . '</figcaption>' . "\n" .
+            '            </figure>' . "\n" .
+            '          </li>';
+    }
+    return implode("\n", $out);
+}

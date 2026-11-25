@@ -8,3 +8,5 @@ Thumbs.db
 .publicado.json
 cache/
 fotos/
+cron/bin/
+midia/

@@ -14,7 +14,9 @@ RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 RewriteRule ^(lib|cache|cron)(/|$) - [F,L]
 
 # Pasta das fotos enviadas pelo painel: só imagem, nunca código
-RewriteRule ^fotos/.*\.(php[0-9]?|phtml|phar|cgi|pl|py|sh)$ - [F,L,NC]
+RewriteRule ^(fotos|midia)/.*\.(php[0-9]?|phtml|phar|cgi|pl|py|sh)$ - [F,L,NC]
+# Vídeos ainda na fila (originais do celular) não são servidos
+RewriteRule ^midia/instagram/fila(/|$) - [F,L]
 
 # Páginas (pastas com index.html) são montadas pelo site.php com os dados do banco:
 # "/", "/lanchas/", "/lanchas/<slug>/", "/sobre/"... O painel e a api ficam de fora.

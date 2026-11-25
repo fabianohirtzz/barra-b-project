@@ -389,3 +389,18 @@ label.botao:focus-within{outline:3px solid var(--serie1);outline-offset:2px}
 .parada-foto{border-radius:16px;overflow:hidden;background:var(--fundo);aspect-ratio:4/3;display:grid;place-items:center;color:var(--suave)}
 .parada-foto img{width:100%;height:100%;object-fit:cover;display:block}
 .linha__corpo b .selo{display:inline-flex;width:auto;margin:0 0 0 6px;vertical-align:middle;font-size:.75rem}
+
+/* ---------- vídeos do Instagram ---------- */
+.videos-l{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.videos-l button{position:relative;display:block;width:100%;padding:0;border:0;border-radius:16px;overflow:hidden;background:var(--abismo);aspect-ratio:9/16;text-align:left}
+.videos-l img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.videos-l__sem{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.7);font-size:.85rem;padding:12px;text-align:center}
+.videos-l__n{position:absolute;left:8px;top:8px;min-width:28px;height:28px;padding:0 8px;border-radius:999px;background:rgba(8,51,89,.85);color:#fff;font-weight:700;font-size:.85rem;display:grid;place-items:center}
+.videos-l__selo{position:absolute;right:8px;top:8px;padding:3px 9px;border-radius:999px;background:var(--alerta-fundo);color:var(--alerta);font-size:.75rem;font-weight:600}
+.videos-l__selo--erro{background:#FDECEA;color:var(--perigo)}
+.videos-l__selo--fora{background:#fff;color:var(--suave)}
+.videos-l__leg{position:absolute;left:0;right:0;bottom:0;padding:28px 10px 10px;background:linear-gradient(transparent,rgba(8,51,89,.92));color:#fff;font-size:.85rem;line-height:1.3}
+@media (max-width:420px){.videos-l{grid-template-columns:repeat(2,1fr)}}
+.video-previa{display:block;width:100%;max-height:60vh;border-radius:16px;background:#000;margin-bottom:14px}
+.progresso{height:10px;border-radius:999px;background:var(--linha);overflow:hidden;margin:4px 0 14px}
+.progresso span{display:block;height:100%;width:0;background:var(--canal);transition:width .2s}

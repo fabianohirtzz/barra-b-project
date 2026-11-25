@@ -20,6 +20,8 @@ preg_match('/\$carga\$(.*?)\$carga\$/s', $sql2, $m2);
 $conteudo = json_decode($m2[1], true);
 foreach ($conteudo['roteiros'] as &$r) $r['nome'] = $r['slug'] === 'ilha-do-campeche' ? 'Ilha do Campeche' : 'Costa da Lagoa';
 unset($r);
+preg_match('/\$carga\$(.*?)\$carga\$/s', file_get_contents(BB_RAIZ . '/supabase/seed/03-instagram.sql'), $m3);
+$conteudo['instagram'] = json_decode($m3[1], true);
 
 function normaliza($h)
 {
@@ -68,6 +70,33 @@ list($st, $h) = bb_render('lanchas/1564/', null);
 if ($st !== 200 || $h !== bb_molde('lanchas/1564/index.html')) { $falhas++; echo "sem banco não serviu a estática\n"; }
 list($st) = bb_render('../config.local.php', $lanchas);
 if ($st !== 404) { $falhas++; echo "caminho com .. devolveu $st\n"; }
+
+// o que a Michele muda no painel aparece no site
+$testes = 0;
+$confere = function ($ok, $msg) use (&$falhas, &$testes) { $testes++; if (!$ok) { $falhas++; echo "FALHA: $msg\n"; } };
+$c2 = $conteudo;
+$c2['faq'][0]['pergunta'] = 'Onde fica o embarque & a marina?';
+$c2['roteiros'][0]['regras'] = [];
+$c2['roteiros'][1]['regras'] = ['Coletes para todos a bordo.'];
+$c2['roteiros'][1]['paradas'][] = ['nome' => 'Parada nova', 'texto' => 'Sem foto ainda.'];
+$c2['instagram'] = [['video_url' => '/midia/instagram/x.mp4', 'poster_url' => '/midia/instagram/x.webp', 'legenda' => 'Pôr do sol & churrasco', 'largura' => 1080, 'altura' => 1920]];
+list(, $h) = bb_render('', $lanchas, 'api/disponibilidade.php', $c2);
+$confere(strpos($h, '<summary>Onde fica o embarque &amp; a marina?</summary>') !== false, 'pergunta editada não apareceu no HTML');
+$confere(strpos($h, '"name": "Onde fica o embarque & a marina?"') !== false, 'pergunta editada não apareceu no JSON-LD');
+$confere(substr_count($h, '<li class="reel">') === 1, 'a home deveria ter só o vídeo novo');
+$confere(strpos($h, 'src="midia/instagram/x.mp4" poster="midia/instagram/x.webp" width="1080" height="1920"') !== false, 'vídeo novo sem src, capa ou tamanho certos');
+$confere(strpos($h, 'Pôr do sol &amp; churrasco</figcaption>') !== false, 'legenda do vídeo não escapada');
+list(, $h) = bb_render('ilha-do-campeche/', $lanchas, 'api/disponibilidade.php', $c2);
+$confere(strpos($h, 'aviso-regras') === false, 'regras apagadas continuaram no Campeche');
+$confere(strpos($h, '<h2 id="escolha-titulo"') !== false, 'apagar as regras levou junto a seção seguinte');
+list(, $h) = bb_render('costa-da-lagoa/', $lanchas, 'api/disponibilidade.php', $c2);
+$confere(strpos($h, '<li>Coletes para todos a bordo.</li>') !== false && strpos($h, 'Regras da Costa da Lagoa') !== false, 'regras novas não apareceram na Costa');
+$confere(strpos($h, 'rota-v__parada--sem-foto') !== false, 'parada nova sem foto não apareceu');
+$confere(strpos($h, '"name": "Parada nova"') !== false, 'parada nova fora do itinerário do JSON-LD');
+$sem = array_values(array_filter($lanchas, function ($l) { return $l['slug'] !== '1564'; }));
+list(, $h) = bb_render('costa-da-lagoa/', $sem, 'api/disponibilidade.php', $conteudo);
+$confere(preg_match('#data-grade-lanchas>.*?</section>#s', $h, $g) && strpos($g[0], 'lanchas/1564/') === false && substr_count($g[0], '<li class="lancha"') === 4, 'amostra do roteiro com lancha escondida ou sem 4 lanchas');
+echo "$testes testes de mudança\n";
 
 echo $falhas ? "$falhas problema(s)\n" : 'ok: ' . count($paginas) . " páginas iguais à prévia estática\n";
 exit($falhas ? 1 : 0);
