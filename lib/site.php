@@ -81,6 +81,26 @@ function bb_mexe_ld($html, callable $f)
     return str_replace($m[0], $ld, $html);
 }
 
+/* No domínio oficial a página sai indexável e com o Google Tag Manager de sempre (ligado às contas de
+   anúncio) e a verificação do Search Console. Na prévia (GitHub Pages e novo.) nada disso entra, para não
+   indexar nem sujar os dados dos anúncios: o molde estático já vem com noindex. */
+const BB_GTM = 'GTM-5FJVHJRJ';
+function bb_eh_producao($host)
+{
+    return (bool) preg_match('/^(www\.)?barraboatfloripa\.com\.br$/i', (string) $host);
+}
+function bb_producao($h, $st, $p)
+{
+    if ($st === 200) $h = preg_replace('#\s*<!-- PRÉVIA:[^>]*-->\s*<meta name="robots" content="noindex, nofollow">#u', '', $h, 1);
+    $verif = $p === '' ? "\n  <meta name=\"google-site-verification\" content=\"google5eba1bbfca68b875\">" : '';
+    $gtm = "<!-- Google Tag Manager -->\n  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});"
+        . "var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;"
+        . "j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','" . BB_GTM . "');</script>";
+    $h = preg_replace('#<head>#', "<head>\n  " . $gtm . $verif, $h, 1);
+    $ns = '<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=' . BB_GTM . '" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>';
+    return preg_replace('#(<body[^>]*>)#', "$1\n" . $ns, $h, 1);
+}
+
 function bb_404()
 {
     $h = bb_molde('404.html');

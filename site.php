@@ -13,6 +13,8 @@ if (getenv('REDIRECT_STATUS') === '404' || isset($_SERVER['REDIRECT_STATUS']) &&
     list($st, $html) = bb_render($p, bb_lanchas(), 'api/disponibilidade.php', bb_conteudo());
 }
 
+if (bb_eh_producao($_SERVER['HTTP_HOST'] ?? '')) $html = bb_producao($html, $st, $p);
+
 http_response_code($st);
 header('Content-Type: text/html; charset=utf-8');
 header('Cache-Control: public, max-age=60');

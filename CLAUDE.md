@@ -276,5 +276,11 @@ corrido segue 17 px; selos sobre foto >= 13,5 px; rótulos, notas, itens a bordo
 paradas do card de roteiro a 12,5 px (até 370 px), ficha da lancha com coluna que encolhe (sumiu a rolagem lateral de
 39 px que já existia) e topo do calendário em duas linhas. Medição: script que lista todo texto visível < 15 px.
 
+**Lançamento (25/11):** roteiro da troca em `docs/lancamento.md`. No domínio oficial o `site.php` tira o noindex e
+põe o GTM-5FJVHJRJ e a verificação do Search Console (`bb_producao` em `lib/site.php`); em novo. e na prévia,
+continua noindex e sem GTM. `.htaccess` força https sem www e faz 301 das URLs do WordPress que somem (lanchas
+mantêm o endereço). Ícones das gavetas de escolha corrigidos (`.escolha span` pegava o `.linha__icone`); varredura
+de ícones fora do centro: script no scratchpad (abre todas as telas e gavetas e mede).
+
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.

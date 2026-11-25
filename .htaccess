@@ -6,6 +6,20 @@ ErrorDocument 404 /site.php
 
 RewriteEngine On
 
+# Domínio oficial: sempre https://barraboatfloripa.com.br (sem www), como no canonical
+RewriteCond %{HTTP_HOST} ^www\.barraboatfloripa\.com\.br$ [NC,OR]
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP_HOST} ^(www\.)?barraboatfloripa\.com\.br$ [NC]
+RewriteRule ^(.*)$ https://barraboatfloripa.com.br/$1 [R=301,L]
+
+# Endereços do WordPress antigo que não existem mais (as lanchas e páginas mantêm o mesmo endereço)
+RewriteRule ^(reembolso-ou-devolucoes|refund_returns)(/.*)?$ /politica-de-cancelamento/ [R=301,L,NC]
+RewriteRule ^privacy-policy(/.*)?$ /politica-de-privacidade/ [R=301,L,NC]
+RewriteRule ^produto/([a-z0-9-]+)/?$ /lanchas/$1/ [R=301,L,NC]
+RewriteRule ^(shop|loja|categoria-produto|produto-tag|passageiro|pes|valor)(/.*)?$ /lanchas/ [R=301,L,NC]
+RewriteRule ^(carrinho|cart|finalizar-compra|checkout|minha-conta|my-account|feed|comments)(/.*)?$ / [R=301,L,NC]
+RewriteRule ^(sitemap_index|[a-z_]+-sitemap[0-9]*)\.xml$ /sitemap.xml [R=301,L,NC]
+
 # Login do painel chega ao PHP (api/agenda.php): alguns servidores descartam o cabeçalho
 RewriteCond %{HTTP:Authorization} .
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

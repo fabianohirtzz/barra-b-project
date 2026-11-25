@@ -209,7 +209,7 @@ h1,h2,h3{color:var(--tinta);margin:0;line-height:1.15}
 .escolha{display:flex;gap:14px;align-items:flex-start;padding:16px;border-radius:var(--r);border:2px solid var(--linha);background:#fff;text-align:left}
 .escolha:hover,.escolha:focus-visible{border-color:var(--canal)}
 .escolha b{display:block;color:var(--tinta);font-size:1.05rem}
-.escolha span{display:block;font-size:.93rem;color:var(--suave);margin-top:2px}
+.escolha b + span{display:block;font-size:.93rem;color:var(--suave);margin-top:2px}
 .escolha .selo{margin-top:8px}
 .passos{margin:0 0 16px;padding:0;list-style:none;counter-reset:p;display:grid;gap:10px}
 .passos li{counter-increment:p;display:flex;gap:12px;align-items:flex-start}
