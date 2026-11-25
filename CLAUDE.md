@@ -326,5 +326,11 @@ em outro lugar?" e o pedido indo na mensagem do WhatsApp.
   personalizado" (`contato/?roteiro=personalizado` abre o formulário com Personalizado); /sobre/ com o número da frota do banco
   (`<b data-frota-n>`); /contato/ "Sede e embarque" reescrito; cabeçalho fica sólido antes de o texto da capa encostar no logo.
 
+**Cadastro do cliente (25/11):** em Clientes, tocar na pessoa abre "Dados do cliente" (nome, WhatsApp, e-mail, idioma das mensagens,
+CPF e nascimento opcionais, documento estrangeiro opcional: tipo, número, país). Grava em todos os pedidos da pessoa (`bb_leads`,
+migração `2026-11-25-15-documentos-do-cliente.sql`: `cpf` só dígitos com DV conferido no painel, `doc_tipo/doc_numero/doc_pais`,
+`nascimento`). O painel lê `bb_leads` com `select('*')` e só mostra os campos de documento depois da migração (`temDocs()`).
+A ficha do pedido tem o atalho "Cadastro do cliente"; a tabela tem a coluna Documento e a planilha exporta os documentos.
+
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.

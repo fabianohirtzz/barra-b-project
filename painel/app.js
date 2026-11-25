@@ -128,7 +128,7 @@
       um(sb.from('bb_parceiros').select('*').order('nome')),
       um(sb.from('bb_marinheiros').select('*').order('nome')),
       um(sb.from('bb_roteiros').select('id,slug,nome,ativo').order('ordem')),
-      todos(() => sb.from('bb_leads').select('id,created_at,updated_at,nome,wa_id,email,idioma,mensagem,data_desejada,data_texto,pessoas,roteiro_id,lancha_id,etapa,motivo_perda,valor_orcado,valor_fechado,custos_passeio,orcamento_at,fechado_at,perdido_at,notas,origem,origem_manual,origem_import,parceiro_id').order('created_at', { ascending: false })),
+      todos(() => sb.from('bb_leads').select('*').order('created_at', { ascending: false })),
       todos(() => sb.from('bb_recebimentos').select('*').order('recebido_em').order('id')),
       todos(() => sb.from('bb_passeios').select('*').neq('status', 'cancelado').gte('dia', anoPassado).order('dia').order('id')),
       um(sb.from('bb_bloqueios').select('*').gte('fim', recente).order('inicio')),
@@ -1120,7 +1120,20 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
 
   /* ================= CLIENTES (funil) ================= */
   let etapaAtual = 'novos', busca = '';
-  const textoBusca = (l) => [l.nome, l.wa_id, foneTela(l.wa_id), l.email, l.mensagem].join(' ').toLowerCase();
+  const textoBusca = (l) => [l.nome, l.wa_id, foneTela(l.wa_id), l.email, l.mensagem, l.cpf, l.cpf && cpfTela(l.cpf), l.doc_numero].join(' ').toLowerCase();
+
+  /* ---------- documentos do cliente (CPF e documento estrangeiro, opcionais) ---------- */
+  const DOC_TIPOS = [['passaporte', 'Passaporte'], ['dni', 'DNI'], ['cedula', 'Cédula de identidade'], ['rg', 'RG estrangeiro'], ['outro', 'Outro documento']];
+  const nomeDoc = (t) => (DOC_TIPOS.find((x) => x[0] === t) || [null, 'Documento'])[1];
+  const cpfTela = (c) => { const d = digitos(c); return d.length === 11 ? `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}` : String(c || ''); };
+  function cpfValido(c) {
+    const d = digitos(c);
+    if (d.length !== 11 || /^(\d)\1+$/.test(d)) return false;
+    const dv = (n) => { let s = 0; for (let i = 0; i < n; i++) s += Number(d[i]) * (n + 1 - i); const r = (s * 10) % 11; return r === 10 ? 0 : r; };
+    return dv(9) === Number(d[9]) && dv(10) === Number(d[10]);
+  }
+  const temDocs = () => S.leads.some((c) => 'cpf' in c);   // a migração dos documentos já rodou?
+  const IDIOMAS_CLI = [['pt', 'Português'], ['es', 'Espanhol'], ['en', 'Inglês']];
 
   /* Uma pessoa pode ter vários pedidos ao longo dos anos (um por reserva). Junta pelo
      WhatsApp; sem WhatsApp, pelo e-mail; sem nenhum dos dois, o pedido fica sozinho. */
@@ -1138,7 +1151,8 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       const prim = ls[ls.length - 1];
       const achar = (f) => (ls.find((c) => c[f]) || {})[f] || null;
       return {
-        k, pedidos: ls, nome: achar('nome'), wa: achar('wa_id'), email: achar('email'),
+        k, pedidos: ls, nome: achar('nome'), wa: achar('wa_id'), email: achar('email'), idioma: achar('idioma'),
+        cpf: achar('cpf'), doc_tipo: achar('doc_tipo'), doc_numero: achar('doc_numero'), doc_pais: achar('doc_pais'), nascimento: achar('nascimento'),
         reservas: res.length, ultimo: dias.filter((d) => d < hj).pop() || null, proximo: dias.find((d) => d >= hj) || null,
         total: res.reduce((s, c) => s + (Number(c.valor_fechado) || 0), 0),
         origem: prim.origem_manual || prim.origem, primeiro: prim.created_at, contato: ls[0].created_at, exemplo: ls.some(exemplo),
@@ -1218,11 +1232,12 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         : '';
       const th = (id, nome, cls) => `<th${cls ? ` class="${cls}"` : ''} aria-sort="${ordemTab === id ? (id === 'nome' ? 'ascending' : 'descending') : 'none'}"><button type="button" data-ordem-tab="${id}">${nome}</button></th>`;
       tela.querySelector('[data-tabela]').innerHTML = lista.length ? `<table>
-        <thead><tr>${th('nome', 'Cliente')}<th>WhatsApp</th><th>E-mail</th>${th('reservas', 'Reservas', 'num')}${th('ultimo', 'Último passeio')}${th('total', 'Total gasto', 'num')}<th>Veio de</th></tr></thead>
+        <thead><tr>${th('nome', 'Cliente')}<th>WhatsApp</th><th>E-mail</th><th>Documento</th>${th('reservas', 'Reservas', 'num')}${th('ultimo', 'Último passeio')}${th('total', 'Total gasto', 'num')}<th>Veio de</th></tr></thead>
         <tbody>${lista.slice(0, 500).map((x) => `<tr data-historico="${esc(x.k)}">
           <td data-r="Cliente"><button class="tabela-cli__nome" type="button">${esc(x.nome || foneTela(x.wa) || 'Sem nome')}</button>${x.exemplo ? seloExemplo({ origem_import: 'demo' }) : ''}<small>${x.pedidos.length === 1 ? '1 pedido' : x.pedidos.length + ' pedidos'}</small></td>
           <td data-r="WhatsApp">${esc(foneTela(x.wa)) || '<span class="tabela-cli__nada">sem</span>'}</td>
           <td data-r="E-mail">${x.email ? esc(x.email) : '<span class="tabela-cli__nada">sem</span>'}</td>
+          <td data-r="Documento">${x.cpf ? 'CPF ' + esc(cpfTela(x.cpf)) : x.doc_numero ? esc(nomeDoc(x.doc_tipo)) + `<small>${esc(x.doc_numero)}${x.doc_pais ? ', ' + esc(x.doc_pais) : ''}</small>` : '<span class="tabela-cli__nada">sem</span>'}</td>
           <td data-r="Reservas" class="num">${x.reservas}</td>
           <td data-r="Último passeio">${x.proximo ? `<b>Próximo ${ddIso(x.proximo)}</b>${x.ultimo ? `<small>antes ${ddIso(x.ultimo)}</small>` : ''}` : x.ultimo ? ddIso(x.ultimo) + `<small>${x.ultimo.slice(0, 4)}</small>` : '<span class="tabela-cli__nada">nunca</span>'}</td>
           <td data-r="Total gasto" class="num">${x.total ? R(x.total) : '<span class="tabela-cli__nada">nada</span>'}</td>
@@ -1253,8 +1268,10 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const fonePlanilha = (w) => { const d = digitos(w); return !d ? '' : d.startsWith('55') ? foneTela(w) : d; };
-    const linhas = [['Nome', 'WhatsApp', 'E-mail', 'Pedidos', 'Reservas', 'Último passeio', 'Próximo passeio', 'Total gasto', 'Veio de', 'Primeiro contato']]
-      .concat(lista.filter((x) => !x.exemplo).map((x) => [x.nome || '', fonePlanilha(x.wa), x.email || '', x.pedidos.length, x.reservas,
+    const linhas = [['Nome', 'WhatsApp', 'E-mail', 'CPF', 'Documento estrangeiro', 'País do documento', 'Nascimento', 'Idioma', 'Pedidos', 'Reservas', 'Último passeio', 'Próximo passeio', 'Total gasto', 'Veio de', 'Primeiro contato']]
+      .concat(lista.filter((x) => !x.exemplo).map((x) => [x.nome || '', fonePlanilha(x.wa), x.email || '', x.cpf ? cpfTela(x.cpf) : '',
+        x.doc_numero ? `${nomeDoc(x.doc_tipo)} ${x.doc_numero}` : '', x.doc_numero ? x.doc_pais || '' : '', x.nascimento ? x.nascimento.split('-').reverse().join('/') : '',
+        (IDIOMAS_CLI.find((i) => i[0] === (x.idioma || 'pt')) || [null, ''])[1], x.pedidos.length, x.reservas,
         x.ultimo ? ddIso(x.ultimo) + '/' + x.ultimo.slice(0, 4) : '', x.proximo ? ddIso(x.proximo) + '/' + x.proximo.slice(0, 4) : '',
         x.total ? x.total.toFixed(2).replace('.', ',') : '0', nomeOrigem(x.origem), x.primeiro ? ddIso(iso(new Date(x.primeiro))) + '/' + String(x.primeiro).slice(0, 4) : '']));
     const blob = new Blob(['﻿' + linhas.map((l) => l.map(cel).join(';')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
@@ -1271,17 +1288,40 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     const x = pessoaDe(k);
     if (!x) return;
     const wa = digitos(x.wa);
+    const docs = temDocs();
     abreGaveta(x.nome || foneTela(x.wa) || 'Cliente', `
-      <div class="secao-g">
-        ${x.exemplo ? '<p class="selo selo--neutro" style="white-space:normal;margin:0 0 10px">Cliente de exemplo: será apagado antes do lançamento.</p>' : ''}
-        <p style="margin:0;color:var(--suave)">${[foneTela(x.wa), x.email, 'veio de ' + nomeOrigem(x.origem), 'primeiro contato ' + quando(x.primeiro)].filter(Boolean).map(esc).join(' · ')}</p>
+      ${x.exemplo ? '<p class="selo selo--neutro" style="white-space:normal;margin:0 0 10px">Cliente de exemplo: será apagado antes do lançamento.</p>' : ''}
+      <div class="secao-g"><h3>Dados do cliente</h3>
+        <div class="cartao">
+          <div class="grade-2">
+            <label class="campo"><span>Nome completo</span><input data-cad="nome" value="${esc(x.nome || '')}" autocomplete="off"></label>
+            <label class="campo"><span>WhatsApp</span><input data-cad="wa_id" inputmode="tel" value="${esc(foneTela(x.wa))}" autocomplete="off"></label>
+            <label class="campo"><span>E-mail</span><input data-cad="email" type="email" value="${esc(x.email || '')}" autocomplete="off"></label>
+            <label class="campo"><span>Idioma das mensagens</span><select data-cad="idioma">${IDIOMAS_CLI.map(([v, n]) => `<option value="${v}"${(x.idioma || 'pt') === v ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+          </div>
+          ${docs ? `<div class="grade-2">
+            <label class="campo"><span>CPF <small style="font-weight:400;color:var(--suave)">(opcional)</small></span><input data-cad="cpf" inputmode="numeric" value="${esc(x.cpf ? cpfTela(x.cpf) : '')}" placeholder="000.000.000-00" autocomplete="off"></label>
+            <label class="campo"><span>Data de nascimento <small style="font-weight:400;color:var(--suave)">(opcional)</small></span><input data-cad="nascimento" type="date" value="${x.nascimento || ''}"></label>
+          </div>
+          <fieldset class="doc-estrangeiro"><legend>Documento estrangeiro <small>(opcional, para quem não tem CPF)</small></legend>
+            <div class="grade-3">
+              <label class="campo"><span>Tipo</span><select data-cad="doc_tipo"><option value="">Nenhum</option>${DOC_TIPOS.map(([v, n]) => `<option value="${v}"${x.doc_tipo === v ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+              <label class="campo"><span>Número</span><input data-cad="doc_numero" value="${esc(x.doc_numero || '')}" autocomplete="off"></label>
+              <label class="campo"><span>País</span><input data-cad="doc_pais" value="${esc(x.doc_pais || '')}" placeholder="Ex.: Argentina" list="paises-cli" autocomplete="off"></label>
+            </div>
+            <datalist id="paises-cli">${['Argentina', 'Uruguai', 'Paraguai', 'Chile', 'Bolívia', 'Peru', 'Colômbia', 'Estados Unidos', 'Portugal', 'Espanha', 'Itália', 'Alemanha', 'França'].map((n) => `<option value="${n}">`).join('')}</datalist>
+          </fieldset>` : '<p class="ajuda">CPF e documento estrangeiro aparecem aqui depois que a atualização do banco for aplicada.</p>'}
+          <p class="ajuda" style="margin-bottom:12px">${[x.origem ? 'Veio de ' + nomeOrigem(x.origem) : '', x.primeiro ? 'primeiro contato ' + quando(x.primeiro) : ''].filter(Boolean).map(esc).join(', ')}.${x.pedidos.length > 1 ? ` Os dados valem para os ${x.pedidos.length} pedidos desta pessoa.` : ''}</p>
+          <p class="erro" data-erro hidden></p>
+          <div class="acoes"><button class="botao botao--principal" type="button" data-salvar-cad>Salvar os dados</button>
+            ${wa ? `<a class="botao botao--wa" href="https://wa.me/${wa}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Abrir conversa</a>` : ''}</div>
+        </div>
       </div>
       <div class="numeros secao-g">
         <div class="numero"><span>Reservas</span><b>${x.reservas}</b><small>${x.pedidos.length === 1 ? '1 pedido' : x.pedidos.length + ' pedidos'}</small></div>
         <div class="numero"><span>Total gasto</span><b>${R(x.total)}</b>${x.reservas > 1 ? `<small>${R(x.total / x.reservas)} por reserva</small>` : ''}</div>
         <div class="numero"><span>${x.proximo ? 'Próximo passeio' : 'Último passeio'}</span><b>${x.proximo ? ddIso(x.proximo) : x.ultimo ? ddIso(x.ultimo) : 'nunca'}</b>${(x.proximo || x.ultimo) ? `<small>${(x.proximo || x.ultimo).slice(0, 4)}</small>` : ''}</div>
       </div>
-      ${wa ? `<div class="acoes secao-g"><a class="botao botao--wa" href="https://wa.me/${wa}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Abrir conversa</a></div>` : ''}
       <div class="secao-g"><h3>Pedidos</h3>
         <ul class="lista">${x.pedidos.map((c) => {
           const p = passeioDoLead(c.id), l = lancha((p && p.lancha_id) || c.lancha_id), r = roteiro(c.roteiro_id);
@@ -1293,7 +1333,32 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
               <span>${esc([ETAPAS.find((e) => e.id === c.etapa).nome, c.pessoas ? c.pessoas + ' pessoas' : '', valor, c.etapa === 'perdidos' ? c.motivo_perda : '', 'pedido ' + quando(c.created_at)].filter(Boolean).join(' · '))}</span></span>
             <svg><use href="#p-seta"/></svg></button></li>`;
         }).join('')}</ul>
-      </div>`);
+      </div>`, (g) => {
+      const v = (k) => { const e = g.querySelector(`[data-cad="${k}"]`); return e ? e.value.trim() : null; };
+      if (docs) {
+        const cpf = g.querySelector('[data-cad="cpf"]');
+        cpf.addEventListener('blur', () => { if (digitos(cpf.value).length === 11) cpf.value = cpfTela(cpf.value); });
+      }
+      aoSalvar(g.querySelector('[data-salvar-cad]'), async () => {
+        const wa = fone(v('wa_id'));
+        if (!v('nome') && !wa) return erroCampo(g, 'Escreva o nome ou o WhatsApp.');
+        if (wa && wa.replace(/\D/g, '').length < 12) return erroCampo(g, 'O WhatsApp precisa ter DDD e número. Ex.: (48) 99115-3172. De fora do Brasil, comece com + e o código do país.');
+        if (v('email') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('email'))) return erroCampo(g, 'Confira o e-mail.');
+        const dados = { nome: v('nome') || null, wa_id: wa, email: v('email') || null, idioma: v('idioma') || 'pt' };
+        if (docs) {
+          const cpf = digitos(v('cpf'));
+          if (cpf && !cpfValido(cpf)) return erroCampo(g, 'Esse CPF não confere. Confira os números ou deixe em branco.');
+          if (v('doc_numero') && !v('doc_tipo')) return erroCampo(g, 'Escolha o tipo do documento estrangeiro (passaporte, DNI...).');
+          Object.assign(dados, { cpf: cpf || null, nascimento: v('nascimento') || null,
+            doc_tipo: v('doc_numero') ? v('doc_tipo') : null, doc_numero: v('doc_numero') || null, doc_pais: v('doc_numero') ? v('doc_pais') || null : null });
+        }
+        erroCampo(g, '');
+        if (!(await grava(sb.from('bb_leads').update(dados).in('id', x.pedidos.map((c) => c.id))))) return;
+        await atualiza();
+        const novoK = chavePessoa(Object.assign({}, x.pedidos[0], dados));
+        abreHistorico(novoK); avisa('Dados do cliente salvos.');
+      });
+    });
   }
 
   function novoCliente() {
@@ -1350,9 +1415,10 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         <p style="margin:0;color:var(--suave)">Etapa: <b style="color:var(--tinta)">${esc(ETAPAS[n].nome)}</b> · veio de ${esc(nomeOrigem(c.origem_manual || c.origem))} · chegou ${esc(quando(c.created_at))}${c.etapa === 'perdidos' && c.motivo_perda ? ` · ${esc(c.motivo_perda)}` : ''}</p>
         ${(() => {
           const x = pessoaDe(chavePessoa(c));
-          if (!x || x.pedidos.length < 2) return '';
-          return `<button class="linha historico-atalho" type="button" data-historico="${esc(x.k)}"><span class="linha__icone"><svg><use href="#p-relogio"/></svg></span>
-            <span class="linha__corpo"><b>Já pediu ${x.pedidos.length} vezes${x.reservas ? `, ${x.reservas === 1 ? '1 reserva' : x.reservas + ' reservas'}` : ''}</b><span>${x.total ? 'Gastou ' + R(x.total) + ' no total. ' : ''}Ver o histórico</span></span><svg><use href="#p-seta"/></svg></button>`;
+          if (!x) return '';
+          const doc = x.cpf ? 'CPF ' + cpfTela(x.cpf) : x.doc_numero ? `${nomeDoc(x.doc_tipo)} ${x.doc_numero}` : 'sem documento';
+          return `<button class="linha historico-atalho" type="button" data-historico="${esc(x.k)}"><span class="linha__icone"><svg><use href="#p-conta"/></svg></span>
+            <span class="linha__corpo"><b>Cadastro do cliente${x.pedidos.length > 1 ? `: ${x.pedidos.length} pedidos${x.reservas ? `, ${x.reservas === 1 ? '1 reserva' : x.reservas + ' reservas'}` : ''}` : ''}</b><span>${esc(doc)}${x.total ? ' · gastou ' + R(x.total) : ''}. Ver e mudar os dados</span></span><svg><use href="#p-seta"/></svg></button>`;
         })()}
       </div>
       <div class="acoes secao-g">
