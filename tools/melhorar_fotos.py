@@ -11,8 +11,8 @@ O cron do servidor (cron/videos.php, a cada 5 min) vê o -ia.webp, troca a foto 
 Nome novo de propósito: o celular não fica com a foto antiga guardada.
 
 Uso:
-    BB_FTP_SENHA='...' python tools/melhorar_fotos.py            # melhora tudo o que está na fila
-    BB_FTP_SENHA='...' python tools/melhorar_fotos.py --listar   # só mostra a fila
+    python tools/melhorar_fotos.py                          # melhora tudo o que está na fila
+    python tools/melhorar_fotos.py --listar                 # só mostra a fila
 """
 import argparse
 import io
@@ -22,7 +22,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from publicar import conecta  # noqa: E402
+from publicar import conecta, senha_ftp  # noqa: E402
 
 BASE = '/novo/fotos/lanchas'
 ENTRADA_MAX, LADO, LADO_MINI = 560, 1400, 480
@@ -49,10 +49,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--listar', action='store_true')
     a = ap.parse_args()
-    senha = os.environ.get('BB_FTP_SENHA')
-    if not senha:
-        sys.exit('Defina BB_FTP_SENHA.')
-    ftp = conecta(senha)
+    ftp = conecta(senha_ftp())
     itens = fila(ftp)
     print(f'{len(itens)} foto(s) na fila')
     for slug, nome in itens:

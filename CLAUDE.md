@@ -65,10 +65,10 @@ Referência: `E:\Clientes\Pereira Oliveira Turismo\po-tu-project` (ler o CLAUDE.
   (MX, SPF, DKIM e DMARC conferidos). SSL pelo AutoSSL.
 - **Servidor de teste:** https://novo.barraboatfloripa.com.br (pasta `novo/`, `noindex` pelo
   `.htaccess` e pela meta). `config.local.php` com a `service_role` já está em `novo/` (403 pela web).
-- **Deploy:** `BB_FTP_SENHA='...' python tools/publicar.py` (FTPS em `ftp.barraboatfloripa.com.br`;
+- **Deploy:** `python tools/publicar.py` (senha em `E:\Clientes\Barra Boat Floripa\Site\ferramentas\ftp-senha.txt`, fora do repo, ou `BB_FTP_SENHA`) (FTPS em `ftp.barraboatfloripa.com.br`;
   envia só o que mudou, guardado em `.publicado.json`; reconecta quando a ErêHost derruba a sessão).
   **A raiz do FTP é o WordPress em produção:** o padrão é `/novo` e a raiz só com `--producao`,
-  no dia da troca. Senha só na hora, nunca em arquivo.
+  no dia da troca. A senha nunca entra no repositório nem no servidor.
 
 ## Escopo completo
 
@@ -220,7 +220,7 @@ como veio, com `melhorar: true` no JSON e o original em `fotos/lanchas/<slug>/or
 baixa os `orig/` pelo FTP, roda o Real-ESRGAN (`tools/esrgan.py`; entrada até 560 px, 4x, saída 1400) e sobe
 `<nome>-ia.webp` e `-ia-p.webp`. O `cron/videos.php` (5 min) chama `lib/fotos_ia.php`: troca a URL no banco, tira o
 `melhorar`, refaz a capa se for a primeira e apaga a versão pequena e o original. Modelo **v0.67.0** em
-`E:\Clientes\Barra Boat Floripa\Siteerramentas\esrgan\` (fora do Git; ~1 min por foto). Primeira rodada: 5 fotos da
+`E:\Clientes\Barra Boat Floripa\Site\ferramentas\esrgan\` (fora do Git; ~1 min por foto). Primeira rodada: 5 fotos da
 Phantom 30 BB (562 a 1085 px). O painel relê as fotos antes de gravar, para não voltar a URL antiga.
 **Menu do painel (25/11, aprovado pelo Fabiano):** a aba "Mais" saiu. Menu lateral por categoria (sem título: Hoje,
 Agenda; Vendas: Clientes, Dinheiro; Frota e equipe: Lanchas, Parceiros, Marinheiros; Site: Roteiros, Perguntas e
@@ -294,6 +294,15 @@ instruções com "escreva o nome da lancha no título", regra do compromisso sem
 na agenda (grava ao sair do campo). Lanchas > "Cadastrar lancha" (nome, pessoas, pés, região, de quem é, itens a
 bordo); nasce escondida e só aparece no site com foto. A lancha também passou a editar região, itens e texto do site.
 O que o parceiro faz: manda o link uma vez e escreve o nome da lancha no título de cada reserva.
+
+**Embarque e passeio personalizado (25/11):** migração `2026-11-25-13-embarque-e-personalizado.sql`. Lancha tem local de
+embarque (texto + link do Maps, opcionais), horário de embarque e marinheiro de sempre: viram sugestão ao marcar o
+passeio, que guarda a própria cópia (muda só naquele passeio). Sem embarque na lancha vale o canal da Barra
+(`EMBARQUE_PADRAO` no `app.js`). Roteiro "Personalizado" no painel (pedido do cliente, deslocamento sim/não, onde buscar,
+valor do deslocamento cobrado do cliente, à parte do passeio: **ainda não entra no Dinheiro**). Mensagens (`textoPasseio`):
+cliente (pt/es, com embarque, mapa, nome do marinheiro, valor e quanto falta; sem telefone do marinheiro), marinheiro e
+dono (só o nome do cliente). Site: "Ainda não sei" virou "Personalizado" na home e no Contato, com "a lancha busca o grupo
+em outro lugar?" e o pedido indo na mensagem do WhatsApp.
 
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.

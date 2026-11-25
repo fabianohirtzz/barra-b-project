@@ -21,8 +21,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,300..800;1,62..125,500..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../assets/css/site.css?v=12">
-  <link rel="stylesheet" href="../assets/css/paginas.css?v=12">
+  <link rel="stylesheet" href="../assets/css/site.css?v=13">
+  <link rel="stylesheet" href="../assets/css/paginas.css?v=13">
   <script type="application/ld+json">
   {
    "@context": "https://schema.org",
@@ -229,10 +229,19 @@
             <select name="roteiro">
               <option>Ilha do Campeche</option>
               <option>Costa da Lagoa</option>
-              <option>Ainda não sei</option>
+              <option>Personalizado</option>
             </select>
           </label>
-          <label class="campo">Mensagem<textarea name="mensagem" rows="3" placeholder="Alguma dúvida ou pedido especial?"></textarea></label>
+          <div class="campo-pers" data-pers hidden>
+            <label class="campo">A lancha precisa buscar o grupo em outro lugar?
+              <select name="desloc">
+                <option value="nao">Não, embarcamos no ponto da Barra Boat</option>
+                <option value="sim">Sim, tenho píer ou outro ponto</option>
+              </select>
+            </label>
+            <label class="campo" data-desloc-local hidden>Onde buscar o grupo<input name="local" autocomplete="off" placeholder="Ex.: píer de casa em Jurerê"></label>
+          </div>
+          <label class="campo"><span data-rotulo-msg>Mensagem</span><textarea name="mensagem" rows="3" placeholder="Alguma dúvida ou pedido especial?"></textarea></label>
           <p class="form-contato__erro" data-form-erro hidden>Escreva o seu nome para a nossa equipe saber com quem está falando.</p>
           <button class="botao botao--mar botao--cheio botao--grande" type="submit"><svg aria-hidden="true"><use href="#i-wa"/></svg><span>Enviar pelo WhatsApp</span></button>
         </form>
@@ -340,7 +349,7 @@
     <svg aria-hidden="true"><use href="#i-wa"/></svg><span>Reservar</span>
   </a>
 
-    <script src="../assets/js/site.js?v=8" defer></script>
-  <script src="../assets/js/contato.js?v=1" defer></script>
+    <script src="../assets/js/site.js?v=9" defer></script>
+  <script src="../assets/js/contato.js?v=2" defer></script>
 </body>
 </html>

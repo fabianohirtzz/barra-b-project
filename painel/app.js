@@ -124,7 +124,7 @@
     const anoPassado = `${hoje().getFullYear() - 1}-01-01`;
     const recente = iso(somaDias(hoje(), -60));
     const [lanchas, parceiros, marinheiros, roteiros, leads, receb, passeios, bloqueios, dono] = await Promise.all([
-      um(sb.from('bb_lanchas').select('id,slug,nome,pes,passageiros,regiao,descricao,itens,capa_url,fotos,parceiro_id,cor,ativo,ordem,agenda_palavra').order('ordem').order('nome')),
+      um(sb.from('bb_lanchas').select('id,slug,nome,pes,passageiros,regiao,descricao,itens,capa_url,fotos,parceiro_id,cor,ativo,ordem,agenda_palavra,embarque_local,embarque_maps,embarque_hora,marinheiro_id').order('ordem').order('nome')),
       um(sb.from('bb_parceiros').select('*').order('nome')),
       um(sb.from('bb_marinheiros').select('*').order('nome')),
       um(sb.from('bb_roteiros').select('id,slug,nome').order('ordem')),
@@ -248,23 +248,72 @@
      Para o dono da lancha (parceiro) e para o marinheiro, pelo WhatsApp da Michele.
      Abre a conversa com o texto pronto; ela confere e envia. */
   const diaDoPasseio = (p) => { const d = deIso(p.dia); return `${DIAS_LONGOS[d.getDay()].toLowerCase()}, ${dd(d)}`; };
-  function textoPasseio(p, para) {
-    const l = lancha(p.lancha_id) || { nome: 'lancha' }, c = lead(p.lead_id), r = roteiro(p.roteiro_id), m = marinheiro(p.marinheiro_id);
-    const pessoas = p.pessoas || (c && c.pessoas);
-    const partes = [`saída ${p.hora_saida ? hora(p.hora_saida) : 'a combinar'}`, pessoas ? `${pessoas} pessoas` : '', `roteiro ${r ? r.nome : 'a combinar'}`].filter(Boolean).join(', ');
-    if (para === 'dono') {
-      const dono = parceiro(l.parceiro_id);
-      return `Oi${dono ? ', ' + primeiroNome(dono.nome) : ''}! Reserva da ${l.nome} pela Barra Boat Floripa: ${diaDoPasseio(p)}, ${partes}.${m ? ` Marinheiro: ${m.nome}.` : ''}${c && c.nome ? ` Cliente: ${c.nome}.` : ''}`;
-    }
-    return `Oi${m ? ', ' + primeiroNome(m.nome) : ''}! Passeio de ${diaDoPasseio(p)} na ${l.nome}: ${partes}.${c ? ` Cliente: ${c.nome || 'sem nome'}${c.wa_id ? ', WhatsApp ' + foneTela(c.wa_id) : ''}.` : ''}`;
+  // Onde embarca: o que foi combinado no passeio; sem isso, o de sempre da lancha; sem isso, o canal da Barra.
+  const EMBARQUE_PADRAO = { local: 'Canal da Barra da Lagoa, Rod. Jorn. Manoel de Menezes, 3007', maps: 'https://maps.app.goo.gl/BpSAjwD4joPXAXKb7' };
+  function embarqueDe(p) {
+    const l = lancha(p.lancha_id) || {};
+    if (p.embarque_local) return { local: p.embarque_local, maps: p.embarque_maps || '' };
+    if (l.embarque_local) return { local: l.embarque_local, maps: l.embarque_maps || '' };
+    return EMBARQUE_PADRAO;
   }
-  // Botões "mandar ao dono" e "mandar ao marinheiro" (só aparecem quando há para quem mandar).
+  const linkEmbarque = (p) => { const e = embarqueDe(p); return e.maps ? `<a href="${esc(e.maps)}" target="_blank" rel="noopener">${esc(e.local)}</a>` : esc(e.local); };
+  const nomeRoteiro = (p) => (p.personalizado ? 'Personalizado' : (roteiro(p.roteiro_id) || {}).nome || 'a combinar');
+  function textoPasseio(p, para) {
+    const l = lancha(p.lancha_id) || { nome: 'lancha' }, c = lead(p.lead_id), m = marinheiro(p.marinheiro_id);
+    const pessoas = p.pessoas || (c && c.pessoas);
+    const emb = embarqueDe(p);
+    const saida = p.hora_saida ? hora(p.hora_saida) : 'a combinar';
+    const linhas = [];
+    if (para === 'cliente') {
+      const es = c && c.idioma === 'es';
+      const valor = c ? Number(c.valor_fechado) || 0 : 0, falta_ = c ? falta(c) : 0;
+      if (es) {
+        linhas.push(`¡Hola${c && c.nome ? ', ' + primeiroNome(c.nome) : ''}! Estos son los datos de tu paseo con Barra Boat Floripa:`, '',
+          `Fecha: ${['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'][deIso(p.dia).getDay()]}, ${ddIso(p.dia)}`, `Embarque: ${saida}`, `Lugar de embarque: ${emb.local}`);
+        if (emb.maps) linhas.push(`Mapa: ${emb.maps}`);
+        linhas.push(`Lancha: ${l.nome}`, `Recorrido: ${p.personalizado ? 'personalizado' : nomeRoteiro(p)}`);
+        if (pessoas) linhas.push(`Personas: ${pessoas}`);
+        if (m) linhas.push(`Marinero: ${m.nome}`);
+        if (p.personalizado && p.pedido) linhas.push(`Lo que combinamos: ${p.pedido}`);
+        if (p.deslocamento && Number(p.deslocamento_valor)) linhas.push(`Traslado hasta el lugar de embarque: ${R(p.deslocamento_valor)}`);
+        if (valor) linhas.push(`Valor del paseo: ${R(valor)}${falta_ ? `, falta pagar ${R(falta_)}` : ', pagado'}`);
+        linhas.push('', 'Llega 15 minutos antes. Cualquier duda, escríbenos aquí.');
+      } else {
+        linhas.push(`Olá${c && c.nome ? ', ' + primeiroNome(c.nome) : ''}! Seguem os dados do seu passeio com a Barra Boat Floripa:`, '',
+          `Dia: ${diaDoPasseio(p)}`, `Embarque: ${saida}`, `Local de embarque: ${emb.local}`);
+        if (emb.maps) linhas.push(`Mapa: ${emb.maps}`);
+        linhas.push(`Lancha: ${l.nome}`, `Roteiro: ${nomeRoteiro(p)}`);
+        if (pessoas) linhas.push(`Pessoas: ${pessoas}`);
+        if (m) linhas.push(`Marinheiro: ${m.nome}`);
+        if (p.personalizado && p.pedido) linhas.push(`O que combinamos: ${p.pedido}`);
+        if (p.deslocamento && Number(p.deslocamento_valor)) linhas.push(`Deslocamento até o local de embarque: ${R(p.deslocamento_valor)}`);
+        if (valor) linhas.push(`Valor do passeio: ${R(valor)}${falta_ ? `, falta pagar ${R(falta_)}` : ', pago'}`);
+        linhas.push('', 'Chegue 15 minutos antes. Qualquer dúvida, é só chamar aqui.');
+      }
+      return linhas.join('\n');
+    }
+    // dono e marinheiro: dados do passeio e só o NOME do cliente (o contato do cliente fica com a equipe)
+    const oi = para === 'dono' ? parceiro(l.parceiro_id) : m;
+    linhas.push(`Oi${oi ? ', ' + primeiroNome(oi.nome) : ''}! ${para === 'dono' ? `Reserva da ${l.nome} pela Barra Boat Floripa` : `Passeio na ${l.nome}`}:`, '',
+      `Dia: ${diaDoPasseio(p)}`, `Saída: ${saida}`, `Embarque: ${emb.local}`);
+    if (emb.maps) linhas.push(`Mapa: ${emb.maps}`);
+    linhas.push(`Roteiro: ${nomeRoteiro(p)}`);
+    if (pessoas) linhas.push(`Pessoas: ${pessoas}`);
+    if (c && c.nome) linhas.push(`Cliente: ${c.nome}`);
+    if (para === 'dono' && m) linhas.push(`Marinheiro: ${m.nome}`);
+    if (p.personalizado && p.pedido) linhas.push(`Pedido do cliente: ${p.pedido}`);
+    if (p.deslocamento) linhas.push('Tem deslocamento: buscar o grupo no local de embarque acima.');
+    if (p.obs) linhas.push(`Observação: ${p.obs}`);
+    return linhas.join('\n');
+  }
+  // Botões de envio (só aparecem quando há para quem mandar).
   function botoesEnvio(p, pequeno) {
-    const l = lancha(p.lancha_id) || {}, dono = parceiro(l.parceiro_id), m = marinheiro(p.marinheiro_id);
+    const l = lancha(p.lancha_id) || {}, dono = parceiro(l.parceiro_id), m = marinheiro(p.marinheiro_id), c = lead(p.lead_id);
     const cls = `botao botao--wa${pequeno ? ' botao--pequeno' : ''}`;
     return [
-      dono ? `<a class="${cls}" href="${linkWa(dono.telefone, textoPasseio(p, 'dono'))}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Mandar a reserva ao dono</a>` : '',
+      c && c.wa_id ? `<a class="${cls}" href="${linkWa(c.wa_id, textoPasseio(p, 'cliente'))}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Mandar ao cliente</a>` : '',
       m ? `<a class="${cls}" href="${linkWa(m.telefone, textoPasseio(p, 'marinheiro'))}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Mandar ao marinheiro</a>` : '',
+      dono ? `<a class="${cls}" href="${linkWa(dono.telefone, textoPasseio(p, 'dono'))}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Mandar a reserva ao dono</a>` : '',
     ].join('');
   }
 
@@ -341,12 +390,14 @@
         <dl class="dados">
           <div><dt>Cliente</dt><dd>${esc(c ? c.nome || 'Sem nome' : 'Sem cliente')}</dd></div>
           <div><dt>Pessoas</dt><dd>${p.pessoas || (c && c.pessoas) || 'a confirmar'}</dd></div>
-          <div><dt>Roteiro</dt><dd>${esc(r ? r.nome : 'a combinar')}</dd></div>
+          <div><dt>Roteiro</dt><dd>${esc(nomeRoteiro(p))}</dd></div>
           <div><dt>Marinheiro</dt><dd>${esc(m ? m.nome : 'a definir')}</dd></div>
+          <div><dt>Embarque</dt><dd>${linkEmbarque(p)}</dd></div>
           ${f > 0 ? `<div><dt>Falta receber</dt><dd>${R(f)}</dd></div>` : ''}
         </dl>
         <div class="acoes">${c ? `<button class="botao botao--leve botao--pequeno" type="button" data-cliente="${c.id}">Abrir</button>` : ''}
         ${f > 0 ? `<button class="botao botao--leve botao--pequeno" type="button" data-receber="${c.id}">Recebi o restante</button>` : ''}
+        ${c && c.wa_id ? `<a class="botao botao--leve botao--pequeno" href="${linkWa(c.wa_id, textoPasseio(p, 'cliente'))}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Mandar ao cliente</a>` : ''}
         ${m ? `<a class="botao botao--leve botao--pequeno" href="${linkWa(m.telefone, textoPasseio(p, 'marinheiro'))}" target="_blank" rel="noopener"><svg><use href="#p-wa"/></svg>Mandar ao marinheiro</a>` : ''}</div>
       </li>`;
     }).join('') || vazio('Nenhum passeio marcado para hoje.');
@@ -541,18 +592,20 @@
       return;
     }
     if (e.t === 'passeio') {
-      const p = e.p, c = lead(p.lead_id), r = roteiro(p.roteiro_id), m = marinheiro(p.marinheiro_id);
+      const p = e.p, c = lead(p.lead_id), m = marinheiro(p.marinheiro_id);
       abreGaveta(titulo, `<div class="cartao"><dl class="dados" style="display:grid;gap:8px">
           <div><dt>Cliente:</dt><dd>${esc(c ? c.nome || 'Sem nome' : 'Sem cliente')}</dd></div>
-          <div><dt>Saída:</dt><dd>${p.hora_saida ? hora(p.hora_saida) : 'a combinar'}</dd></div>
+          <div><dt>Embarque:</dt><dd>${p.hora_saida ? hora(p.hora_saida) : 'hora a combinar'}, ${linkEmbarque(p)}</dd></div>
           <div><dt>Pessoas:</dt><dd>${p.pessoas || 'a confirmar'}</dd></div>
-          <div><dt>Roteiro:</dt><dd>${esc(r ? r.nome : 'a combinar')}</dd></div>
+          <div><dt>Roteiro:</dt><dd>${esc(nomeRoteiro(p))}</dd></div>
+          ${p.personalizado && p.pedido ? `<div><dt>Pedido:</dt><dd>${esc(p.pedido)}</dd></div>` : ''}
+          ${p.deslocamento ? `<div><dt>Deslocamento:</dt><dd>${Number(p.deslocamento_valor) ? R(p.deslocamento_valor) + ', cobrado do cliente' : 'sim, valor não anotado'}</dd></div>` : ''}
           <div><dt>Marinheiro:</dt><dd>${esc(m ? m.nome : 'a definir')}</dd></div>
         </dl>${exemplo(p) ? '<p class="selo selo--neutro" style="white-space:normal;margin:10px 0 0">Passeio de exemplo: será apagado antes do lançamento.</p>' : ''}</div>
         ${botoesEnvio(p) ? `<div class="acoes" style="margin-top:16px">${botoesEnvio(p)}</div>` : ''}
         <div class="acoes" style="margin-top:12px">
           ${c ? `<button class="botao botao--principal" type="button" data-abrir-c="${c.id}">Abrir o cliente</button>` : ''}
-          <button class="botao botao--leve" type="button" data-editar>Mudar data, hora ou marinheiro</button>
+          <button class="botao botao--leve" type="button" data-editar>Mudar data, hora, embarque ou marinheiro</button>
           <button class="botao botao--leve" type="button" data-cancelar>Cancelar este passeio</button>
         </div>`, (g) => {
         const ab = g.querySelector('[data-abrir-c]'); if (ab) ab.addEventListener('click', () => abreCliente(ab.dataset.abrirC));
@@ -585,12 +638,72 @@
     });
   }
 
+  /* Campos do passeio que valem para marcar e para mudar: roteiro (ou personalizado), embarque,
+     deslocamento. O embarque e o marinheiro vêm da lancha como sugestão e podem mudar na hora. */
+  function camposPasseio(v) {
+    const pers = !!v.personalizado;
+    return `
+      <div class="grade-2">
+        <label class="campo"><span>Roteiro</span><select data-roteiro>${opcoes(S.roteiros, pers ? null : v.roteiro_id, (x) => x.nome, 'A combinar')}<option value="personalizado"${pers ? ' selected' : ''}>Personalizado</option></select></label>
+        <label class="campo"><span>Marinheiro</span><select data-marinheiro>${opcoes(S.marinheiros.filter((x) => x.ativo || x.id === v.marinheiro_id), v.marinheiro_id, (x) => x.nome, 'A definir')}</select></label>
+      </div>
+      <div data-bloco-pers${pers ? '' : ' hidden'}>
+        <label class="campo"><span>O que o cliente quer no passeio</span><textarea data-pedido rows="3" placeholder="Ex.: sair do píer de casa, parar na Praia Mole, voltar ao pôr do sol">${esc(v.pedido || '')}</textarea></label>
+        <label class="campo"><span>A lancha vai buscar o grupo em outro lugar?</span><select data-desloc>
+          <option value="0"${v.deslocamento ? '' : ' selected'}>Não, embarcam no lugar de sempre</option>
+          <option value="1"${v.deslocamento ? ' selected' : ''}>Sim, tem deslocamento</option></select></label>
+        <label class="campo" data-bloco-valor${v.deslocamento ? '' : ' hidden'}><span>Valor do deslocamento <small style="font-weight:400;color:var(--suave)">(cobrado do cliente, à parte do passeio)</small></span><input data-desloc-valor inputmode="decimal" value="${v.deslocamento_valor != null ? String(v.deslocamento_valor).replace('.', ',') : ''}" placeholder="R$"></label>
+      </div>
+      <div class="grade-2">
+        <label class="campo"><span data-rotulo-local>${v.deslocamento ? 'Onde buscar o grupo' : 'Local de embarque'}</span><input data-emb-local value="${esc(v.embarque_local || '')}"></label>
+        <label class="campo"><span>Link do Google Maps <small style="font-weight:400;color:var(--suave)">(opcional)</small></span><input data-emb-maps type="url" value="${esc(v.embarque_maps || '')}" placeholder="https://maps.app.goo.gl/..."></label>
+      </div>`;
+  }
+  // Liga o mostra/esconde dos campos do personalizado e do deslocamento.
+  function ligaCamposPasseio(c) {
+    const f = (k) => c.querySelector(`[data-${k}]`);
+    const mostra = () => {
+      f('bloco-pers').hidden = f('roteiro').value !== 'personalizado';
+      const d = !f('bloco-pers').hidden && f('desloc').value === '1';
+      f('bloco-valor').hidden = !d;
+      f('rotulo-local').textContent = d ? 'Onde buscar o grupo' : 'Local de embarque';
+    };
+    f('roteiro').addEventListener('change', mostra);
+    f('desloc').addEventListener('change', () => {
+      // passou a ter deslocamento: o local sugerido da lancha não serve mais
+      if (f('desloc').value === '1' && f('emb-local').dataset.sugerido === '1') { f('emb-local').value = ''; f('emb-maps').value = ''; f('emb-local').dataset.sugerido = ''; }
+      mostra();
+    });
+    ['emb-local', 'emb-maps'].forEach((k) => f(k).addEventListener('input', () => { f('emb-local').dataset.sugerido = ''; }));
+    mostra();
+  }
+  // Lê os campos acima. null + mensagem se faltar algo.
+  function lePasseio(c) {
+    const f = (k) => c.querySelector(`[data-${k}]`);
+    const pers = f('roteiro').value === 'personalizado';
+    const desl = pers && f('desloc').value === '1';
+    const maps = f('emb-maps').value.trim();
+    if (maps && !/^https?:\/\//.test(maps)) return [null, 'O link do mapa precisa começar com https://. Copie o link pelo botão "Compartilhar" do Google Maps.'];
+    if (desl && !f('emb-local').value.trim()) return [null, 'Escreva onde a lancha vai buscar o grupo.'];
+    return [{
+      roteiro_id: pers ? null : f('roteiro').value || null,
+      personalizado: pers,
+      pedido: pers ? f('pedido').value.trim() || null : null,
+      deslocamento: desl,
+      deslocamento_valor: desl && f('desloc-valor').value.trim() ? num(f('desloc-valor').value) : null,
+      marinheiro_id: f('marinheiro').value || null,
+      embarque_local: f('emb-local').value.trim() || null,
+      embarque_maps: maps || null,
+    }, null];
+  }
+
   // Marca um passeio. Vem da Agenda (lancha e dia escolhidos) ou do cliente (lead escolhido).
   function marcarPasseio(pre) {
     const l0 = pre.lead_id ? lead(pre.lead_id) : null;
     const candidatos = S.leads.filter((x) => x.etapa !== 'perdidos' && (!passeioDoLead(x.id) || x.id === pre.lead_id))
       .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
     const rotLead = (x) => [x.nome || foneTela(x.wa_id) || 'Sem nome', x.pessoas ? x.pessoas + ' pessoas' : '', x.data_desejada ? ddIso(x.data_desejada) : ''].filter(Boolean).join(' · ');
+    const lIni = lancha(pre.lancha_id || (l0 && l0.lancha_id)) || {};
     abreGaveta('Marcar passeio', `
       <label class="campo"><span>Cliente</span><select data-lead><option value="">Cliente novo</option>${opcoes(candidatos, pre.lead_id, rotLead)}</select></label>
       <div class="grade-2" data-novo>
@@ -598,21 +711,21 @@
         <label class="campo"><span>WhatsApp</span><input data-fone inputmode="tel" placeholder="(48) 99999-9999" autocomplete="off"></label>
       </div>
       <div class="grade-2">
-        <label class="campo"><span>Lancha</span><select data-lancha>${opcoes(lanchasAtivas(), pre.lancha_id || (l0 && l0.lancha_id), (x) => `${x.nome} (até ${x.passageiros})`, 'Escolha a lancha')}</select></label>
+        <label class="campo"><span>Lancha</span><select data-lancha>${opcoes(lanchasAtivas(), lIni.id, (x) => `${x.nome} (até ${x.passageiros})`, 'Escolha a lancha')}</select></label>
         <label class="campo"><span>Dia</span><input type="date" data-dia value="${pre.dia || (l0 && l0.data_desejada) || ''}"></label>
       </div>
       <div class="grade-2">
         <label class="campo"><span>Pessoas</span><input data-pessoas inputmode="numeric" value="${(l0 && l0.pessoas) || ''}"></label>
-        <label class="campo"><span>Saída</span><input type="time" data-hora value="09:00"></label>
+        <label class="campo"><span>Horário de embarque</span><input type="time" data-hora value="${lIni.embarque_hora ? lIni.embarque_hora.slice(0, 5) : '09:00'}"></label>
       </div>
-      <div class="grade-2">
-        <label class="campo"><span>Roteiro</span><select data-roteiro>${opcoes(S.roteiros, l0 && l0.roteiro_id, (x) => x.nome, 'A combinar')}</select></label>
-        <label class="campo"><span>Marinheiro</span><select data-marinheiro>${opcoes(S.marinheiros.filter((x) => x.ativo), null, (x) => x.nome, 'A definir')}</select></label>
-      </div>
+      ${camposPasseio({ roteiro_id: l0 && l0.roteiro_id, marinheiro_id: lIni.marinheiro_id, embarque_local: lIni.embarque_local || EMBARQUE_PADRAO.local, embarque_maps: lIni.embarque_local ? lIni.embarque_maps : EMBARQUE_PADRAO.maps })}
+      <p class="ajuda">Horário, embarque e marinheiro vêm do cadastro da lancha. Mude aqui se este passeio for diferente.</p>
       <p class="selo selo--alerta" data-aviso hidden style="margin:0 0 12px;white-space:normal"></p>
       <p class="erro" data-erro hidden></p>
       <button class="botao botao--principal botao--cheio" type="button" data-salvar>Marcar o passeio</button>`, (c) => {
       const f = (k) => c.querySelector(`[data-${k}]`);
+      f('emb-local').dataset.sugerido = '1';
+      ligaCamposPasseio(c);
       const confere = () => {
         f('novo').hidden = !!f('lead').value;
         const l = lancha(f('lancha').value), n = Number(f('pessoas').value);
@@ -622,15 +735,30 @@
       };
       f('lead').addEventListener('change', () => {
         const x = lead(f('lead').value);
-        if (x) { if (x.pessoas) f('pessoas').value = x.pessoas; if (x.roteiro_id) f('roteiro').value = x.roteiro_id; if (!f('dia').value && x.data_desejada) f('dia').value = x.data_desejada; }
+        if (x) { if (x.pessoas) f('pessoas').value = x.pessoas; if (x.roteiro_id) { f('roteiro').value = x.roteiro_id; f('roteiro').dispatchEvent(new Event('change')); } if (!f('dia').value && x.data_desejada) f('dia').value = x.data_desejada; }
         confere();
       });
-      ['lancha', 'pessoas'].forEach((k) => f(k).addEventListener('input', confere));
+      // trocou a lancha: traz o horário, o marinheiro e o embarque de sempre dela (se ainda for a sugestão)
+      f('lancha').addEventListener('change', () => {
+        const l = lancha(f('lancha').value);
+        if (l) {
+          if (l.embarque_hora) f('hora').value = l.embarque_hora.slice(0, 5);
+          if (l.marinheiro_id) f('marinheiro').value = l.marinheiro_id;
+          if (f('emb-local').dataset.sugerido === '1') {
+            f('emb-local').value = l.embarque_local || EMBARQUE_PADRAO.local;
+            f('emb-maps').value = l.embarque_local ? l.embarque_maps || '' : EMBARQUE_PADRAO.maps;
+          }
+        }
+        confere();
+      });
+      f('pessoas').addEventListener('input', confere);
       confere();
       aoSalvar(f('salvar'), async () => {
         const lanchaId = f('lancha').value, dia = f('dia').value, pessoas = Number(f('pessoas').value) || null;
         if (!lanchaId || !dia) return erroCampo(c, 'Escolha a lancha e o dia.');
         if (!f('lead').value && !f('nome').value.trim()) return erroCampo(c, 'Escreva o nome do cliente.');
+        const [extra, erro] = lePasseio(c);
+        if (erro) return erroCampo(c, erro);
         erroCampo(c, '');
         let leadId = f('lead').value, criado = false;
         if (!leadId) {
@@ -638,11 +766,10 @@
           if (!novo) return;
           leadId = novo.id; criado = true;
         }
-        const roteiroId = f('roteiro').value || null;
-        const p = await grava(sb.from('bb_passeios').insert({ lancha_id: lanchaId, dia, hora_saida: f('hora').value || null, roteiro_id: roteiroId, lead_id: leadId, marinheiro_id: f('marinheiro').value || null, pessoas }));
+        const p = await grava(sb.from('bb_passeios').insert(Object.assign({ lancha_id: lanchaId, dia, hora_saida: f('hora').value || null, lead_id: leadId, pessoas }, extra)));
         if (!p) { if (criado) await sb.from('bb_leads').delete().eq('id', leadId); return; }
         const x = lead(leadId) || { etapa: 'conversando', valor_fechado: 0, valor_orcado: 0 };
-        const muda = { lancha_id: lanchaId, data_desejada: dia, roteiro_id: roteiroId };
+        const muda = { lancha_id: lanchaId, data_desejada: dia, roteiro_id: extra.roteiro_id };
         if (pessoas) muda.pessoas = pessoas;
         if (x.etapa !== 'fechados') { muda.etapa = 'fechados'; if (!Number(x.valor_fechado) && Number(x.valor_orcado)) muda.valor_fechado = x.valor_orcado; }
         await grava(sb.from('bb_leads').update(muda).eq('id', leadId));
@@ -653,36 +780,35 @@
   }
 
   function editarPasseio(p) {
+    const emb = embarqueDe(p);
     abreGaveta('Mudar o passeio', `
       <div class="grade-2">
         <label class="campo"><span>Dia</span><input type="date" data-dia value="${p.dia}"></label>
         <label class="campo"><span>Lancha</span><select data-lancha>${opcoes(S.lanchas.filter((x) => x.ativo || x.id === p.lancha_id), p.lancha_id, (x) => `${x.nome} (até ${x.passageiros})`)}</select></label>
       </div>
       <div class="grade-2">
-        <label class="campo"><span>Saída</span><input type="time" data-hora value="${(p.hora_saida || '').slice(0, 5)}"></label>
+        <label class="campo"><span>Horário de embarque</span><input type="time" data-hora value="${(p.hora_saida || '').slice(0, 5)}"></label>
         <label class="campo"><span>Pessoas</span><input data-pessoas inputmode="numeric" value="${p.pessoas || ''}"></label>
       </div>
-      <div class="grade-2">
-        <label class="campo"><span>Marinheiro</span><select data-marinheiro>${opcoes(S.marinheiros.filter((x) => x.ativo || x.id === p.marinheiro_id), p.marinheiro_id, (x) => x.nome, 'A definir')}</select></label>
-        <label class="campo"><span>Roteiro</span><select data-roteiro>${opcoes(S.roteiros, p.roteiro_id, (x) => x.nome, 'A combinar')}</select></label>
-      </div>
-      <p class="ajuda">Mudou o dia ou a lancha? O dia antigo fica livre no site e o novo fica ocupado. Se a lancha for de parceiro, mande a reserva de novo ao dono.</p>
+      ${camposPasseio(Object.assign({}, p, { embarque_local: emb.local, embarque_maps: emb.maps }))}
+      <p class="ajuda">Mudou o dia ou a lancha? O dia antigo fica livre no site e o novo fica ocupado. Mudou algo? Mande de novo ao cliente, ao marinheiro e, se a lancha for de parceiro, ao dono.</p>
       <p class="erro" data-erro hidden></p>
       <button class="botao botao--principal botao--cheio" type="button" data-salvar>Salvar</button>`, (c) => {
+      ligaCamposPasseio(c);
       aoSalvar(c.querySelector('[data-salvar]'), async () => {
         const dia = c.querySelector('[data-dia]').value, lanchaId = c.querySelector('[data-lancha]').value;
         if (!dia || !lanchaId) return erroCampo(c, 'Escolha o dia e a lancha.');
         const mudou = dia !== p.dia || lanchaId !== p.lancha_id;
         const outro = S.passeios.find((x) => x.id !== p.id && x.lancha_id === lanchaId && x.dia === dia);
         if (outro) return erroCampo(c, `A ${lancha(lanchaId).nome} já tem passeio em ${ddIso(dia)}.`);
+        const [extra, erro] = lePasseio(c);
+        if (erro) return erroCampo(c, erro);
         erroCampo(c, '');
-        const ok = await grava(sb.from('bb_passeios').update({
+        const ok = await grava(sb.from('bb_passeios').update(Object.assign({
           dia, lancha_id: lanchaId,
           hora_saida: c.querySelector('[data-hora]').value || null,
           pessoas: Number(c.querySelector('[data-pessoas]').value) || null,
-          marinheiro_id: c.querySelector('[data-marinheiro]').value || null,
-          roteiro_id: c.querySelector('[data-roteiro]').value || null,
-        }).eq('id', p.id));
+        }, extra)).eq('id', p.id));
         if (!ok) return;
         // o pedido do cliente acompanha o passeio (data e lancha)
         if (p.lead_id && mudou) await grava(sb.from('bb_leads').update({ data_desejada: dia, lancha_id: lanchaId }).eq('id', p.lead_id));
@@ -1381,6 +1507,21 @@
   };
   const linhas = (t) => String(t || '').split('\n').map((x) => x.trim()).filter(Boolean);
 
+  // Embarque e marinheiro de sempre da lancha (viram sugestão ao marcar o passeio).
+  const camposEmbarque = (l, at) => `
+      <div class="grade-2">
+        <label class="campo"><span>Local de embarque <small style="font-weight:400;color:var(--suave)">(opcional)</small></span><input ${at}="embarque_local" value="${esc(l.embarque_local || '')}" placeholder="${esc(EMBARQUE_PADRAO.local)}"></label>
+        <label class="campo"><span>Link do Google Maps <small style="font-weight:400;color:var(--suave)">(opcional)</small></span><input ${at}="embarque_maps" type="url" value="${esc(l.embarque_maps || '')}" placeholder="https://maps.app.goo.gl/..."></label>
+        <label class="campo"><span>Horário de embarque</span><input ${at}="embarque_hora" type="time" value="${l.embarque_hora ? l.embarque_hora.slice(0, 5) : ''}"></label>
+        <label class="campo"><span>Marinheiro de sempre</span><select ${at}="marinheiro_id">${opcoes(S.marinheiros.filter((x) => x.ativo || x.id === l.marinheiro_id), l.marinheiro_id, (x) => x.nome, 'Nenhum')}</select></label>
+      </div>
+      <p class="ajuda">Embarque vazio: vale o canal da Barra da Lagoa. Ao marcar um passeio, estes dados já vêm preenchidos e dá para mudar só naquele passeio.</p>`;
+  const leEmbarque = (v) => {
+    const maps = v('embarque_maps').trim();
+    if (maps && !/^https?:\/\//.test(maps)) return [null, 'O link do mapa precisa começar com https://. Copie pelo botão "Compartilhar" do Google Maps.'];
+    return [{ embarque_local: v('embarque_local').trim() || null, embarque_maps: maps || null, embarque_hora: v('embarque_hora') || null, marinheiro_id: v('marinheiro_id') || null }, null];
+  };
+
   // Cadastrar lancha: nasce escondida do site até ter fotos; o dono (parceiro) já vem escolhido aqui.
   function novaLancha() {
     abreGaveta('Cadastrar lancha', `
@@ -1392,6 +1533,7 @@
       </div>
       <label class="campo"><span>De quem é</span><select data-n="parceiro_id">${opcoes(S.parceiros.filter((p) => p.ativo !== false && p.tipo !== 'revendedor'), null, (x) => x.nome, 'Própria (da Barra Boat)')}</select>
         <small class="caixas__ajuda">O parceiro não está na lista? Cadastre ele antes em Parceiros.</small></label>
+      ${camposEmbarque({}, 'data-n')}
       <label class="campo"><span>Itens a bordo <small style="font-weight:400;color:var(--suave)">(um por linha)</small></span><textarea data-n="itens" rows="5" placeholder="Banheiro&#10;Som bluetooth&#10;Churrasqueira&#10;Tapete flutuante"></textarea></label>
       <p class="ajuda">A lancha começa escondida do site. Depois de salvar, adicione as fotos e mude "Mostrar no site" para sim.</p>
       <p class="erro" data-erro hidden></p>
@@ -1403,7 +1545,9 @@
         if (!nome) return erroCampo(g, 'Escreva o nome da lancha.');
         if (!(pax > 0)) return erroCampo(g, 'Escreva quantas pessoas a lancha leva.');
         if (S.lanchas.some((l) => l.nome.toLowerCase() === nome.toLowerCase())) return erroCampo(g, 'Já existe uma lancha com esse nome.');
-        const nova = await grava(sb.from('bb_lanchas').insert({
+        const [emb, erroEmb] = leEmbarque(v);
+        if (erroEmb) return erroCampo(g, erroEmb);
+        const nova = await grava(sb.from('bb_lanchas').insert({ ...emb,
           nome, slug: slugDe(nome), passageiros: pax, pes: v('pes').trim() ? num(v('pes')) : null, regiao: v('regiao'),
           parceiro_id: v('parceiro_id') || null, itens: linhas(v('itens')), ativo: false,
           ordem: Math.max(0, ...S.lanchas.map((l) => l.ordem || 0)) + 1,
@@ -1452,6 +1596,7 @@
           <label class="campo"><span>Dono</span><select data-l="parceiro_id">${opcoes(S.parceiros, l.parceiro_id, (x) => x.nome, 'Própria (da Barra Boat)')}</select></label>
           <label class="campo"><span>Região</span><select data-l="regiao">${regioes().map((r) => `<option${r === l.regiao ? ' selected' : ''}>${esc(r)}</option>`).join('')}</select></label>
         </div>
+        ${camposEmbarque(l, 'data-l')}
         <label class="campo"><span>Itens a bordo <small style="font-weight:400;color:var(--suave)">(um por linha)</small></span><textarea data-l="itens" rows="6">${esc((Array.isArray(l.itens) ? l.itens : []).join('\n'))}</textarea></label>
         <label class="campo"><span>Texto da lancha no site <small style="font-weight:400;color:var(--suave)">(se ficar vazio, o site escreve um com o tamanho e as pessoas)</small></span><textarea data-l="descricao" rows="3">${esc(l.descricao || '')}</textarea></label>
         <label class="campo"><span>Mostrar no site</span><select data-l="ativo"><option value="1"${l.ativo ? ' selected' : ''}>Sim, aparece no site</option><option value="0"${l.ativo ? '' : ' selected'}>Não, esconder por enquanto</option></select></label>
@@ -1486,8 +1631,10 @@
       const v = (k) => tela.querySelector(`[data-l="${k}"]`).value;
       const pax = parseInt(v('passageiros'), 10);
       if (!v('nome').trim() || !(pax > 0)) { avisa('Preencha o nome e quantas pessoas a lancha leva.', true); return; }
-      if (v('ativo') === '1' && !l.capa_url && !(Array.isArray(l.fotos) && l.fotos.length)) { avisa('Adicione pelo menos uma foto antes de mostrar a lancha no site.', true); return; }
-      const dados = { nome: v('nome').trim(), passageiros: pax, pes: v('pes').trim() ? num(v('pes')) : null, parceiro_id: v('parceiro_id') || null, ativo: v('ativo') === '1',
+      if (!l.ativo && v('ativo') === '1' && !l.capa_url && !(Array.isArray(l.fotos) && l.fotos.length)) { avisa('Adicione pelo menos uma foto antes de mostrar a lancha no site.', true); return; }
+      const [emb, erroEmb] = leEmbarque(v);
+      if (erroEmb) { avisa(erroEmb, true); return; }
+      const dados = { ...emb, nome: v('nome').trim(), passageiros: pax, pes: v('pes').trim() ? num(v('pes')) : null, parceiro_id: v('parceiro_id') || null, ativo: v('ativo') === '1',
         regiao: v('regiao'), itens: linhas(v('itens')), descricao: v('descricao').trim() || null };
       const ok = await grava(sb.from('bb_lanchas').update(dados).eq('id', l.id));
       if (!ok) return;
@@ -2411,7 +2558,9 @@
       ${dias.length ? dias.map((d) => `<section class="bloco"><h2>${nomeDia(d)}</h2><ul class="lista">${ps.filter((p) => p.dia === d).map((p) => `<li class="linha passeio-m">
           <span class="passeio-m__hora">${p.hora_saida ? hora(p.hora_saida) : 'a definir'}</span>
           <span class="linha__corpo"><b>${esc(p.lancha)}${p.roteiro ? ' · ' + esc(p.roteiro) : ''}</b>
-            <span>${esc([p.pessoas ? p.pessoas + ' pessoas' : '', p.cliente ? 'cliente ' + p.cliente : '', Number(p.passageiros) ? `${p.passageiros} na lista de passageiros` : ''].filter(Boolean).join(' · '))}</span></span></li>`).join('')}</ul></section>`).join('')
+            <span>${esc([p.pessoas ? p.pessoas + ' pessoas' : '', p.cliente ? 'cliente ' + p.cliente : '', Number(p.passageiros) ? `${p.passageiros} na lista de passageiros` : ''].filter(Boolean).join(' · '))}</span>
+            <span>Embarque: ${p.embarque_maps ? `<a href="${esc(p.embarque_maps)}" target="_blank" rel="noopener">${esc(p.embarque_local || EMBARQUE_PADRAO.local)}</a>` : esc(p.embarque_local || EMBARQUE_PADRAO.local)}</span>
+            ${p.personalizado && p.pedido ? `<span>Pedido: ${esc(p.pedido)}</span>` : ''}</span></li>`).join('')}</ul></section>`).join('')
         : '<p class="cartao vazio">Nenhum passeio marcado para você nos próximos 60 dias. Quando a equipe marcar, ele aparece aqui.</p>'}
       <section class="bloco"><h2>Previsão do Windguru <small>próximos 4 dias, vento em km/h</small></h2>
         <div class="cartao windguru"><div data-windguru></div>

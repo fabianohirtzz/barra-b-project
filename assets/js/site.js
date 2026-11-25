@@ -364,6 +364,14 @@
     $('[data-menos]', plan).addEventListener('click', () => muda(-1));
     $('[data-mais]', plan).addEventListener('click', () => muda(1));
     sel.addEventListener('change', confere);
+    // Personalizado: pergunta se a lancha busca o grupo em outro lugar e abre espaço para o pedido
+    const pers = $('[data-pers]', plan), local = $('[data-desloc-local]', plan);
+    const mostraPers = () => {
+      pers.hidden = plan.roteiro.value !== 'Personalizado';
+      local.hidden = pers.hidden || plan.desloc.value !== 'sim';
+    };
+    $$('input[name="roteiro"], input[name="desloc"]', plan).forEach((r) => r.addEventListener('change', mostraPers));
+    mostraPers();
     $('[data-limite-ajuda]', plan).addEventListener('click', () => { sel.value = ''; confere(); sel.focus(); });
     plan.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -371,9 +379,14 @@
       const roteiro = plan.roteiro.value;
       const dia = data.value ? data.value.split('-').reverse().join('/') : null;
       const pessoas = n === 1 ? '1 pessoa' : `${n} pessoas`;
-      const trecho = roteiro === 'ainda não sei'
-        ? 'Ainda não escolhi o roteiro.'
-        : `Quero consultar um passeio para a ${roteiro === 'Costa da Lagoa' ? 'Costa da Lagoa' : 'Ilha do Campeche'}.`;
+      let trecho;
+      if (roteiro === 'Personalizado') {
+        const ondeBuscar = plan.desloc.value === 'sim' ? (plan.local.value.trim() || 'a combinar') : '';
+        const pedido = plan.pedido.value.trim();
+        trecho = 'Quero um passeio personalizado.'
+          + (ondeBuscar ? ` Preciso que a lancha busque o grupo em outro lugar: ${ondeBuscar}.` : ' Podemos embarcar no ponto de vocês.')
+          + (pedido ? ` Como quero o passeio: ${pedido}` + (/[.!?]$/.test(pedido) ? '' : '.') : '');
+      } else trecho = `Quero consultar um passeio para a ${roteiro === 'Costa da Lagoa' ? 'Costa da Lagoa' : 'Ilha do Campeche'}.`;
       const barco = sel.value ? `Lancha: ${sel.value}.` : 'Quero ajuda da equipe para escolher a lancha.';
       const texto = `Olá! Vim pelo site da Barra Boat. ${trecho} ${barco} Data: ${dia || 'ainda a definir'}. Somos ${pessoas}.`;
       (window.dataLayer = window.dataLayer || []).push({ event: 'clique_whatsapp', origem, pagina: location.pathname, formulario: 'planejar' });

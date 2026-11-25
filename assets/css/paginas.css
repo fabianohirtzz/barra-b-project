@@ -261,6 +261,8 @@ a.canal:hover{transform:translateY(-2px);box-shadow:0 1px 0 var(--linha),0 18px 
 .campo input,.campo select{height:50px}
 .campo select{background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%2318608C' stroke-width='1.8' d='m1 1 5 5 5-5'/%3E%3C/svg%3E") no-repeat right 16px center}
 .campo textarea{resize:vertical}
+.campo-pers{display:grid;gap:14px;padding:14px;border-radius:16px;background:#F3F6F9}
+.campo-pers[hidden],.campo[hidden]{display:none}
 .campo input:focus,.campo select:focus,.campo textarea:focus{outline:2px solid var(--canal);outline-offset:1px;border-color:transparent}
 .campo [aria-invalid="true"]{border-color:#c0392b}
 .campo-linha{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px}

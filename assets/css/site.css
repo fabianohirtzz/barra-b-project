@@ -226,6 +226,10 @@ body.menu-aberto{overflow:hidden}
 .planejar__roteiro span{display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--linha);font-size:.92rem;font-weight:500;transition:background .25s,color .25s,border-color .25s}
 .planejar__roteiro input:checked + span{background:var(--abismo);border-color:var(--abismo);color:#fff}
 .planejar__roteiro input:focus-visible + span{outline:2px solid var(--canal);outline-offset:2px}
+.planejar__pers{display:grid;gap:14px;padding:14px;border-radius:16px;background:#F3F6F9}
+.planejar__pers[hidden],.planejar__campo[hidden]{display:none}
+.planejar__campo textarea{-webkit-appearance:none;appearance:none;display:block;width:100%;min-width:0;border-radius:14px;border:1px solid var(--linha);padding:10px 12px;font:500 1rem var(--f);color:var(--tinta);background:#fff;resize:vertical}
+.planejar__campo textarea:focus-visible{outline:2px solid var(--canal);outline-offset:2px}
 .planejar__linha{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px}
 .planejar__linha > *{min-width:0}
 .planejar__campo{display:grid;gap:6px;font-size:.82rem;color:var(--suave)}

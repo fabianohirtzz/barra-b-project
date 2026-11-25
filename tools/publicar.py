@@ -1,9 +1,9 @@
 """Publica o site na ErêHost por FTPS.
 
-Uso (a senha vem só da variável de ambiente, nunca de arquivo):
-    BB_FTP_SENHA='...' python tools/publicar.py            # envia o que mudou para /novo
-    BB_FTP_SENHA='...' python tools/publicar.py --tudo     # reenvia tudo
-    BB_FTP_SENHA='...' python tools/publicar.py --listar   # só mostra o que mudaria
+Uso (a senha vem de BB_FTP_SENHA ou de Site/ferramentas/ftp-senha.txt, fora do repositório):
+    python tools/publicar.py                                 # envia o que mudou para /novo
+    python tools/publicar.py --tudo                          # reenvia tudo
+    python tools/publicar.py --listar                        # só mostra o que mudaria
 
 A raiz do FTP é o WordPress em produção. Por isso o destino padrão é /novo e a raiz
 só é aceita com --producao (usar apenas no dia da troca, com o ok do Fabiano).
@@ -40,6 +40,20 @@ def arquivos():
 def sha1(p):
     return hashlib.sha1((RAIZ / p).read_bytes()).hexdigest()
 
+
+
+# Senha do FTP: a variável BB_FTP_SENHA ou o arquivo local fora do repositório
+# (E:\Clientes\Barra Boat Floripa\Site\ferramentas\ftp-senha.txt). Nunca no Git.
+ARQ_SENHA = Path(__file__).resolve().parents[2] / 'Site' / 'ferramentas' / 'ftp-senha.txt'
+
+
+def senha_ftp():
+    senha = os.environ.get('BB_FTP_SENHA')
+    if not senha and ARQ_SENHA.is_file():
+        senha = ARQ_SENHA.read_text(encoding='utf-8').strip()
+    if not senha:
+        sys.exit(f'Defina BB_FTP_SENHA ou grave a senha em {ARQ_SENHA}.')
+    return senha
 
 def conecta(senha):
     ctx = ssl.create_default_context()
@@ -88,10 +102,7 @@ def main():
             print('  ', p)
         return
 
-    senha = os.environ.get('BB_FTP_SENHA')
-    if not senha:
-        sys.exit('Defina BB_FTP_SENHA.')
-    ftp = conecta(senha)
+    ftp = conecta(senha_ftp())
     criadas = set()
     registro = feito.setdefault(chave, {})
     try:

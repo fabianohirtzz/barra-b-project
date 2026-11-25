@@ -14,7 +14,7 @@ WA = '5548991153172'
 INDEX = open(os.path.join(PROJ, 'index.html'), encoding='utf-8').read()
 L_JSON = {l['slug']: l for l in json.load(open(os.path.join(PROJ, 'docs/conteudo-site-atual/lanchas.json'), encoding='utf-8'))}
 IMGS = json.load(open(os.path.join(PROJ, 'tools/imagens.json'), encoding='utf-8'))
-V_CSS, V_JS = '12', '8'
+V_CSS, V_JS = '13', '9'
 e = html.escape
 
 
@@ -753,10 +753,19 @@ corpo = capa_faixa('Fale com a Barra Boat', 'Atendimento 24 horas pelo WhatsApp.
             <select name="roteiro">
               <option>Ilha do Campeche</option>
               <option>Costa da Lagoa</option>
-              <option>Ainda não sei</option>
+              <option>Personalizado</option>
             </select>
           </label>
-          <label class="campo">Mensagem<textarea name="mensagem" rows="3" placeholder="Alguma dúvida ou pedido especial?"></textarea></label>
+          <div class="campo-pers" data-pers hidden>
+            <label class="campo">A lancha precisa buscar o grupo em outro lugar?
+              <select name="desloc">
+                <option value="nao">Não, embarcamos no ponto da Barra Boat</option>
+                <option value="sim">Sim, tenho píer ou outro ponto</option>
+              </select>
+            </label>
+            <label class="campo" data-desloc-local hidden>Onde buscar o grupo<input name="local" autocomplete="off" placeholder="Ex.: píer de casa em Jurerê"></label>
+          </div>
+          <label class="campo"><span data-rotulo-msg>Mensagem</span><textarea name="mensagem" rows="3" placeholder="Alguma dúvida ou pedido especial?"></textarea></label>
           <p class="form-contato__erro" data-form-erro hidden>Escreva o seu nome para a nossa equipe saber com quem está falando.</p>
           <button class="botao botao--mar botao--cheio botao--grande" type="submit"><svg aria-hidden="true"><use href="#i-wa"/></svg><span>Enviar pelo WhatsApp</span></button>
         </form>
@@ -776,7 +785,7 @@ corpo = capa_faixa('Fale com a Barra Boat', 'Atendimento 24 horas pelo WhatsApp.
 gerados.append(pagina('contato/', 'Contato e embarque | Barra Boat Floripa',
                       'Fale com a Barra Boat Floripa pelo WhatsApp (48) 99115-3172, atendimento 24 horas. Embarque no Canal da Barra da Lagoa, Rod. Jorn. Manoel de Menezes, 3007.',
                       corpo, [ld_m, {'@type': 'ContactPage', 'url': DOM + 'contato/', 'about': EMPRESA_REF}],
-                      js_extra='\n  <script src="{pre}assets/js/contato.js?v=1" defer></script>'))
+                      js_extra='\n  <script src="{pre}assets/js/contato.js?v=2" defer></script>'))
 
 
 # ---------------------------------------------------------------- políticas
