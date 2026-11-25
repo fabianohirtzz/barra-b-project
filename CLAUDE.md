@@ -230,6 +230,21 @@ JSON; 21 páginas iguais). Duração, distância e tempo de trajeto **não** sã
 páginas e ainda dependem das respostas da cliente; mudar no gerador. **Conteúdo editável no painel ainda não tem
 tradução** (pensar nisso quando entrar o i18n).
 
+**Vídeos do Instagram pelo painel (25/11):** Mais > Vídeos do Instagram. `api/videos.php` guarda o arquivo como veio
+(MP4/MOV/WebM, até 400 MB) em `midia/instagram/fila/` (403 pela web) e o painel grava a linha com `pronto = false`
+(migração `2026-11-25-11-instagram.sql`: legenda, pronto, erro, largura, altura). `cron/videos.php` (a cada 5 min,
+**instalado em 25/11**: `*/5 * * * * /usr/local/bin/php -q /home/barraboa/public_html/novo/cron/videos.php`) usa
+`lib/videos.php` + **ffmpeg 7.0.2 estático em `cron/bin/ffmpeg`** (fora do Git, enviado por FTP com chmod 755; cópia
+local em `E:\Clientes\Barra Boat Floripa\Site\ferramentas\ffmpeg\`). A hospedagem limita processos paralelos: tudo
+com `threads 1` (o x265 nem roda; ler HEVC do iPhone roda). Comprime até 1080 px de largura (H.264 CRF 23 + AAC,
+faststart); se o original já é MP4 H.264 menor, só reorganiza. Gera a capa WebP 720 px e marca pronto. Testado no
+servidor: MP4 leve (reorganizado, 23 s), HEVC 1080x1920 girado do iPhone (vira H.264 em pé, 21 s), alta qualidade
+(10 MB para 584 KB). A home lê `bb_instagram` (ativos e prontos); vazio, vale o molde. Carga dos 7 vídeos de hoje:
+`supabase/seed/03-instagram.sql` (gerado pelo `tools/extrair_conteudo.py`). **Na troca para a raiz: copiar
+`midia/` e `cron/bin/ffmpeg`, e trocar o caminho dos dois crons.**
+**Conferidor:** `php tools/conferir_php.php` compara 21 páginas e roda 11 testes de mudança (perguntas, regras,
+paradas, vídeos, amostra de lanchas). Até 25/11 esses testes não rodavam por erro meu; agora rodam.
+
 **Ajustes da reunião de 19/11 (feitos em 20/11):** mês no cabeçalho da Agenda; "Próximos dias" (3 dias) na
 tela Hoje; passeio muda de dia e de lancha (o pedido do cliente acompanha); botões "Mandar a reserva ao dono" e
 "Mandar ao marinheiro" (wa.me com texto pronto, sem custo; o envio automático pela API, R$ 0,31 cada, fica para
