@@ -282,5 +282,18 @@ continua noindex e sem GTM. `.htaccess` força https sem www e faz 301 das URLs 
 mantêm o endereço). Ícones das gavetas de escolha corrigidos (`.escolha span` pegava o `.linha__icone`); varredura
 de ícones fora do centro: script no scratchpad (abre todas as telas e gavetas e mede).
 
+**Agenda no parceiro e cadastro de lancha (25/11, pedido urgente):** o link da agenda saiu da lancha e foi para
+o parceiro (migração `2026-11-25-12-agenda-do-parceiro.sql`: `bb_parceiros.agenda_tipo/url/lida_at/erro/sem_nome`,
+`bb_lanchas.agenda_palavra`). Os parceiros anotam várias lanchas na mesma agenda: `lib/agenda.php` baixa uma vez e
+reparte cada compromisso pela lancha cujo nome (ou `agenda_palavra`, separada por vírgula) está no **título**; sem
+nome no título, procura na descrição; sem nome em nenhum, ocupa **todas** as lanchas dele (padrão) ou nenhuma.
+Nome mais longo ganha ("Phantom 29 My Girls" não cai na "Phantom 29"). Parceiro com uma lancha: tudo é dela.
+Cron e "Ler agora" (`api/agenda.php`, agora com `parceiro_id`) leem por parceiro. Testes: 27 antigos + 14 novos
+(`teste-agenda-parceiro.php` no scratchpad). Painel: Parceiros > parceiro > "Agenda do <nome>" (conectar, ler,
+instruções com "escreva o nome da lancha no título", regra do compromisso sem nome); a lancha mostra o nome que vale
+na agenda (grava ao sair do campo). Lanchas > "Cadastrar lancha" (nome, pessoas, pés, região, de quem é, itens a
+bordo); nasce escondida e só aparece no site com foto. A lancha também passou a editar região, itens e texto do site.
+O que o parceiro faz: manda o link uma vez e escreve o nome da lancha no título de cada reserva.
+
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.

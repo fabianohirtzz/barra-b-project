@@ -1,6 +1,6 @@
 <?php
 // Barra Boat Floripa | cron/agendas.php
-// Lê as agendas dos donos (Google Agenda ou planilha) de todas as lanchas e grava
+// Lê as agendas dos parceiros (Google Agenda ou planilha) e grava, lancha por lancha,
 // os dias ocupados. Só roda pela linha de comando (cron do cPanel, a cada 15 min):
 //
 //   */15 * * * *   php -q $HOME/public_html/novo/cron/agendas.php > /dev/null 2>&1
@@ -16,14 +16,21 @@ if (!is_dir(BB_CACHE)) @mkdir(BB_CACHE, 0755, true);
 $trava = fopen(BB_CACHE . '/agendas.lock', 'c');
 if (!$trava || !flock($trava, LOCK_EX | LOCK_NB)) { echo "Outra leitura ainda está rodando.\n"; exit(0); }
 
-$lanchas = bb_agenda_lanchas();
-if ($lanchas === null) { fwrite(STDERR, "Não consegui ler as lanchas no Supabase.\n"); exit(1); }
+$parceiros = bb_agenda_parceiros();
+if ($parceiros === null) { fwrite(STDERR, "Não consegui ler os parceiros no Supabase.
+"); exit(1); }
 
 $falhas = 0;
-foreach ($lanchas as $l) {
-    $r = bb_agenda_ler_lancha($l);
-    if ($r['ok']) printf("%s: %d dias ocupados (+%d, -%d)\n", $l['nome'], $r['total'], $r['entraram'], $r['sairam']);
-    else { $falhas++; printf("%s: %s\n", $l['nome'], $r['erro']); }
+foreach ($parceiros as list($p, $lanchas)) {
+    $r = bb_agenda_ler_parceiro($p, $lanchas);
+    if ($r['ok']) {
+        printf("%s: %d dias ocupados (+%d, -%d)
+", $p['nome'], $r['total'], $r['entraram'], $r['sairam']);
+        foreach ($r['lanchas'] as $nome => $n) printf("   %s: %d
+", $nome, $n);
+    } else { $falhas++; printf("%s: %s
+", $p['nome'], $r['erro']); }
 }
-printf("%d lanchas lidas, %d com problema.\n", count($lanchas), $falhas);
+printf("%d agendas lidas, %d com problema.
+", count($parceiros), $falhas);
 flock($trava, LOCK_UN);

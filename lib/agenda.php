@@ -10,8 +10,15 @@
      duas datas na linha viram um período; linha com "livre", "disponível", "vago"
      ou "cancelado" é ignorada.
 
-   Só o DIA ocupado é guardado (bb_agenda_dono). Título, nome de cliente e
-   qualquer outro texto da agenda pessoal do dono não saem deste arquivo.
+   A agenda é do PARCEIRO (bb_parceiros.agenda_url): ele anota várias lanchas na mesma.
+   Cada compromisso vai para a lancha cujo nome (ou a palavra combinada,
+   bb_lanchas.agenda_palavra) aparece no título; sem nome no título, procura na
+   descrição; sem nome em nenhum dos dois, ocupa todas as lanchas dele ou nenhuma
+   (bb_parceiros.agenda_sem_nome). Parceiro com uma lancha só: todo compromisso é dela.
+
+   Só o DIA ocupado é guardado (bb_agenda_dono). Título e descrição são lidos só
+   para achar a lancha; eles, nome de cliente e qualquer outro texto da agenda do
+   dono não saem deste arquivo.
    Compatível com PHP 7.4+. */
 
 require_once __DIR__ . '/bb.php';
@@ -115,6 +122,12 @@ function bb_ical_duracao($v)
     return ($m[1] ?? '') === '-' ? 0 : $seg;
 }
 
+/* Texto de campo iCal sem os escapes (\n, \, \; \\) */
+function bb_ical_texto($v)
+{
+    return strtr($v, ['\\n' => ' ', '\\N' => ' ', '\\,' => ',', '\\;' => ';', '\\\\' => '\\']);
+}
+
 /* Lê o texto iCal em eventos: [{start, allday, fim|null, dur|null, rrule, exdates[], recid|null, uid, cancelado}] */
 function bb_ical_eventos($txt)
 {
@@ -123,7 +136,7 @@ function bb_ical_eventos($txt)
     $evs = [];
     $ev = null;
     foreach (explode("\n", $txt) as $linha) {
-        if ($linha === 'BEGIN:VEVENT') { $ev = ['exdates' => [], 'rrule' => null, 'recid' => null, 'uid' => '', 'cancelado' => false, 'start' => null, 'allday' => false, 'fim' => null, 'dur' => null]; continue; }
+        if ($linha === 'BEGIN:VEVENT') { $ev = ['titulo' => '', 'desc' => '', 'exdates' => [], 'rrule' => null, 'recid' => null, 'uid' => '', 'cancelado' => false, 'start' => null, 'allday' => false, 'fim' => null, 'dur' => null]; continue; }
         if ($linha === 'END:VEVENT') { if ($ev && $ev['start']) $evs[] = $ev; $ev = null; continue; }
         if ($ev === null) continue;
         $dp = strpos($linha, ':');
@@ -142,6 +155,8 @@ function bb_ical_eventos($txt)
             case 'EXDATE': foreach (explode(',', $val) as $x) { list($d) = bb_ical_data($x, $tzid); if ($d) $ev['exdates'][$d->format('Y-m-d')] = true; } break;
             case 'RECURRENCE-ID': list($d) = bb_ical_data($val, $tzid); if ($d) $ev['recid'] = $d->format('Y-m-d'); break;
             case 'UID': $ev['uid'] = $val; break;
+            case 'SUMMARY': $ev['titulo'] = bb_ical_texto($val); break;
+            case 'DESCRIPTION': $ev['desc'] = bb_ical_texto($val); break;
             case 'STATUS': if (strtoupper(trim($val)) === 'CANCELLED') $ev['cancelado'] = true; break;
         }
     }
@@ -248,16 +263,21 @@ function bb_ical_ocorrencias(DateTimeImmutable $ini, $rrule, $ate, $de = null)
     return $saida;
 }
 
-/* Texto iCal -> lista de dias ocupados (Y-m-d) entre $de e $ate. null se não for iCal. */
-function bb_ical_dias($txt, $de, $ate)
+/* Texto iCal -> lista de dias ocupados (Y-m-d) entre $de e $ate. null se não for iCal.
+   Com $classifica (função (título, descrição) -> [ids de lancha]): devolve [id => [dias]]. */
+function bb_ical_dias($txt, $de, $ate, $classifica = null)
 {
     if (strpos($txt, 'BEGIN:VCALENDAR') === false) return null;
     $evs = bb_ical_eventos($txt);
     $alteradas = [];   // uid => [dia original => true]: ocorrências que viraram evento próprio
     foreach ($evs as $e) if ($e['recid'] !== null) $alteradas[$e['uid']][$e['recid']] = true;
     $dias = [];
+    $por = [];
     foreach ($evs as $e) {
         if ($e['cancelado']) continue;
+        $ids = $classifica ? $classifica($e['titulo'], $e['desc']) : null;
+        if ($ids === []) continue;
+        $dias_ev = [];
         $ini = $e['start'];
         if ($e['fim'] !== null) $seg = $e['fim']->getTimestamp() - $ini->getTimestamp();
         elseif ($e['dur'] !== null) $seg = $e['dur'];
@@ -266,15 +286,21 @@ function bb_ical_dias($txt, $de, $ate)
             $fora = $e['exdates'] + ($alteradas[$e['uid']] ?? []);
             foreach (bb_ical_ocorrencias($ini, $e['rrule'], $ate, $de) as $oc) {
                 if (isset($fora[$oc->format('Y-m-d')])) continue;
-                bb_ical_dias_ocorrencia($oc, $e['allday'], $seg, $dias, $de, $ate);
+                bb_ical_dias_ocorrencia($oc, $e['allday'], $seg, $dias_ev, $de, $ate);
             }
         } else {
-            bb_ical_dias_ocorrencia($ini, $e['allday'], $seg, $dias, $de, $ate);
+            bb_ical_dias_ocorrencia($ini, $e['allday'], $seg, $dias_ev, $de, $ate);
         }
+        if ($ids === null) $dias += $dias_ev;
+        else foreach ($ids as $id) $por[$id] = ($por[$id] ?? []) + $dias_ev;
     }
-    $dias = array_keys($dias);
-    sort($dias);
-    return $dias;
+    return $classifica ? bb_agenda_ordena($por) : bb_agenda_ordena(['_' => $dias])['_'];
+}
+
+function bb_agenda_ordena(array $por)
+{
+    foreach ($por as $k => $d) { $d = array_keys($d); sort($d); $por[$k] = $d; }
+    return $por;
 }
 
 /* ---------- planilha (CSV) ---------- */
@@ -304,8 +330,9 @@ function bb_csv_datas_celula($c, DateTimeImmutable $hoje)
     return $saida;
 }
 
-/* Texto CSV -> [dias ocupados entre $de e $ate, achou alguma data na planilha?]. null se não for CSV. */
-function bb_csv_dias($txt, $de, $ate)
+/* Texto CSV -> [dias ocupados entre $de e $ate, achou alguma data na planilha?]. null se não for CSV.
+   Com $classifica (texto da linha -> [ids de lancha]): os dias vêm como [id => [dias]]. */
+function bb_csv_dias($txt, $de, $ate, $classifica = null)
 {
     if (preg_match('/^\s*<(!doctype|html)/i', $txt)) return null;
     $hoje = bb_hoje();
@@ -313,6 +340,7 @@ function bb_csv_dias($txt, $de, $ate)
     fwrite($f, $txt);
     rewind($f);
     $dias = [];
+    $por = [];
     $achou = false;
     while (($cels = fgetcsv($f, 0, ',', '"', '\\')) !== false) {
         $linha = implode(' ', array_map('strval', $cels));
@@ -326,30 +354,82 @@ function bb_csv_dias($txt, $de, $ate)
             // período: início e fim na mesma linha
             for ($t = strtotime($datas[0] . ' 12:00'); date('Y-m-d', $t) <= $datas[1]; $t += 86400) $datas[] = date('Y-m-d', $t);
         }
-        foreach ($datas as $d) if ($d >= $de && $d <= $ate) $dias[$d] = true;
+        $dias_l = [];
+        foreach ($datas as $d) if ($d >= $de && $d <= $ate) $dias_l[$d] = true;
+        if (!$classifica) { $dias += $dias_l; continue; }
+        foreach ($classifica($linha, '') as $id) $por[$id] = ($por[$id] ?? []) + $dias_l;
     }
     fclose($f);
-    $dias = array_keys($dias);
-    sort($dias);
-    return [$dias, $achou];
+    return [$classifica ? bb_agenda_ordena($por) : bb_agenda_ordena(['_' => $dias])['_'], $achou];
 }
 
-/* ---------- leitura de uma lancha ---------- */
+/* ---------- de qual lancha é o compromisso ---------- */
 
-/* Lê a agenda e grava. $l = [id, nome, agenda_tipo, agenda_url].
-   Devolve ['ok' => bool, 'total' => n, 'entraram' => n, 'sairam' => n] ou ['ok' => false, 'erro' => texto]. */
-function bb_agenda_ler_lancha(array $l)
+function bb_agenda_norm($t)
 {
-    $tipo = $l['agenda_tipo'] ?? '';
-    if (!in_array($tipo, ['google', 'planilha'], true) || empty($l['agenda_url'])) return ['ok' => false, 'erro' => 'Esta lancha não tem agenda conectada por link.'];
+    $t = mb_strtolower((string) $t, 'UTF-8');
+    $t = strtr($t, ['á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'é' => 'e', 'ê' => 'e', 'è' => 'e', 'í' => 'i', 'ì' => 'i',
+        'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ò' => 'o', 'ú' => 'u', 'ü' => 'u', 'ç' => 'c', 'ñ' => 'n']);
+    return trim(preg_replace('/[^a-z0-9]+/', ' ', $t));
+}
+
+/* Palavras de cada lancha: as combinadas (separadas por vírgula) ou o nome. */
+function bb_agenda_palavras(array $l)
+{
+    $fonte = trim((string) ($l['agenda_palavra'] ?? '')) !== '' ? explode(',', $l['agenda_palavra']) : [$l['nome'] ?? ''];
+    return array_values(array_filter(array_map('bb_agenda_norm', $fonte), 'strlen'));
+}
+
+/* Lanchas citadas num texto. Ganha a palavra mais longa encontrada (assim "Phantom 29 My Girls"
+   não cai também na "Phantom 29"). */
+function bb_agenda_acha(array $pal, $texto)
+{
+    $t = ' ' . bb_agenda_norm($texto) . ' ';
+    $melhor = 0; $achadas = [];
+    foreach ($pal as $id => $ps) {
+        $n = 0;
+        foreach ($ps as $p) if (strpos($t, ' ' . $p . ' ') !== false) $n = max($n, strlen($p));
+        if ($n === 0) continue;
+        if ($n > $melhor) { $melhor = $n; $achadas = [$id]; } elseif ($n === $melhor) $achadas[] = $id;
+    }
+    return $achadas;
+}
+
+/* Função (título, descrição) -> [ids]. Procura no título; se não achar, na descrição; se não achar
+   em nenhum, todas as lanchas dele ('todas') ou nenhuma ('nenhuma'). Uma lancha só: sempre ela. */
+function bb_agenda_classificador(array $lanchas, $sem_nome)
+{
+    $ids = array_map(function ($l) { return $l['id']; }, $lanchas);
+    if (count($lanchas) === 1) return function ($t, $d = '') use ($ids) { return $ids; };
+    $pal = [];
+    foreach ($lanchas as $l) $pal[$l['id']] = bb_agenda_palavras($l);
+    return function ($titulo, $desc = '') use ($pal, $ids, $sem_nome) {
+        $a = bb_agenda_acha($pal, $titulo);
+        if (!$a && $desc !== '') $a = bb_agenda_acha($pal, $desc);
+        if ($a) return $a;
+        return $sem_nome === 'nenhuma' ? [] : $ids;
+    };
+}
+
+/* ---------- leitura da agenda de um parceiro ---------- */
+
+/* Lê a agenda do parceiro e grava os dias de cada lancha dele.
+   $p = [id, nome, agenda_tipo, agenda_url, agenda_sem_nome]; $lanchas = [[id, nome, agenda_palavra], ...].
+   Devolve ['ok' => true, 'total' => n, 'lanchas' => [nome => n], 'entraram', 'sairam'] ou ['ok' => false, 'erro' => texto]. */
+function bb_agenda_ler_parceiro(array $p, array $lanchas)
+{
+    $tipo = $p['agenda_tipo'] ?? '';
+    if (!in_array($tipo, ['google', 'planilha'], true) || empty($p['agenda_url'])) return ['ok' => false, 'erro' => 'Este parceiro não tem agenda conectada por link.'];
+    if (!$lanchas) return ['ok' => false, 'erro' => 'Este parceiro ainda não tem lancha no nome dele. Marque as lanchas dele no cadastro.'];
     $hoje = bb_hoje();
     $de = $hoje->format('Y-m-d');
     $ate = $hoje->modify('+' . BB_AGENDA_DIAS . ' days')->format('Y-m-d');
     $google = $tipo === 'google';
+    $classifica = bb_agenda_classificador($lanchas, $p['agenda_sem_nome'] ?? 'todas');
 
-    list($st, $txt) = bb_agenda_baixa(bb_agenda_url_real($tipo, $l['agenda_url']));
+    list($st, $txt) = bb_agenda_baixa(bb_agenda_url_real($tipo, $p['agenda_url']));
     $erro = null;
-    $dias = null;
+    $por = null;
     if ($st === 0 && $txt === 'endereco') $erro = 'O link salvo não é um endereço válido. Cole o link de novo.';
     elseif ($st === 0) $erro = 'Não consegui abrir o link agora. Tento de novo na próxima leitura.';
     elseif (in_array($st, [401, 403, 404, 410], true)) {
@@ -357,30 +437,47 @@ function bb_agenda_ler_lancha(array $l)
                         : 'A planilha não está publicada na web. Peça ao dono para publicar de novo (Arquivo, Compartilhar, Publicar na Web, formato CSV).';
     } elseif ($st >= 500 || $st < 200 || $st >= 300) $erro = 'O site da agenda não respondeu direito agora. Tento de novo na próxima leitura.';
     elseif ($google) {
-        $dias = bb_ical_dias($txt, $de, $ate);
-        if ($dias === null) $erro = 'Esse link não é de uma agenda. Confira se é o "Endereço secreto no formato iCal" (termina em .ics).';
+        $por = bb_ical_dias($txt, $de, $ate, $classifica);
+        if ($por === null) $erro = 'Esse link não é de uma agenda. Confira se é o "Endereço secreto no formato iCal" (termina em .ics).';
     } else {
-        $r = bb_csv_dias($txt, $de, $ate);
+        $r = bb_csv_dias($txt, $de, $ate, $classifica);
         if ($r === null) $erro = 'A planilha não está publicada como CSV. Peça ao dono para publicar na web escolhendo "Valores separados por vírgula (.csv)".';
         elseif (!$r[1] && trim($txt) !== '') $erro = 'Não achei nenhuma data na planilha. As datas precisam estar como 23/11/2026.';
-        else $dias = $r[0];
+        else $por = $r[0];
     }
 
     if ($erro !== null) {
-        bb_supabase('POST', 'rpc/bb_agenda_falha', ['p_lancha' => $l['id'], 'p_erro' => $erro]);
+        bb_supabase('POST', 'rpc/bb_agenda_parceiro_lido', ['p_parceiro' => $p['id'], 'p_erro' => $erro]);
         return ['ok' => false, 'erro' => $erro];
     }
-    list($st2, $res) = bb_supabase('POST', 'rpc/bb_agenda_troca', ['p_lancha' => $l['id'], 'p_origem' => $tipo, 'p_dias' => $dias, 'p_de' => $de]);
-    if ($st2 !== 200 || !is_array($res)) return ['ok' => false, 'erro' => 'Li a agenda, mas não consegui gravar no painel. Tento de novo na próxima leitura.'];
-    if (($res['entraram'] ?? 0) + ($res['sairam'] ?? 0) > 0) @unlink(BB_CACHE . '/ocupadas.json');   // o calendário do site pega na hora
-    return ['ok' => true, 'total' => (int) ($res['total'] ?? count($dias)), 'entraram' => (int) ($res['entraram'] ?? 0), 'sairam' => (int) ($res['sairam'] ?? 0)];
+    $saida = ['ok' => true, 'total' => 0, 'lanchas' => [], 'entraram' => 0, 'sairam' => 0];
+    foreach ($lanchas as $l) {
+        $dias = $por[$l['id']] ?? [];
+        list($st2, $res) = bb_supabase('POST', 'rpc/bb_agenda_troca', ['p_lancha' => $l['id'], 'p_origem' => $tipo, 'p_dias' => $dias, 'p_de' => $de]);
+        if ($st2 !== 200 || !is_array($res)) return ['ok' => false, 'erro' => 'Li a agenda, mas não consegui gravar no painel. Tento de novo na próxima leitura.'];
+        $n = (int) ($res['total'] ?? count($dias));
+        $saida['lanchas'][$l['nome']] = $n;
+        $saida['total'] += $n;
+        $saida['entraram'] += (int) ($res['entraram'] ?? 0);
+        $saida['sairam'] += (int) ($res['sairam'] ?? 0);
+    }
+    bb_supabase('POST', 'rpc/bb_agenda_parceiro_lido', ['p_parceiro' => $p['id'], 'p_erro' => null]);
+    if ($saida['entraram'] + $saida['sairam'] > 0) @unlink(BB_CACHE . '/ocupadas.json');   // o calendário do site pega na hora
+    return $saida;
 }
 
-/* Lanchas com agenda por link. */
-function bb_agenda_lanchas($id = null)
+/* Parceiros com agenda por link, cada um com as lanchas dele: [[parceiro, [lanchas]], ...]. null se o banco falhar. */
+function bb_agenda_parceiros($id = null)
 {
-    $q = 'bb_lanchas?select=id,nome,agenda_tipo,agenda_url&agenda_tipo=in.(google,planilha)&agenda_url=not.is.null';
+    $q = 'bb_parceiros?select=id,nome,agenda_tipo,agenda_url,agenda_sem_nome&agenda_tipo=in.(google,planilha)&agenda_url=not.is.null';
     if ($id !== null) $q .= '&id=eq.' . rawurlencode($id);
-    list($st, $d) = bb_supabase('GET', $q);
-    return ($st === 200 && is_array($d)) ? $d : null;
+    list($st, $ps) = bb_supabase('GET', $q);
+    if ($st !== 200 || !is_array($ps)) return null;
+    if (!$ps) return [];
+    $ids = implode(',', array_map(function ($p) { return $p['id']; }, $ps));
+    list($st, $ls) = bb_supabase('GET', 'bb_lanchas?select=id,nome,agenda_palavra,parceiro_id&parceiro_id=in.(' . $ids . ')&order=nome');
+    if ($st !== 200 || !is_array($ls)) return null;
+    $saida = [];
+    foreach ($ps as $p) $saida[] = [$p, array_values(array_filter($ls, function ($l) use ($p) { return $l['parceiro_id'] === $p['id']; }))];
+    return $saida;
 }

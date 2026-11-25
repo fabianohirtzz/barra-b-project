@@ -124,7 +124,7 @@
     const anoPassado = `${hoje().getFullYear() - 1}-01-01`;
     const recente = iso(somaDias(hoje(), -60));
     const [lanchas, parceiros, marinheiros, roteiros, leads, receb, passeios, bloqueios, dono] = await Promise.all([
-      um(sb.from('bb_lanchas').select('id,slug,nome,pes,passageiros,regiao,capa_url,fotos,parceiro_id,cor,ativo,ordem,agenda_tipo,agenda_url,agenda_lida_at,agenda_erro').order('ordem').order('nome')),
+      um(sb.from('bb_lanchas').select('id,slug,nome,pes,passageiros,regiao,descricao,itens,capa_url,fotos,parceiro_id,cor,ativo,ordem,agenda_palavra').order('ordem').order('nome')),
       um(sb.from('bb_parceiros').select('*').order('nome')),
       um(sb.from('bb_marinheiros').select('*').order('nome')),
       um(sb.from('bb_roteiros').select('id,slug,nome').order('ordem')),
@@ -1357,14 +1357,62 @@
   const foto = (u) => (u ? (/^https?:/.test(u) ? u : '..' + u) : '');
 
   function telaLanchas() {
-    tela.innerHTML = `<header class="cab"><div><h1>Lanchas</h1><p>${lanchasAtivas().length} lanchas no site${S.lanchas.length > lanchasAtivas().length ? `, ${S.lanchas.length - lanchasAtivas().length} escondidas` : ''}. Toque numa para mudar os dados ou a agenda do dono.</p></div></header>
-      <div class="lanchas">${S.lanchas.map((l) => `<a class="lancha-c${l.ativo ? '' : ' is-oculta'}" href="#lancha/${l.id}">
-        <img src="${esc(foto(l.capa_url))}" alt="" loading="lazy">
+    tela.innerHTML = `<header class="cab"><div><h1>Lanchas</h1><p>${lanchasAtivas().length} lanchas no site${S.lanchas.length > lanchasAtivas().length ? `, ${S.lanchas.length - lanchasAtivas().length} escondidas` : ''}. Toque numa para mudar os dados ou as fotos.</p></div>
+        <button class="botao botao--principal" type="button" data-nova-lancha><svg><use href="#p-mais-um"/></svg>Cadastrar lancha</button></header>
+      <div class="lanchas">${S.lanchas.map((l) => {
+        const p = parceiro(l.parceiro_id);
+        return `<a class="lancha-c${l.ativo ? '' : ' is-oculta'}" href="#lancha/${l.id}">
+        ${l.capa_url ? `<img src="${esc(foto(l.capa_url))}" alt="" loading="lazy">` : '<span class="lancha-c__sem"><svg><use href="#p-foto"/></svg>Sem fotos</span>'}
         <div><b>${esc(l.nome)}</b><span>${l.passageiros} pessoas · ${esc(donoNome(l))}</span>
         ${!l.ativo ? '<span class="selo selo--neutro">Escondida do site</span>'
-          : !l.parceiro_id ? '<span class="selo selo--bom"><svg><use href="#p-ok"/></svg>Agenda no painel</span>'
-          : l.agenda_tipo ? `<span class="selo selo--bom"><svg><use href="#p-ok"/></svg>Agenda ${l.agenda_tipo === 'manual' ? 'pelo WhatsApp' : 'conectada'}</span>`
-          : '<span class="selo selo--alerta">Agenda do dono não conectada</span>'}</div></a>`).join('')}</div>`;
+          : !p ? '<span class="selo selo--bom"><svg><use href="#p-ok"/></svg>Agenda no painel</span>'
+          : p.agenda_tipo ? `<span class="selo selo--bom"><svg><use href="#p-ok"/></svg>Agenda ${p.agenda_tipo === 'manual' ? 'pelo WhatsApp' : 'do dono conectada'}</span>`
+          : '<span class="selo selo--alerta">Agenda do dono não conectada</span>'}</div></a>`;
+      }).join('')}</div>`;
+  }
+
+  // Regiões que já existem nas lanchas, mais as três da ilha.
+  const regioes = () => [...new Set(['Leste da Ilha', 'Norte da Ilha', 'Sul da Ilha'].concat(S.lanchas.map((l) => l.regiao).filter(Boolean)))];
+  const slugDe = (nome) => {
+    const base = String(nome).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'lancha';
+    let s = base, n = 2;
+    while (S.lanchas.some((l) => l.slug === s)) s = `${base}-${n++}`;
+    return s;
+  };
+  const linhas = (t) => String(t || '').split('\n').map((x) => x.trim()).filter(Boolean);
+
+  // Cadastrar lancha: nasce escondida do site até ter fotos; o dono (parceiro) já vem escolhido aqui.
+  function novaLancha() {
+    abreGaveta('Cadastrar lancha', `
+      <div class="grade-2">
+        <label class="campo"><span>Nome</span><input data-n="nome" placeholder="Ex.: Phantom 29 Bravo"></label>
+        <label class="campo"><span>Quantas pessoas leva</span><input data-n="passageiros" inputmode="numeric"></label>
+        <label class="campo"><span>Tamanho (pés)</span><input data-n="pes" inputmode="decimal"></label>
+        <label class="campo"><span>Região</span><select data-n="regiao">${regioes().map((r) => `<option>${esc(r)}</option>`).join('')}</select></label>
+      </div>
+      <label class="campo"><span>De quem é</span><select data-n="parceiro_id">${opcoes(S.parceiros.filter((p) => p.ativo !== false && p.tipo !== 'revendedor'), null, (x) => x.nome, 'Própria (da Barra Boat)')}</select>
+        <small class="caixas__ajuda">O parceiro não está na lista? Cadastre ele antes em Parceiros.</small></label>
+      <label class="campo"><span>Itens a bordo <small style="font-weight:400;color:var(--suave)">(um por linha)</small></span><textarea data-n="itens" rows="5" placeholder="Banheiro&#10;Som bluetooth&#10;Churrasqueira&#10;Tapete flutuante"></textarea></label>
+      <p class="ajuda">A lancha começa escondida do site. Depois de salvar, adicione as fotos e mude "Mostrar no site" para sim.</p>
+      <p class="erro" data-erro hidden></p>
+      <button class="botao botao--principal botao--cheio" type="button" data-salvar>Cadastrar lancha</button>`, (g) => {
+      g.querySelector('[data-n="nome"]').focus();
+      aoSalvar(g.querySelector('[data-salvar]'), async () => {
+        const v = (k) => g.querySelector(`[data-n="${k}"]`).value;
+        const nome = v('nome').trim(), pax = parseInt(v('passageiros'), 10);
+        if (!nome) return erroCampo(g, 'Escreva o nome da lancha.');
+        if (!(pax > 0)) return erroCampo(g, 'Escreva quantas pessoas a lancha leva.');
+        if (S.lanchas.some((l) => l.nome.toLowerCase() === nome.toLowerCase())) return erroCampo(g, 'Já existe uma lancha com esse nome.');
+        const nova = await grava(sb.from('bb_lanchas').insert({
+          nome, slug: slugDe(nome), passageiros: pax, pes: v('pes').trim() ? num(v('pes')) : null, regiao: v('regiao'),
+          parceiro_id: v('parceiro_id') || null, itens: linhas(v('itens')), ativo: false,
+          ordem: Math.max(0, ...S.lanchas.map((l) => l.ordem || 0)) + 1,
+        }).select('id').single());
+        if (!nova) return;
+        fechaGaveta(); await atualiza(); location.hash = '#lancha/' + nova.id;
+        avisa(`${nome} cadastrada. Agora adicione as fotos.`);
+      });
+    });
   }
 
   function telaLancha(id) {
@@ -1372,14 +1420,11 @@
     if (!l) { location.hash = '#lanchas'; return; }
     const dono = parceiro(l.parceiro_id);
     const quem = dono ? primeiroNome(dono.nome) : 'dono';
-    const lidaEm = l.agenda_lida_at ? new Date(l.agenda_lida_at) : null;
     const ocupados = S.dono.filter((a) => a.lancha_id === l.id && a.origem !== 'manual' && a.dia >= iso(hoje())).length;
-    const lida = lidaEm ? `Lida pela última vez em ${ddIso(iso(lidaEm))} às ${lidaEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}: ${ocupados === 1 ? '1 dia ocupado' : ocupados + ' dias ocupados'} daqui para frente. O painel lê de novo sozinho a cada 15 minutos.` : 'Ainda não foi lida. O painel lê sozinho a cada 15 minutos, ou toque em "Ler agora".';
-    const estado = !l.parceiro_id ? '<div class="estado"><svg><use href="#p-ok"/></svg>Lancha sua: a agenda é a deste painel.</div>'
-      : l.agenda_tipo === 'google' ? `<div class="estado"><svg><use href="#p-ok"/></svg>Conectada ao Google Agenda do ${esc(quem)}.</div><p class="ajuda">${esc(lida)}</p>`
-      : l.agenda_tipo === 'planilha' ? `<div class="estado"><svg><use href="#p-ok"/></svg>Conectada à planilha do ${esc(quem)}.</div><p class="ajuda">${esc(lida)}</p>`
-      : l.agenda_tipo === 'manual' ? `<div class="estado"><svg><use href="#p-ok"/></svg>O ${esc(quem)} avisa pelo WhatsApp e você marca na Agenda.</div>`
-      : '<div class="estado estado--sem">Ainda não conectada. Enquanto isso, os dias ocupados do dono não aparecem no site.</div>';
+    const porLink = dono && ['google', 'planilha'].includes(dono.agenda_tipo);
+    const varias = dono && S.lanchas.filter((x) => x.parceiro_id === dono.id).length > 1;
+    const estado = !dono ? '<div class="estado"><svg><use href="#p-ok"/></svg>Lancha sua: a agenda é a deste painel.</div>'
+      : `${estadoAgenda(dono)}${porLink ? `<p class="ajuda">Desta lancha: ${ocupados === 1 ? '1 dia ocupado' : ocupados + ' dias ocupados'} daqui para frente.</p>` : ''}`;
     const todas = Array.isArray(l.fotos) ? l.fotos : [];
     const fotos = (l.capa_url ? [{ url_p: l.capa_url, alt: 'Capa' }] : []).concat(todas.slice(0, l.capa_url ? 3 : 4));
     tela.innerHTML = `<a class="voltar" href="#lanchas"><svg><use href="#p-volta"/></svg>Lanchas</a>
@@ -1390,11 +1435,12 @@
           <div class="fotos">${fotos.map((f) => `<img src="${esc(foto(f.url_p || f.url))}" alt="${esc(f.alt || '')}" loading="lazy">`).join('') || '<p class="ajuda">Sem fotos ainda.</p>'}</div>
           <a class="botao botao--leve botao--cheio" href="#fotos/${l.id}" style="margin-top:14px"><svg><use href="#p-foto"/></svg>${todas.length ? `Ver e mudar as fotos (${todas.length})` : 'Adicionar fotos'}</a>
         </section>
-        <section class="cartao agenda-dono"><h3><svg><use href="#p-agenda"/></svg>${l.parceiro_id ? 'Agenda do dono' : 'Agenda'}</h3>
+        <section class="cartao agenda-dono"><h3><svg><use href="#p-agenda"/></svg>${dono ? `Agenda do ${esc(quem)}` : 'Agenda'}</h3>
           ${estado}
-          ${l.agenda_erro ? `<div class="alerta"><div><b>A última leitura não deu certo.</b><p style="margin:2px 0 0">${esc(l.agenda_erro)}</p></div></div>` : ''}
-          ${l.parceiro_id ? `<div class="acoes">${['google', 'planilha'].includes(l.agenda_tipo) ? `<button class="botao botao--principal botao--cheio" type="button" data-ler-agora="${l.id}">Ler agora</button>` : ''}<button class="botao ${l.agenda_tipo ? 'botao--leve' : 'botao--principal'} botao--cheio" type="button" data-conectar="${l.id}">${l.agenda_tipo ? 'Trocar a agenda conectada' : 'Conectar agenda do dono'}</button>
-            <button class="botao botao--wa botao--cheio" type="button" data-instrucoes="${l.id}"><svg><use href="#p-wa"/></svg>Mandar instruções ao dono</button></div>`
+          ${dono ? `${porLink && varias ? `<label class="campo" style="margin-top:4px"><span>Nome desta lancha na agenda do ${esc(quem)}</span>
+              <input data-l="agenda_palavra" value="${esc(l.agenda_palavra || '')}" placeholder="${esc(l.nome)}">
+              <small class="caixas__ajuda">O ${esc(quem)} anota várias lanchas na mesma agenda. O compromisso que tiver este nome no título (ou na descrição) ocupa esta lancha. Vazio: vale o nome "${esc(l.nome)}". Para mais de um nome, separe com vírgula.</small></label>` : ''}
+            <div class="acoes"><button class="botao botao--leve botao--cheio" type="button" data-pessoa="parceiros|${dono.id}">${dono.agenda_tipo ? `Ver a agenda do ${esc(quem)}` : `Conectar a agenda do ${esc(quem)}`}</button></div>`
             : '<p style="margin:0;color:var(--suave)">Os passeios que você marca na Agenda já aparecem no site.</p>'}
         </section>
       </div>
@@ -1404,7 +1450,10 @@
           <label class="campo"><span>Quantas pessoas leva</span><input data-l="passageiros" inputmode="numeric" value="${l.passageiros}"></label>
           <label class="campo"><span>Tamanho (pés)</span><input data-l="pes" inputmode="decimal" value="${l.pes != null ? String(l.pes).replace('.', ',') : ''}"></label>
           <label class="campo"><span>Dono</span><select data-l="parceiro_id">${opcoes(S.parceiros, l.parceiro_id, (x) => x.nome, 'Própria (da Barra Boat)')}</select></label>
+          <label class="campo"><span>Região</span><select data-l="regiao">${regioes().map((r) => `<option${r === l.regiao ? ' selected' : ''}>${esc(r)}</option>`).join('')}</select></label>
         </div>
+        <label class="campo"><span>Itens a bordo <small style="font-weight:400;color:var(--suave)">(um por linha)</small></span><textarea data-l="itens" rows="6">${esc((Array.isArray(l.itens) ? l.itens : []).join('\n'))}</textarea></label>
+        <label class="campo"><span>Texto da lancha no site <small style="font-weight:400;color:var(--suave)">(se ficar vazio, o site escreve um com o tamanho e as pessoas)</small></span><textarea data-l="descricao" rows="3">${esc(l.descricao || '')}</textarea></label>
         <label class="campo"><span>Mostrar no site</span><select data-l="ativo"><option value="1"${l.ativo ? ' selected' : ''}>Sim, aparece no site</option><option value="0"${l.ativo ? '' : ' selected'}>Não, esconder por enquanto</option></select></label>
         <p class="ajuda">O site novo lê estes dados quando estiver no servidor. Na prévia de hoje, as páginas continuam como estão.</p>
         <button class="botao botao--principal" type="button" data-salvar-lancha>Salvar</button>
@@ -1424,11 +1473,23 @@
       if (error) { console.error(error); avisa(msgErro(error), true); return; }
       location.hash = '#lanchas'; await atualiza(); avisa(`${l.nome} apagada.`);
     });
+    // nome na agenda do dono: grava ao sair do campo (a leitura seguinte já reparte com o nome novo)
+    const palavra = tela.querySelector('[data-l="agenda_palavra"]');
+    if (palavra) palavra.addEventListener('change', async () => {
+      const novo = palavra.value.trim() || null;
+      if (novo === (l.agenda_palavra || null)) return;
+      if (!(await grava(sb.from('bb_lanchas').update({ agenda_palavra: novo }).eq('id', l.id)))) return;
+      l.agenda_palavra = novo;
+      avisa('Nome na agenda salvo. Na próxima leitura (até 15 minutos) os dias desta lancha são refeitos.');
+    });
     aoSalvar(tela.querySelector('[data-salvar-lancha]'), async () => {
       const v = (k) => tela.querySelector(`[data-l="${k}"]`).value;
       const pax = parseInt(v('passageiros'), 10);
       if (!v('nome').trim() || !(pax > 0)) { avisa('Preencha o nome e quantas pessoas a lancha leva.', true); return; }
-      const ok = await grava(sb.from('bb_lanchas').update({ nome: v('nome').trim(), passageiros: pax, pes: v('pes').trim() ? num(v('pes')) : null, parceiro_id: v('parceiro_id') || null, ativo: v('ativo') === '1' }).eq('id', l.id));
+      if (v('ativo') === '1' && !l.capa_url && !(Array.isArray(l.fotos) && l.fotos.length)) { avisa('Adicione pelo menos uma foto antes de mostrar a lancha no site.', true); return; }
+      const dados = { nome: v('nome').trim(), passageiros: pax, pes: v('pes').trim() ? num(v('pes')) : null, parceiro_id: v('parceiro_id') || null, ativo: v('ativo') === '1',
+        regiao: v('regiao'), itens: linhas(v('itens')), descricao: v('descricao').trim() || null };
+      const ok = await grava(sb.from('bb_lanchas').update(dados).eq('id', l.id));
       if (!ok) return;
       api('fotos.php', { acao: 'cache' });   // o site mostra o nome e o número de pessoas novos na hora
       await atualiza(); avisa('Lancha salva.');
@@ -1665,55 +1726,90 @@
     });
   }
 
+  /* ---------- agenda do parceiro ----------
+     O link é do parceiro: ele anota todas as lanchas dele na mesma agenda. O servidor reparte cada
+     compromisso pela lancha cujo nome está no título (ou na descrição); sem nome, ocupa todas as dele
+     (agenda_sem_nome = 'todas') ou nenhuma. Parceiro com uma lancha só: todo compromisso é dela. */
+  function estadoAgenda(p) {
+    const quem = primeiroNome(p.nome) || 'dono';
+    const lidaEm = p.agenda_lida_at ? new Date(p.agenda_lida_at) : null;
+    const lida = lidaEm ? `Lida pela última vez em ${ddIso(iso(lidaEm))} às ${lidaEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}. O painel lê de novo sozinho a cada 15 minutos.` : 'Ainda não foi lida. O painel lê sozinho a cada 15 minutos, ou toque em "Ler agora".';
+    const erro = p.agenda_erro ? `<div class="alerta"><div><b>A última leitura não deu certo.</b><p style="margin:2px 0 0">${esc(p.agenda_erro)}</p></div></div>` : '';
+    return p.agenda_tipo === 'google' ? `<div class="estado"><svg><use href="#p-ok"/></svg>Conectada ao Google Agenda do ${esc(quem)}.</div><p class="ajuda">${esc(lida)}</p>${erro}`
+      : p.agenda_tipo === 'planilha' ? `<div class="estado"><svg><use href="#p-ok"/></svg>Conectada à planilha do ${esc(quem)}.</div><p class="ajuda">${esc(lida)}</p>${erro}`
+      : p.agenda_tipo === 'manual' ? `<div class="estado"><svg><use href="#p-ok"/></svg>O ${esc(quem)} avisa pelo WhatsApp e você marca na Agenda.</div>`
+      : '<div class="estado estado--sem">Agenda ainda não conectada. Enquanto isso, os dias ocupados das lanchas dele não aparecem no site.</div>';
+  }
+
+  // Bloco "Agenda dele" dentro do cadastro do parceiro.
+  function blocoAgenda(p) {
+    const dele = S.lanchas.filter((l) => l.parceiro_id === p.id);
+    const quem = primeiroNome(p.nome) || 'dono';
+    const porLink = ['google', 'planilha'].includes(p.agenda_tipo);
+    const nomes = dele.map((l) => `<li><a href="#lancha/${l.id}">${esc(l.nome)}</a>: <b>${esc(l.agenda_palavra || l.nome)}</b></li>`).join('');
+    return `<section class="agenda-parceiro" data-bloco-agenda><h3><svg><use href="#p-agenda"/></svg>Agenda do ${esc(quem)}</h3>
+      ${estadoAgenda(p)}
+      ${porLink && dele.length > 1 ? `<p class="ajuda" style="margin-bottom:4px">Ele anota as ${dele.length} lanchas na mesma agenda. Cada compromisso vai para a lancha cujo nome está no título:</p>
+        <ul class="nomes-agenda">${nomes}</ul>
+        <label class="campo"><span>Compromisso sem nome de lancha</span><select data-sem-nome>
+          <option value="todas"${p.agenda_sem_nome !== 'nenhuma' ? ' selected' : ''}>Ocupa todas as lanchas dele (mais seguro)</option>
+          <option value="nenhuma"${p.agenda_sem_nome === 'nenhuma' ? ' selected' : ''}>Não ocupa nenhuma</option></select></label>` : ''}
+      ${!dele.length && p.agenda_tipo ? '<p class="ajuda">Marque acima as lanchas dele para a agenda valer.</p>' : ''}
+      <div class="acoes">${porLink ? `<button class="botao botao--principal botao--cheio" type="button" data-ler-agora="${p.id}">Ler agora</button>` : ''}
+        <button class="botao ${p.agenda_tipo ? 'botao--leve' : 'botao--principal'} botao--cheio" type="button" data-conectar="${p.id}">${p.agenda_tipo ? 'Trocar a agenda conectada' : 'Conectar a agenda dele'}</button>
+        <button class="botao botao--wa botao--cheio" type="button" data-instrucoes="${p.id}"><svg><use href="#p-wa"/></svg>Mandar instruções ao ${esc(quem)}</button></div>
+    </section>`;
+  }
+
   function conectarAgenda(id) {
-    const l = lancha(id), quem = primeiroNome((parceiro(l.parceiro_id) || {}).nome) || 'dono';
-    abreGaveta('Conectar agenda do dono', `
-      <p style="margin-top:0">Como o ${esc(quem)} anota os dias ocupados da ${esc(l.nome)}?</p>
+    const p = parceiro(id), quem = primeiroNome(p.nome) || 'dono';
+    abreGaveta(`Agenda do ${quem}`, `
+      <p style="margin-top:0">Como o ${esc(quem)} anota os dias ocupados das lanchas dele?</p>
       <div class="escolhas">
         <button class="escolha" type="button" data-tipo="google"><span class="linha__icone"><svg><use href="#p-agenda"/></svg></span><span><b>No Google Agenda</b><span>O mais comum. Ele te manda um link e você cola aqui.</span></span></button>
         <button class="escolha" type="button" data-tipo="planilha"><span class="linha__icone"><svg><use href="#p-mais"/></svg></span><span><b>Numa planilha do Google</b><span>Ele publica a planilha e te manda o link.</span></span></button>
-        <button class="escolha" type="button" data-tipo="manual"><span class="linha__icone"><svg><use href="#p-lancha"/></svg></span><span><b>Ele me avisa pelo WhatsApp</b><span>Você marca os dias do dono na Agenda do painel.</span></span></button>
+        <button class="escolha" type="button" data-tipo="manual"><span class="linha__icone"><svg><use href="#p-wa"/></svg></span><span><b>Ele me avisa pelo WhatsApp</b><span>Você marca os dias dele na Agenda do painel.</span></span></button>
       </div>`, (c) => {
       c.querySelectorAll('[data-tipo]').forEach((b) => b.addEventListener('click', async () => {
-        if (b.dataset.tipo !== 'manual') { colarLink(l, b.dataset.tipo); return; }
-        if (!(await grava(sb.from('bb_lanchas').update({ agenda_tipo: 'manual', agenda_url: null, agenda_erro: null }).eq('id', l.id)))) return;
-        fechaGaveta(); await atualiza(); avisa('Pronto. Marque os dias do dono na Agenda.');
+        if (b.dataset.tipo !== 'manual') { colarLink(p, b.dataset.tipo); return; }
+        if (!(await grava(sb.from('bb_parceiros').update({ agenda_tipo: 'manual', agenda_url: null, agenda_erro: null }).eq('id', p.id)))) return;
+        await atualiza(); editaPessoa('parceiros', p.id); avisa('Pronto. Marque os dias dele na Agenda.');
       }));
     });
   }
 
-  function colarLink(l, tipo) {
+  function colarLink(p, tipo) {
     const google = tipo === 'google';
     abreGaveta(google ? 'Colar o link do Google Agenda' : 'Colar o link da planilha', `
       <ol class="passos">${google
-        ? '<li>O dono abre o Google Agenda no computador e vai em Configurações.</li><li>Clica no nome da agenda da lancha, em "Integrar agenda".</li><li>Copia o "Endereço secreto no formato iCal" e te manda pelo WhatsApp.</li>'
+        ? '<li>O dono abre o Google Agenda no computador e vai em Configurações.</li><li>Clica no nome da agenda onde anota as lanchas, em "Integrar agenda".</li><li>Copia o "Endereço secreto no formato iCal" e te manda pelo WhatsApp.</li>'
         : '<li>O dono abre a planilha e vai em Arquivo, Compartilhar, Publicar na Web.</li><li>Escolhe "Valores separados por vírgula (.csv)" e clica em Publicar.</li><li>Copia o link e te manda pelo WhatsApp.</li>'}</ol>
-      ${google ? '' : '<p class="ajuda">Como o painel lê a planilha: cada linha com uma data (23/11/2026) é um dia ocupado. Duas datas na mesma linha viram um período, de uma até a outra. Linhas com "livre" ou "cancelado" ficam de fora.</p>'}
+      ${google ? '' : '<p class="ajuda">Como o painel lê a planilha: cada linha com uma data (23/11/2026) é um dia ocupado. Duas datas na mesma linha viram um período. Linhas com "livre" ou "cancelado" ficam de fora. O nome da lancha na linha diz de qual lancha é.</p>'}
       <label class="campo"><span>Cole aqui o link que ele mandou</span><input type="url" data-link placeholder="${google ? 'https://calendar.google.com/calendar/ical/...' : 'https://docs.google.com/spreadsheets/...'}"></label>
       <p class="erro" data-erro hidden></p>
       <button class="botao botao--principal botao--cheio" type="button" data-salvar>Conectar</button>
-      <button class="botao botao--wa botao--cheio" type="button" data-instrucoes="${l.id}" style="margin-top:10px"><svg><use href="#p-wa"/></svg>Mandar estas instruções ao dono</button>`, (c) => {
+      <button class="botao botao--wa botao--cheio" type="button" data-instrucoes="${p.id}" style="margin-top:10px"><svg><use href="#p-wa"/></svg>Mandar estas instruções ao dono</button>`, (c) => {
       aoSalvar(c.querySelector('[data-salvar]'), async () => {
         const v = c.querySelector('[data-link]').value.trim();
         const ok = google ? /^https:\/\/calendar\.google\.com\/calendar\/ical\/.+\.ics$/.test(v) || /^https:\/\/.+\.ics(\?.*)?$/.test(v) : /^https:\/\/docs\.google\.com\/spreadsheets\//.test(v);
         if (!ok) return erroCampo(c, google ? 'Esse link não parece o certo. Ele começa com https://calendar.google.com/calendar/ical/ e termina com .ics. Peça de novo ao dono.' : 'Esse link não parece o certo. Ele começa com https://docs.google.com/spreadsheets/. Peça de novo ao dono.');
-        if (!(await grava(sb.from('bb_lanchas').update({ agenda_tipo: tipo, agenda_url: v, agenda_erro: null, agenda_lida_at: null }).eq('id', l.id)))) return;
-        fechaGaveta(); await atualiza(); avisa('Agenda do dono conectada. Lendo os dias ocupados.');
-        await lerAgora(l.id, true);
+        if (!(await grava(sb.from('bb_parceiros').update({ agenda_tipo: tipo, agenda_url: v, agenda_erro: null, agenda_lida_at: null }).eq('id', p.id)))) return;
+        await atualiza(); editaPessoa('parceiros', p.id); avisa('Agenda conectada. Lendo os dias ocupados.');
+        await lerAgora(p.id, true);
       });
     });
   }
 
-  // Lê na hora a agenda do dono (api/agenda.php, só no servidor). O cron faz o mesmo a cada 15 min.
+  // Lê na hora a agenda do parceiro (api/agenda.php, só no servidor). O cron faz o mesmo a cada 15 min.
   async function lerAgora(id, logoAposConectar) {
-    const l = lancha(id);
+    const p = parceiro(id);
     let r;
     try {
       const { data: { session } } = await sb.auth.getSession();
       const resp = await fetch('../api/agenda.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + ((session && session.access_token) || '') },
-        body: JSON.stringify({ lancha_id: id }),
+        body: JSON.stringify({ parceiro_id: id }),
       });
       r = await resp.json();
     } catch (e) {
@@ -1722,13 +1818,19 @@
       return;
     }
     await atualiza();
-    if (r.ok) avisa(`Agenda da ${l ? l.nome : 'lancha'} lida: ${r.total === 1 ? '1 dia ocupado' : r.total + ' dias ocupados'} daqui para frente.`);
-    else avisa(r.erro || 'Não consegui ler a agenda agora.', true);
+    if (!gaveta.hidden && $('[data-bloco-agenda]')) editaPessoa('parceiros', id);
+    if (r.ok) {
+      const partes = Object.entries(r.lanchas || {}).map(([n, k]) => `${n}: ${k}`);
+      avisa(`Agenda do ${primeiroNome(p && p.nome) || 'dono'} lida: ${partes.length > 1 ? partes.join(', ') + ' dias ocupados' : (r.total === 1 ? '1 dia ocupado' : r.total + ' dias ocupados')}.`);
+    } else avisa(r.erro || 'Não consegui ler a agenda agora.', true);
   }
 
   function instrucoes(id) {
-    const l = lancha(id), dono = parceiro(l.parceiro_id);
-    const txt = `Oi, ${primeiroNome(dono && dono.nome) || 'tudo bem'}! Para a agenda da ${l.nome} aparecer no site da Barra Boat, preciso do link da sua agenda. É rapidinho: abra o Google Agenda no computador, vá em Configurações, clique na agenda da lancha, depois em "Integrar agenda", e copie o "Endereço secreto no formato iCal". Me manda aqui.`;
+    const dono = parceiro(id);
+    const dele = S.lanchas.filter((l) => l.parceiro_id === id).map((l) => l.agenda_palavra ? l.agenda_palavra.split(',')[0].trim() : l.nome);
+    const nomes = dele.length > 1 ? dele.slice(0, -1).join(', ') + ' ou ' + dele[dele.length - 1] : dele[0];
+    let txt = `Oi, ${primeiroNome(dono && dono.nome) || 'tudo bem'}! Para os dias ocupados ${dele.length > 1 ? 'das suas lanchas' : 'da sua lancha'} aparecerem no site da Barra Boat, preciso do link da sua agenda. É rapidinho: abra o Google Agenda no computador, vá em Configurações, clique na agenda onde você anota as lanchas, depois em "Integrar agenda", e copie o "Endereço secreto no formato iCal". Me manda aqui. Esse link só deixa a gente ver os dias ocupados dessa agenda: não dá acesso ao seu e-mail nem a nada mais da sua conta.`;
+    if (dele.length > 1) txt += ` Ao marcar uma reserva, escreva o nome da lancha no título do compromisso (${nomes}), assim o site sabe qual lancha está ocupada.`;
     const num2 = String((dono && dono.telefone) || '').replace(/\D/g, '');
     abreGaveta('Mensagem para o dono', `
       <p style="margin-top:0">Esta mensagem vai pronta no WhatsApp. Você pode mudar antes de enviar.</p>
@@ -1745,7 +1847,8 @@
         <button class="botao botao--principal" type="button" data-pessoa="${tipo}|"><svg><use href="#p-mais-um"/></svg>Cadastrar</button></header>
       <ul class="lista">${lista.map((x) => {
         const lanchasDele = parc ? S.lanchas.filter((l) => l.parceiro_id === x.id).map((l) => l.nome) : [];
-        const sub = [foneTela(x.telefone), parc ? { dono: 'Dono de lancha', revendedor: 'Vende passeios', ambos: 'Dono e vende' }[x.tipo] : '', lanchasDele.join(', '), x.ativo ? '' : 'inativo'].filter(Boolean).join(' · ');
+        const agenda = parc && lanchasDele.length ? ({ google: 'agenda conectada', planilha: 'planilha conectada', manual: 'avisa pelo WhatsApp' }[x.agenda_tipo] || 'agenda não conectada') : '';
+        const sub = [foneTela(x.telefone), parc ? { dono: 'Dono de lancha', revendedor: 'Vende passeios', ambos: 'Dono e vende' }[x.tipo] : '', lanchasDele.join(', '), agenda, x.ativo ? '' : 'inativo'].filter(Boolean).join(' · ');
         return `<li><button class="linha" type="button" data-pessoa="${tipo}|${x.id}"><span class="avatar">${esc((x.nome || '?')[0].toUpperCase())}</span>
           <span class="linha__corpo"><b>${esc(x.nome)}${seloExemplo(x)}</b><span>${esc(sub || 'sem telefone')}</span></span><svg><use href="#p-seta"/></svg></button></li>`;
       }).join('') || vazio(parc ? 'Nenhum parceiro cadastrado ainda.' : 'Nenhum marinheiro cadastrado ainda.')}</ul>`;
@@ -1782,6 +1885,7 @@
         <div class="campo" data-bloco-dele><span>Lanchas dele</span><small class="caixas__ajuda">Marque as lanchas que são dele ou que ele cuida. Na agenda, elas ficam com a cor dele.</small>${caixas('dele', dele)}</div>
         <div class="campo" data-bloco-vende><span>Lanchas que ele vende</span><small class="caixas__ajuda">As lanchas que ele pode oferecer aos clientes dele.</small>${caixas('vende', vende)}</div>
         <label class="campo"><span>Comissão de quem vende (%) <small style="font-weight:400;color:var(--suave)">(se tiver)</small></span><input data-comissao inputmode="decimal" value="${x.comissao_pct != null ? String(x.comissao_pct).replace('.', ',') : ''}"></label>` : ''}
+      ${parc && id ? blocoAgenda(x) : ''}
       ${id ? `<label class="campo"><span>Situação</span><select data-ativo><option value="1"${x.ativo ? ' selected' : ''}>Ativo</option><option value="0"${x.ativo ? '' : ' selected'}>Inativo</option></select></label>` : ''}
       <p class="erro" data-erro hidden></p>
       <button class="botao botao--principal botao--cheio" type="button" data-salvar>Salvar</button>
@@ -1791,7 +1895,15 @@
         if (!parc) return;
         g.querySelector('[data-bloco-dele]').hidden = papel === 'revendedor';
         g.querySelector('[data-bloco-vende]').hidden = papel === 'dono';
+        const ag = g.querySelector('[data-bloco-agenda]');
+        if (ag) ag.hidden = papel === 'revendedor';
       };
+      const semNome = g.querySelector('[data-sem-nome]');
+      if (semNome) semNome.addEventListener('change', async () => {
+        if (!(await grava(sb.from('bb_parceiros').update({ agenda_sem_nome: semNome.value }).eq('id', id)))) return;
+        x.agenda_sem_nome = semNome.value;
+        avisa('Salvo. Na próxima leitura (até 15 minutos) os dias são refeitos.');
+      });
       if (parc) chips(g, '[data-papel]', (b) => { papel = b.dataset.papel; mostra(); });
       mostra();
       if (!id) g.querySelector('[data-nome]').focus();
@@ -2458,7 +2570,7 @@
   window.addEventListener('hashchange', () => { fechaMenu(); rota(); window.scrollTo(0, 0); tela.focus({ preventScroll: true }); });
 
   document.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-cliente],[data-despesa],[data-dia],[data-etapa],[data-aba-d],[data-conectar],[data-ler-agora],[data-vista-cli],[data-historico],[data-instrucoes],[data-breve],[data-receber],[data-ag],[data-mes],[data-periodo],[data-sair],[data-novo-cliente],[data-pessoa]');
+    const t = e.target.closest('[data-cliente],[data-despesa],[data-dia],[data-etapa],[data-aba-d],[data-conectar],[data-ler-agora],[data-vista-cli],[data-historico],[data-instrucoes],[data-breve],[data-receber],[data-ag],[data-mes],[data-periodo],[data-sair],[data-novo-cliente],[data-pessoa],[data-nova-lancha]');
     if (!t) return;
     const d = t.dataset;
     if (d.cliente) abreCliente(d.cliente);
@@ -2480,6 +2592,7 @@
     else if (d.mes) { mesSel = somaMes(mesSel, Number(d.mes) * PASSO[periodo]); if (mesSel > iso(hoje()).slice(0, 7)) mesSel = iso(hoje()).slice(0, 7); telaDinheiro(); }
     else if (d.periodo) { periodo = d.periodo; telaDinheiro(); }
     else if ('novoCliente' in d) novoCliente();
+    else if (t.hasAttribute('data-nova-lancha')) novaLancha();
     else if (d.pessoa) { const [tipo, id] = d.pessoa.split('|'); editaPessoa(tipo, id || null); }
     else if ('sair' in d) sai();
     else if (d.breve) { e.preventDefault(); avisa(d.breve); }

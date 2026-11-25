@@ -201,6 +201,13 @@ h1,h2,h3{color:var(--tinta);margin:0;line-height:1.15}
 .fotos img:first-child{grid-column:span 3;aspect-ratio:4/3}
 .agenda-dono{border:2px solid var(--agua)}
 .agenda-dono h3{font-size:1.1rem;display:flex;align-items:center;gap:10px}
+.agenda-parceiro{margin:8px 0 18px;padding:16px;border-radius:var(--r);border:2px solid var(--agua);background:#fff}
+.agenda-parceiro h3{font-size:1.05rem;display:flex;align-items:center;gap:10px;margin:0}
+.agenda-parceiro .acoes{display:grid;gap:10px;margin-top:12px}
+.nomes-agenda{margin:0 0 14px;padding-left:18px;display:grid;gap:4px}
+.nomes-agenda a{color:var(--canal)}
+.lancha-c__sem{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;aspect-ratio:4/3;background:var(--fundo);color:var(--suave);font-size:.95rem}
+.lancha-c__sem svg{font-size:1.8rem}
 .estado{display:flex;align-items:center;gap:10px;margin:12px 0;padding:12px 14px;border-radius:14px;background:var(--bom-fundo);color:var(--bom);font-weight:600}
 .estado--sem{background:var(--fundo);color:var(--texto);font-weight:500}
 
@@ -306,7 +313,7 @@ details.tabela td:first-child,details.tabela th:first-child{text-align:left}
 .despesa-dia{font-size:.9rem;color:var(--suave);margin:18px 0 8px;font-weight:600}
 
 /* aviso rápido (toast) */
-.aviso{position:fixed;z-index:70;left:50%;bottom:96px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:16px;background:var(--tinta);color:#fff;font-weight:600;box-shadow:0 14px 30px -12px rgba(0,0,0,.5);max-width:calc(100% - 32px);animation:sobe .25s}
+.aviso{position:fixed;z-index:70;left:50%;bottom:96px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:16px;background:var(--tinta);color:#fff;font-weight:600;box-shadow:0 14px 30px -12px rgba(0,0,0,.5);width:max-content;max-width:min(calc(100vw - 32px),560px);animation:sobe .25s}
 .aviso[hidden]{display:none}
 .aviso svg{color:#7EE2A8;font-size:1.3rem}
 .aviso--erro{background:var(--perigo)}
