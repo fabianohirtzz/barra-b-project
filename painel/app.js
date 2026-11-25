@@ -1453,7 +1453,12 @@
 
   // Grava a lista na ordem da tela; a legenda segue a posição ("Phantom 29, foto 3").
   async function salvaFotos(l, lista) {
-    const fotos = lista.map((f, i) => Object.assign({}, f, { alt: `${l.nome}, foto ${i + 1}` }));
+    // o servidor pode ter trocado uma foto pela versão melhorada (-ia) enquanto a tela estava aberta:
+    // relê o banco e fica com a versão de lá, para não gravar de volta um arquivo que já foi apagado
+    const { data: atual } = await sb.from('bb_lanchas').select('fotos').eq('id', l.id).maybeSingle();
+    const raiz = (u) => String(u || '').replace(/-ia\.webp$/, '.webp');
+    const doBanco = new Map(((atual && atual.fotos) || []).map((f) => [raiz(f.url), f]));
+    const fotos = lista.map((f, i) => Object.assign({}, doBanco.get(raiz(f.url)) || f, { alt: `${l.nome}, foto ${i + 1}` }));
     return grava(sb.from('bb_lanchas').update({ fotos }).eq('id', l.id));
   }
 

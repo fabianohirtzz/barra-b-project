@@ -1,5 +1,6 @@
 <?php
 // Barra Boat Floripa | cron/videos.php
+// Também troca as fotos de lancha que a IA melhorou (lib/fotos_ia.php).
 // Prepara os vídeos do Instagram enviados pelo painel (fila em midia/instagram/fila/) com
 // lib/videos.php e marca cada um como pronto no banco. Só roda pela linha de comando
 // (cron do cPanel, a cada 5 min):
@@ -10,6 +11,7 @@ if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 
 require_once dirname(__DIR__) . '/lib/bb.php';
 require_once dirname(__DIR__) . '/lib/videos.php';
+require_once dirname(__DIR__) . '/lib/fotos_ia.php';
 
 define('MIDIA', BB_RAIZ . '/midia/instagram');
 define('POR_RODADA', 3);
@@ -66,5 +68,7 @@ foreach (array_slice($fila, 0, POR_RODADA) as $orig) {
         @unlink(MIDIA . "/$id.mp4");
     }
 }
+// fotos das lanchas que a IA melhorou no computador (tools/melhorar_fotos.py)
+$feitos += bb_fotos_ia_trocar();
 if ($feitos) bb_limpa_cache();
 flock($trava, LOCK_UN);
