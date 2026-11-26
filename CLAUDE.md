@@ -315,7 +315,9 @@ em outro lugar?" e o pedido indo na mensagem do WhatsApp.
   com `parceiro_id` do vendedor e `origem = 'parceiro'` (só o nome do cliente); marinheiro já ocupado no dia fica desabilitado com a
   lancha ao lado; local de embarque escolhido da lista traz o mapa. Botões: cliente, marinheiro, "Mandar ao parceiro" (dono) e, se
   outro parceiro vendeu, "Mandar ao parceiro que vendeu".
-- Roteiros: cadastrar, desativar (`ativo`) e apagar (só se nenhum passeio/cliente usou; o banco faria set null). Roteiro novo existe só
+- Roteiros: "Cadastrar roteiro" abre a página inteira como rascunho (`#roteiro/novo`, só no navegador: nome, resumo,
+  paradas com foto guardada no navegador, regras); nada grava até "Cadastrar roteiro" no fim, que cria o roteiro e sobe as fotos.
+  Rascunho abandonado continua ao voltar; "Descartar" apaga. Roteiro sem página no site edita nome e resumo. Também desativar (`ativo`) e apagar (só se nenhum passeio/cliente usou; o banco faria set null). Roteiro novo existe só
   no painel: **ainda não ganha página no site** (só Ilha do Campeche e Costa da Lagoa têm página, `ROTEIRO_COM_PAGINA`).
 - Botões de apagar em vermelho claro (`botao--perigo-leve`). Fotos: arraste não deixa mais o fantasma na tela (pointerup na janela,
   `buttons === 0`) e a grade trava enquanto grava.

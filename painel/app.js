@@ -2513,67 +2513,133 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       <span class="linha__corpo"><b>${esc(r.nome)}${r.ativo === false ? ' <span class="selo selo--neutro">Desativado</span>' : ''}</b><span>${(r.paradas || []).length} paradas · ${(r.regras || []).length ? (r.regras || []).length + ' regras' : 'sem regras'}${ROTEIRO_COM_PAGINA.includes(r.slug) ? ' · tem página no site' : ''}</span></span><svg><use href="#p-seta"/></svg></a></li>`).join('');
   }
 
-  function novoRoteiro() {
-    abreGaveta('Cadastrar roteiro', `
-      <label class="campo"><span>Nome do roteiro</span><input data-nome placeholder="Ex.: Praia do Forte e Jurerê"></label>
-      <label class="campo"><span>Resumo <small style="font-weight:400;color:var(--suave)">(opcional)</small></span><textarea data-resumo rows="3" placeholder="Por onde passa e o que tem de bom"></textarea></label>
-      <p class="ajuda">O roteiro novo já aparece para marcar passeios e no cadastro dos clientes. Depois de salvar, adicione as paradas e as regras.</p>
-      <p class="erro" data-erro hidden></p>
-      <button class="botao botao--principal botao--cheio" type="button" data-salvar>Cadastrar roteiro</button>`, (g) => {
-      g.querySelector('[data-nome]').focus();
-      aoSalvar(g.querySelector('[data-salvar]'), async () => {
-        const nome = g.querySelector('[data-nome]').value.trim();
-        if (!nome) return erroCampo(g, 'Escreva o nome do roteiro.');
-        if (S.roteiros.some((x) => x.nome.toLowerCase() === nome.toLowerCase())) return erroCampo(g, 'Já existe um roteiro com esse nome.');
-        const base = semAcento(nome).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'roteiro';
-        let slug = base, n = 2;
-        while (S.roteiros.some((x) => x.slug === slug)) slug = `${base}-${n++}`;
-        const novo = await grava(sb.from('bb_roteiros').insert({ nome, slug, resumo: g.querySelector('[data-resumo]').value.trim() || null,
-          paradas: [], regras: [], ativo: true, ordem: S.roteiros.length + 1 }).select('id').single());
-        if (!novo) return;
-        fechaGaveta(); roteirosCompletos = null; await atualiza(); location.hash = '#roteiro/' + novo.id;
-        avisa(`${nome} cadastrado. Agora adicione as paradas.`);
-      });
-    });
-  }
+  /* Roteiro novo: abre a página inteira (nome, resumo, paradas com foto, regras) como rascunho,
+     só no navegador. Nada vai para o banco até tocar em "Cadastrar roteiro" no fim da página;
+     aí grava o roteiro e sobe as fotos das paradas. */
+  let rascunho = null;
+  const rascunhoVazio = () => ({ id: null, nome: '', resumo: '', paradas: [], regras: [], ativo: true });
+  // um rascunho começado e abandonado continua lá ao voltar (só sai com "Descartar" ou ao cadastrar)
+  function novoRoteiro() { if (!rascunho) rascunho = rascunhoVazio(); location.hash = '#roteiro/novo'; }
+  const leRegras = (t) => String(t || '').split('\n').map((x) => x.trim().replace(/^[-•*]\s*/, '')).filter(Boolean);
+  const slugRoteiro = (nome) => {
+    const base = semAcento(nome).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'roteiro';
+    let slug = base, n = 2;
+    while (S.roteiros.some((x) => x.slug === slug)) slug = `${base}-${n++}`;
+    return slug;
+  };
+  const nomeRepetido = (nome, id) => S.roteiros.some((x) => x.id !== id && x.nome.toLowerCase() === nome.toLowerCase());
 
   async function telaRoteiro(id) {
-    const r = (roteirosCompletos || []).find((x) => x.id === id) || ((await carregaRoteiros()) || []).find((x) => x.id === id);
+    const novo = id === 'novo';
+    if (novo && !rascunho) rascunho = rascunhoVazio();
+    const r = novo ? rascunho : (roteirosCompletos || []).find((x) => x.id === id) || ((await carregaRoteiros()) || []).find((x) => x.id === id);
     if (!r) { location.hash = '#roteiros'; return; }
     const paradas = Array.isArray(r.paradas) ? r.paradas : [];
     const regras = Array.isArray(r.regras) ? r.regras : [];
     const num = (v, suf) => (v != null ? `${String(Number(v)).replace('.', ',')} ${suf}` : null);
-    const comPagina = ROTEIRO_COM_PAGINA.includes(r.slug);
+    const comPagina = !novo && ROTEIRO_COM_PAGINA.includes(r.slug);
+    const fotoParada = (p) => p._previa || (p.foto ? foto(p.foto) : '');
     tela.innerHTML = `<a class="voltar" href="#roteiros"><svg><use href="#p-volta"/></svg>Roteiros</a>
-      <header class="cab"><div><h1>${esc(r.nome)}${r.ativo === false ? ' <span class="selo selo--neutro">Desativado</span>' : ''}</h1><p>${esc([num(r.duracao_horas, 'horas'), num(r.distancia_milhas, 'milhas'), r.trajeto_texto].filter(Boolean).join(' · '))}</p></div>
+      <header class="cab"><div><h1>${novo ? 'Novo roteiro' : esc(r.nome)}${r.ativo === false ? ' <span class="selo selo--neutro">Desativado</span>' : ''}</h1>
+        ${novo ? '<p>Preencha o roteiro inteiro e toque em "Cadastrar roteiro" no fim da página.</p>' : `<p>${esc([num(r.duracao_horas, 'horas'), num(r.distancia_milhas, 'milhas'), r.trajeto_texto].filter(Boolean).join(' · '))}</p>`}</div>
         ${comPagina ? `<a class="botao botao--leve botao--pequeno" href="../${esc(r.slug)}/" target="_blank" rel="noopener">Ver no site</a>` : ''}</header>
       <p class="ajuda">${comPagina ? 'A duração, a distância e o tempo de navegação aparecem em várias páginas do site. Para mudar, fale com a Freela, que a gente troca em todas de uma vez.'
+        : novo ? 'Depois de cadastrado, o roteiro já aparece para marcar passeios e no cadastro dos clientes. Para ele ganhar uma página no site, como a Ilha do Campeche e a Costa da Lagoa, fale com a Freela.'
         : 'Este roteiro aparece no painel, para marcar passeios. Para ele ganhar uma página no site, como a Ilha do Campeche e a Costa da Lagoa, fale com a Freela.'}</p>
+      ${comPagina ? '' : `<section class="bloco cartao"><h2 style="font-size:1.1rem;margin-bottom:12px">Dados do roteiro</h2>
+        <label class="campo"><span>Nome do roteiro</span><input data-r-nome value="${esc(r.nome || '')}" placeholder="Ex.: Praia do Forte e Jurerê" maxlength="80"></label>
+        <label class="campo"><span>Resumo <small style="font-weight:400;color:var(--suave)">(opcional)</small></span><textarea data-r-resumo rows="3" placeholder="Por onde passa e o que tem de bom">${esc(r.resumo || '')}</textarea></label>
+        ${novo ? '' : '<button class="botao botao--principal" type="button" data-salvar-dados>Salvar nome e resumo</button>'}
+      </section>`}
       <section class="bloco"><h2>Paradas <small>a ordem é a do passeio</small></h2>
         <ol class="lista paradas-l">${paradas.map((p, i) => `<li><button class="linha" type="button" data-parada="${i}">
-          ${p.foto ? `<img class="paradas-l__foto" src="${esc(foto(p.foto))}" alt="">` : '<span class="paradas-l__foto paradas-l__foto--sem">sem foto</span>'}
-          <span class="linha__corpo"><b>${i + 1}. ${esc(p.nome)}</b><span>${esc(curto(p.texto))}</span></span><svg><use href="#p-seta"/></svg></button></li>`).join('') || vazio('Nenhuma parada.')}</ol>
+          ${fotoParada(p) ? `<img class="paradas-l__foto" src="${esc(fotoParada(p))}" alt="">` : '<span class="paradas-l__foto paradas-l__foto--sem">sem foto</span>'}
+          <span class="linha__corpo"><b>${i + 1}. ${esc(p.nome)}</b><span>${esc(curto(p.texto))}</span></span><svg><use href="#p-seta"/></svg></button></li>`).join('') || vazio(novo ? 'Nenhuma parada ainda. Adicione na ordem do passeio.' : 'Nenhuma parada.')}</ol>
         <button class="botao botao--leve" type="button" data-nova-parada style="margin-top:12px"><svg><use href="#p-mais-um"/></svg>Adicionar parada</button>
       </section>
       <section class="bloco cartao"><h2 style="font-size:1.1rem;margin-bottom:6px">Regras do roteiro</h2>
-        <p class="ajuda" style="margin-top:0">Uma regra por linha. Aparecem num quadro de aviso na página do roteiro. Sem nenhuma regra, o quadro some.</p>
+        <p class="ajuda" style="margin-top:0">Uma regra por linha. ${novo ? 'Ex.: "Não aceita pets: a ilha proíbe animais."' : 'Aparecem num quadro de aviso na página do roteiro. Sem nenhuma regra, o quadro some.'}</p>
         <label class="campo"><span class="sr">Regras</span><textarea data-regras rows="${Math.max(4, regras.length + 1)}">${esc(regras.join('\n'))}</textarea></label>
-        <button class="botao botao--principal" type="button" data-salvar-regras>Salvar as regras</button>
+        ${novo ? '' : '<button class="botao botao--principal" type="button" data-salvar-regras>Salvar as regras</button>'}
       </section>
-      <section class="bloco cartao"><h2 style="font-size:1.1rem;margin-bottom:6px">${r.ativo === false ? 'Roteiro desativado' : 'Desativar ou apagar'}</h2>
+      ${novo ? `<section class="bloco cartao">
+        <p class="erro" data-erro hidden></p>
+        <div class="acoes"><button class="botao botao--principal" type="button" data-cadastrar>Cadastrar roteiro</button>
+          <button class="botao botao--perigo-leve" type="button" data-descartar>Descartar</button></div>
+      </section>` : `<section class="bloco cartao"><h2 style="font-size:1.1rem;margin-bottom:6px">${r.ativo === false ? 'Roteiro desativado' : 'Desativar ou apagar'}</h2>
         <p style="margin:0 0 12px;color:var(--suave)">${r.ativo === false ? 'Não aparece para marcar passeios. Os passeios antigos continuam com ele.'
           : `Desativado, ele sai das opções para marcar passeio e os passeios antigos continuam com ele.${comPagina ? ' A página dele no site continua no ar.' : ''} Apagar só dá se nenhum passeio ou cliente usou este roteiro.`}</p>
         <div class="acoes">
           <button class="botao botao--leve" type="button" data-ativa>${r.ativo === false ? 'Ativar de novo' : 'Desativar'}</button>
           ${comPagina ? '' : '<button class="botao botao--perigo-leve" type="button" data-apagar-r>Apagar o roteiro</button>'}
         </div>
-      </section>`;
-    aoSalvar(tela.querySelector('[data-ativa]'), async () => {
+      </section>`}`;
+    const campo = (s) => tela.querySelector(s);
+    // no rascunho, o que foi digitado fica guardado quando a tela é redesenhada (ao voltar de uma parada)
+    const guardaCampos = () => {
+      if (!novo) return;
+      r.nome = campo('[data-r-nome]').value; r.resumo = campo('[data-r-resumo]').value; r.regras = leRegras(campo('[data-regras]').value);
+    };
+    if (novo) {
+      ['[data-r-nome]', '[data-r-resumo]', '[data-regras]'].forEach((s) => campo(s).addEventListener('input', guardaCampos));
+      if (!r.nome) campo('[data-r-nome]').focus();
+    }
+    const salvaRoteiro = async (muda, msg) => {
+      if (novo) {
+        guardaCampos(); Object.assign(r, muda); fechaGaveta(); telaRoteiro('novo');
+        avisa(msg.replace(' O site já mostra.', '').replace('.', ' no rascunho.')); return true;
+      }
+      if (!(await grava(sb.from('bb_roteiros').update(muda).eq('id', r.id)))) return false;
+      Object.assign(r, muda); limpaSite(); fechaGaveta(); telaRoteiro(r.id); avisa(msg); return true;
+    };
+    tela.querySelectorAll('[data-parada]').forEach((b) => b.addEventListener('click', () => editaParada(r, Number(b.dataset.parada), salvaRoteiro)));
+    campo('[data-nova-parada]').addEventListener('click', () => editaParada(r, -1, salvaRoteiro));
+
+    if (novo) {
+      aoSalvar(campo('[data-cadastrar]'), async () => {
+        guardaCampos();
+        const nome = r.nome.trim();
+        if (!nome) { erroCampo(tela, 'Escreva o nome do roteiro.'); campo('[data-r-nome]').focus(); return; }
+        if (nomeRepetido(nome)) return erroCampo(tela, 'Já existe um roteiro com esse nome.');
+        erroCampo(tela, '');
+        const limpa = (lista) => lista.map((p) => ({ nome: p.nome, texto: p.texto, foto: p.foto || null, alt: p.alt || '' }));
+        const criado = await grava(sb.from('bb_roteiros').insert({ nome, slug: slugRoteiro(nome), resumo: r.resumo.trim() || null,
+          paradas: limpa(r.paradas), regras: r.regras, ativo: true, ordem: S.roteiros.length + 1 }).select('id').single());
+        if (!criado) return;
+        // fotos das paradas: só sobem agora, que o roteiro tem endereço próprio
+        let falhou = 0;
+        const fotos = r.paradas.slice();
+        for (const p of fotos) {
+          if (!p._blob) continue;
+          const fd = new FormData();
+          fd.append('acao', 'parada'); fd.append('roteiro_id', criado.id); fd.append('foto', p._blob, 'foto.jpg');
+          const res = await api('fotos.php', fd);
+          if (res.ok) p.foto = res.url; else falhou++;
+        }
+        if (fotos.some((p) => p.foto)) await grava(sb.from('bb_roteiros').update({ paradas: limpa(fotos) }).eq('id', criado.id));
+        fotos.forEach((p) => { if (p._previa) URL.revokeObjectURL(p._previa); });
+        rascunho = null; roteirosCompletos = null;
+        await atualiza(); location.hash = '#roteiro/' + criado.id;
+        avisa(falhou ? `${nome} cadastrado. ${falhou === 1 ? '1 foto não subiu' : falhou + ' fotos não subiram'}: abra a parada e escolha de novo.` : `${nome} cadastrado. Já aparece para marcar passeios.`, !!falhou);
+      });
+      confirmaNoBotao(campo('[data-descartar]'), 'Toque de novo para descartar', () => { rascunho = null; location.hash = '#roteiros'; });
+      return;
+    }
+
+    const bDados = campo('[data-salvar-dados]');
+    if (bDados) aoSalvar(bDados, async () => {
+      const nome = campo('[data-r-nome]').value.trim();
+      if (!nome) { avisa('Escreva o nome do roteiro.', true); return; }
+      if (nomeRepetido(nome, r.id)) { avisa('Já existe um roteiro com esse nome.', true); return; }
+      if (!(await salvaRoteiro({ nome, resumo: campo('[data-r-resumo]').value.trim() || null }, 'Nome e resumo salvos.'))) return;
+      atualiza();
+    });
+    aoSalvar(campo('[data-ativa]'), async () => {
       const ativo = r.ativo === false;
       if (!(await grava(sb.from('bb_roteiros').update({ ativo }).eq('id', r.id)))) return;
       r.ativo = ativo; await atualiza(); avisa(ativo ? 'Roteiro ativado.' : 'Roteiro desativado.');
     });
-    const bApaga = tela.querySelector('[data-apagar-r]');
+    const bApaga = campo('[data-apagar-r]');
     if (bApaga) confirmaNoBotao(bApaga, 'Toque de novo para apagar', async () => {
       // o banco apagaria o roteiro dos passeios e clientes antigos (set null): confere antes
       const usados = await Promise.all(['bb_passeios', 'bb_leads'].map((tb) => sb.from(tb).select('id', { count: 'exact', head: true }).eq('roteiro_id', r.id)));
@@ -2582,16 +2648,10 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       if (error) { console.error(error); avisa(msgErro(error), true); return; }
       roteirosCompletos = null; location.hash = '#roteiros'; await atualiza(); avisa(`${r.nome} apagado.`);
     });
-    const salvaRoteiro = async (muda, msg) => {
-      if (!(await grava(sb.from('bb_roteiros').update(muda).eq('id', r.id)))) return false;
-      Object.assign(r, muda); limpaSite(); fechaGaveta(); telaRoteiro(r.id); avisa(msg); return true;
-    };
-    aoSalvar(tela.querySelector('[data-salvar-regras]'), async () => {
-      const novas = tela.querySelector('[data-regras]').value.split('\n').map((x) => x.trim().replace(/^[-•*]\s*/, '')).filter(Boolean);
+    aoSalvar(campo('[data-salvar-regras]'), async () => {
+      const novas = leRegras(campo('[data-regras]').value);
       await salvaRoteiro({ regras: novas }, novas.length ? 'Regras salvas. O site já mostra.' : 'Regras apagadas. O quadro saiu do site.');
     });
-    tela.querySelectorAll('[data-parada]').forEach((b) => b.addEventListener('click', () => editaParada(r, Number(b.dataset.parada), salvaRoteiro)));
-    tela.querySelector('[data-nova-parada]').addEventListener('click', () => editaParada(r, -1, salvaRoteiro));
   }
 
   function editaParada(r, i, salvaRoteiro) {
@@ -2600,10 +2660,10 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     const p = nova ? { nome: '', texto: '', foto: null, alt: '' } : Object.assign({}, paradas[i]);
     let fotoNova = null;   // arquivo escolhido, ainda não enviado
     abreGaveta(nova ? 'Nova parada' : `Parada ${i + 1}`, `
-      <div class="parada-foto" data-foto-area>${p.foto ? `<img src="${esc(foto(p.foto))}" alt="">` : '<span>Sem foto</span>'}</div>
+      <div class="parada-foto" data-foto-area>${p._previa || p.foto ? `<img src="${esc(p._previa || foto(p.foto))}" alt="">` : '<span>Sem foto</span>'}</div>
       <div class="acoes" style="margin:10px 0 16px">
-        <label class="botao botao--leve botao--pequeno"><svg><use href="#p-foto"/></svg>${p.foto ? 'Trocar a foto' : 'Escolher foto'}<input type="file" accept="image/*" data-arq class="sr"></label>
-        ${p.foto ? '<button class="botao botao--leve botao--pequeno" type="button" data-tira-foto>Tirar a foto</button>' : ''}
+        <label class="botao botao--leve botao--pequeno"><svg><use href="#p-foto"/></svg>${p._previa || p.foto ? 'Trocar a foto' : 'Escolher foto'}<input type="file" accept="image/*" data-arq class="sr"></label>
+        ${p._previa || p.foto ? '<button class="botao botao--leve botao--pequeno" type="button" data-tira-foto>Tirar a foto</button>' : ''}
       </div>
       <label class="campo"><span>Nome da parada</span><input data-nome value="${esc(p.nome)}" maxlength="80"></label>
       <label class="campo"><span>O que tem lá</span><textarea data-texto rows="4" maxlength="400">${esc(p.texto)}</textarea><small>Uma ou duas frases. Fatos ajudam quem procura no Google: o que dá para fazer, o que é proibido.</small></label>
@@ -2619,7 +2679,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         if (fotoNova) c.querySelector('[data-foto-area]').innerHTML = `<img src="${URL.createObjectURL(fotoNova)}" alt="">`;
       });
       const tira = c.querySelector('[data-tira-foto]');
-      if (tira) tira.addEventListener('click', () => { p.foto = null; fotoNova = null; c.querySelector('[data-foto-area]').innerHTML = '<span>Sem foto</span>'; });
+      if (tira) tira.addEventListener('click', () => { p.foto = null; p._blob = null; p._previa = null; fotoNova = null; c.querySelector('[data-foto-area]').innerHTML = '<span>Sem foto</span>'; });
       aoSalvar(c.querySelector('[data-salvar]'), async () => {
         const nome = c.querySelector('[data-nome]').value.trim(), texto = c.querySelector('[data-texto]').value.trim();
         if (!nome || !texto) return erroCampo(c, 'Preencha o nome da parada e o que tem lá.');
@@ -2627,14 +2687,21 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         if (fotoNova) {
           let blob;
           try { blob = await preparaFoto(fotoNova); } catch (e) { return erroCampo(c, 'Esse formato de foto não abre aqui. Envie em JPG.'); }
+          if (!r.id) {
+            // rascunho de roteiro novo: a foto fica guardada aqui e sobe ao cadastrar o roteiro
+            p._blob = blob; p._previa = URL.createObjectURL(blob); p.foto = null;
+          } else {
           const fd = new FormData();
           fd.append('acao', 'parada'); fd.append('roteiro_id', r.id); fd.append('foto', blob, 'foto.jpg');
           if (!nova && paradas[i].foto) fd.append('antiga', paradas[i].foto);
           const res = await api('fotos.php', fd);
           if (!res.ok) return erroCampo(c, res.erro || 'A foto não subiu. Tente de novo.');
           p.foto = res.url;
+          }
         }
-        const pronta = { nome, texto, foto: p.foto || null, alt: c.querySelector('[data-alt]').value.trim() || (p.foto ? nome : '') };
+        const temFoto = !!(p.foto || p._blob);
+        const pronta = { nome, texto, foto: p.foto || null, alt: c.querySelector('[data-alt]').value.trim() || (temFoto ? nome : '') };
+        if (p._blob) Object.assign(pronta, { _blob: p._blob, _previa: p._previa });
         if (nova) paradas.push(pronta); else paradas[i] = pronta;
         await salvaRoteiro({ paradas }, nova ? 'Parada adicionada. O site já mostra.' : 'Parada salva. O site já mostra.');
       });
