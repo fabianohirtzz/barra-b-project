@@ -341,7 +341,7 @@ for s in ORDEM:
           <ul class="ficha__specs">
             <li><svg aria-hidden="true"><use href="#i-pessoas"/></svg><b>{pax}</b> pessoas</li>
             <li><svg aria-hidden="true"><use href="#i-regua"/></svg><b>{pes}</b> pés</li>
-            <li><svg aria-hidden="true"><use href="#i-relogio"/></svg><b>8 h</b> de diária</li>
+            <li><svg aria-hidden="true"><use href="#i-relogio"/></svg><b>7 h</b> de diária</li>
           </ul>
           <p class="ficha__intro">{intro}</p>
 
@@ -390,7 +390,7 @@ for s in ORDEM:
     <section class="secao" aria-labelledby="roteiros-titulo">
       <div class="secao__cabeca">
         <h2 id="roteiros-titulo" class="titulo">Para onde a {e(nome)} vai</h2>
-        <p class="secao__intro">Os dois roteiros saem com a mesma lancha. A diária é de 8 horas, das 9h às 17h ou das 10h às 18h.</p>
+        <p class="secao__intro">Os dois roteiros saem com a mesma lancha. A diária é de 7 horas, das 10h às 17h.</p>
       </div>
       <div class="mini-roteiros">
         <a class="mini-roteiro" href="ilha-do-campeche/">
@@ -427,7 +427,7 @@ for s in ORDEM:
 # (bb_roteiros.fichas): a capa da página do roteiro e a comparação em /roteiros/ mostram todas; o card da
 # home (index.html, editado à mão) mostra as 3 primeiras. Mudou aqui? Mude a home e lib/conteudo.php confere.
 FICHAS = {
-    'ilha-do-campeche': [('Distância', '10,4 milhas'), ('Cada trajeto', '30 a 40 min'), ('Diária', '8 horas'), ('Saída', 'Canal da Barra')],
+    'ilha-do-campeche': [('Distância', '10,4 milhas'), ('Cada trajeto', '30 a 40 min'), ('Diária', '7 horas'), ('Saída', 'Canal da Barra')],
     'costa-da-lagoa': [('Mar', 'Águas calmas'), ('Saída', 'Barra ou Lagoa'), ('Diária', '6 horas'), ('Paradas', '5')],
 }
 
@@ -443,7 +443,7 @@ corpo = capa_foto('roteiros', 'Lanchas ancoradas em frente a uma praia de areia 
     <section class="secao" aria-labelledby="comparar-titulo">
       <div class="secao__cabeca">
         <h2 id="comparar-titulo" class="titulo">Qual roteiro combina com o seu grupo</h2>
-        <p class="secao__intro">Os dois usam a mesma lancha e a mesma diária de 8 horas. A diferença está no tipo de mar e no que fazer durante o dia.</p>
+        <p class="secao__intro">Os dois usam a mesma lancha e saem às 10h. A diferença está no tipo de mar e no que fazer durante o dia.</p>
       </div>
       <div class="comparar">
         <article class="comparar__card">
@@ -500,10 +500,10 @@ corpo = capa_foto('roteiros', 'Lanchas ancoradas em frente a uma praia de areia 
           <p class="secao__intro">Vale para os roteiros da Ilha do Campeche e da Costa da Lagoa.</p>
         </div>
         <ol class="lista-passos">
-          <li><b>Embarque no Canal da Barra</b><span>Às 9h ou às 10h, na Rod. Jorn. Manoel de Menezes, 3007. Pontualidade conta: o tempo de atraso não é reposto no fim do dia.</span></li>
+          <li><b>Embarque no Canal da Barra</b><span>Às 10h, na Rod. Jorn. Manoel de Menezes, 3007. Pontualidade conta: o tempo de atraso não é reposto no fim do dia.</span></li>
           <li><b>Navegação até a primeira parada</b><span>O marinheiro conduz e explica o trajeto. Ninguém pula da lancha em movimento.</span></li>
           <li><b>Lancha ancorada, dia livre</b><span>Banho de mar, tapete flutuante, stand up quando a lancha tem, e o churrasco que o marinheiro prepara com as carnes que vocês levarem.</span></li>
-          <li><b>Volta ao fim da tarde</b><span>Desembarque no mesmo ponto, às 17h ou às 18h.</span></li>
+          <li><b>Volta ao fim da tarde</b><span>Desembarque no mesmo ponto, às 17h.</span></li>
         </ol>
       </div>
     </section>
@@ -628,9 +628,9 @@ pagina_roteiro(
 ''',
     'Olá! Vim pelo site da Barra Boat. Quero consultar um passeio para a Ilha do Campeche.',
     'Passeio de lancha para a Ilha do Campeche | Barra Boat Floripa',
-    'Passeio de lancha privativa para a Ilha do Campeche: 10,4 milhas desde o Canal da Barra da Lagoa, 30 a 40 minutos por trajeto, diária de 8 horas com marinheiro.',
+    'Passeio de lancha privativa para a Ilha do Campeche: 10,4 milhas desde o Canal da Barra da Lagoa, 30 a 40 minutos por trajeto, diária de 7 horas com marinheiro.',
     {'@type': 'TouristTrip', 'name': 'Passeio de lancha para a Ilha do Campeche', 'touristType': ['Famílias', 'Grupos de amigos'],
-     'description': 'Passeio de lancha privativa saindo do Canal da Barra da Lagoa até a Ilha do Campeche, 10,4 milhas, diária de 8 horas com marinheiro e combustível inclusos.',
+     'description': 'Passeio de lancha privativa saindo do Canal da Barra da Lagoa até a Ilha do Campeche, 10,4 milhas, diária de 7 horas com marinheiro e combustível inclusos.',
      'provider': EMPRESA_REF, 'url': DOM + 'ilha-do-campeche/',
      'itinerary': {'@type': 'ItemList', 'itemListElement': [{'@type': 'ListItem', 'position': i + 1, 'item': {'@type': 'Place', 'name': n}} for i, n in enumerate(
          ['Canal da Barra da Lagoa', 'Prainha da Barra', 'Piscinas naturais da Barra', 'Praia da Galheta', 'Ponta do Gravatá', 'Ilha do Campeche'])]}},

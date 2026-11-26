@@ -197,7 +197,7 @@ function bb_pagina_lancha($l, $todas, $pre, $fonte)
           <ul class="ficha__specs">
             <li><svg aria-hidden="true"><use href="#i-pessoas"/></svg><b>' . $pax . '</b> pessoas</li>
             <li><svg aria-hidden="true"><use href="#i-regua"/></svg><b>' . $pes . '</b> pés</li>
-            <li><svg aria-hidden="true"><use href="#i-relogio"/></svg><b>8 h</b> de diária</li>
+            <li><svg aria-hidden="true"><use href="#i-relogio"/></svg><b>7 h</b> de diária</li>
           </ul>
           <p class="ficha__intro">' . bb_e($intro) . '</p>
 
@@ -246,7 +246,7 @@ function bb_pagina_lancha($l, $todas, $pre, $fonte)
     <section class="secao" aria-labelledby="roteiros-titulo">
       <div class="secao__cabeca">
         <h2 id="roteiros-titulo" class="titulo">Para onde a ' . $en . ' vai</h2>
-        <p class="secao__intro">Os dois roteiros saem com a mesma lancha. A diária é de 8 horas, das 9h às 17h ou das 10h às 18h.</p>
+        <p class="secao__intro">Os dois roteiros saem com a mesma lancha. A diária é de 7 horas, das 10h às 17h.</p>
       </div>
       <div class="mini-roteiros">
         <a class="mini-roteiro" href="' . $pre . 'ilha-do-campeche/">

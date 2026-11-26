@@ -20,7 +20,7 @@
   de consulta `cadastur.turismo.gov.br/cadastur/#!/public/qrcode/<CNPJ>`.
 - **Frota:** 17 lanchas no site (2 da Michele, o resto de parceiros). Ver
   `docs/conteudo-site-atual/lanchas.json`.
-- **Roteiros:** Ilha do Campeche (o mais pedido, diária 8 h, 10,4 milhas) e Costa da Lagoa.
+- **Roteiros:** Ilha do Campeche (o mais pedido, diária 7 h das 10h às 17h, 10,4 milhas) e Costa da Lagoa.
 - **Site atual:** WordPress + Elementor em barraboatfloripa.com.br (feito pela Freela).
   Conteúdo inteiro extraído em `docs/conteudo-site-atual/`.
 - **Proposta:** `propostas.freelainhome.com.br/proposal-mM3kvakNgGAhEq6HHkajxXOo/` (20/10/2026).
@@ -384,6 +384,8 @@ Títulos de lancha e roteiro encurtados para caber no Google (até uns 62 caract
 lanchas ativas com pés, pessoas, região e itens, fichas, paradas e regras dos 2 roteiros e as perguntas, tudo do banco.
 IndexNow: chave em `6bf75e866e649d7e10f128b1517138df.txt` na raiz e `python tools/indexnow.py` (sitemap inteiro ou só os
 caminhos passados, nos 9 idiomas). Passo a passo do Search Console e do Bing em `docs/lancamento.md` > Indexação.
+
+**Dados de exemplo apagados em 26/11** (`apagar.sql` rodado e conferido). Diária definida em 26/11: 7 horas, das 10h às 17h.
 
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.

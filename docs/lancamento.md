@@ -9,18 +9,19 @@ O que já está pronto no código (25/11):
 
 ## Antes do dia
 1. Michele confere o site em novo.barraboatfloripa.com.br e o painel.
-2. Rodar `supabase/demo/apagar.sql` no SQL Editor (apaga clientes, passeios, despesas e metas de exemplo;
-   sem isso os passeios de exemplo aparecem como dias ocupados no calendário do site).
+2. ~~Rodar `supabase/demo/apagar.sql`~~ rodado em 26/11 (conferido: nenhum registro de exemplo; ficam 3 clientes, 3 passeios,
+   21 parceiros e 17 marinheiros reais).
 3. Respostas pendentes da cliente que mudam texto (tempos do Campeche, duração da Costa, My Nega, Phantom 30 BB).
-   Duração da diária está desencontrada: a pergunta frequente que a Michele editou no painel diz "07 horas, embarque às
-   10h e fim às 18h" (que dá 8 horas); a ficha do Campeche e o llms.txt dizem 8 horas (9h às 17h ou 10h às 18h). Definir
-   um número só e corrigir no painel (pergunta e ficha) e no `llms.txt`.
+   Diária definida em 26/11: **7 horas, das 10h às 17h** (site, llms.txt e seed já trocados). Falta rodar
+   `supabase/seed/04-ajustes-26-11.sql` (ficha do Campeche, pergunta do painel e itens da Phantom 30 BBF).
+   A ficha da Costa da Lagoa segue com 6 horas: confirmar com a Michele.
 4. ~~Rodar `supabase/migrations/2026-11-25-16-fichas-dos-roteiros.sql`~~ aplicada em 26/11 (conferido: os dois roteiros
    com as 4 fichas de hoje).
 5. Depois do `apagar.sql`: as lanchas Phantom 29 My Girls e My Nega 30 (escondidas) ficam sem dono, porque estavam ligadas
    ao parceiro de exemplo. Se voltarem ao site, ligar ao parceiro certo em Parceiros. Os 3 clientes e 3 passeios reais
    (26 e 27/11) não dependem de nada de exemplo e ficam.
-6. Michele: itens a bordo repetidos na Phantom 30 BBF ("Cooler" e "Geladeira térmica", "Prancha stand up" e "Stand Up*").
+6. Itens repetidos da Phantom 30 BBF: saem no `04-ajustes-26-11.sql`. A Phantom 30 (outra) também tem "Cooler" e
+   "Geladeira térmica": ver com a Michele.
 
 Revisão geral de 26/11 (QA): 216 páginas (24 x 9 idiomas) com 200, um H1, canonical, hreflang e JSON-LD válidos, sem erro
 de console, sem rolagem lateral; formulários, popup, calendário e seletor de idioma testados; painel com as 15 telas abrindo

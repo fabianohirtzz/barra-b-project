@@ -18,7 +18,7 @@ create temp table _carga as select $carga${
   },
   {
    "pergunta": "Quanto tempo dura o passeio?",
-   "resposta": "A diária é de 8 horas: das 9h às 17h ou das 10h às 18h. O horário de embarque precisa ser respeitado, porque atrasos do grupo não estendem a diária.",
+   "resposta": "A diária é de 7 horas: das 10h às 17h. O horário de embarque precisa ser respeitado, porque atrasos do grupo não estendem a diária.",
    "ordem": 2
   },
   {
@@ -148,7 +148,7 @@ create temp table _carga as select $carga${
     },
     {
      "rotulo": "Diária",
-     "valor": "8 horas"
+     "valor": "7 horas"
     },
     {
      "rotulo": "Saída",
