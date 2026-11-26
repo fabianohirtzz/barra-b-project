@@ -410,7 +410,7 @@ function bb_i18n_textos_js()
 /* Avisos que só existem nas páginas traduzidas (escritos em português e traduzidos como o resto). */
 function bb_i18n_avisos($h, $p)
 {
-    if (strpos($p, 'politica-') === 0) {
+    if (strpos($p, 'politica-') === 0 || strpos($p, 'termos-') === 0) {
         $h = preg_replace('#(<p class="prosa__data">.*?</p>)#', '$1' . "\n          " . '<p class="aviso-traducao">Esta página foi traduzida automaticamente do português. Em caso de dúvida, vale a versão em português.</p>', $h, 1);
     }
     if ($p === '' && strpos($h, 'avaliacoes__galeria') !== false) {

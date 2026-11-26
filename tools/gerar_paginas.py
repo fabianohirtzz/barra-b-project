@@ -877,6 +877,20 @@ politica('politica-de-privacidade', 'Política de privacidade',
          'Política de privacidade | Barra Boat Floripa',
          'Como a Barra Boat Floripa coleta, usa e protege os seus dados pessoais, e como exercer os seus direitos pela LGPD.')
 
+politica('termos-de-uso', 'Termos de uso',
+         'As regras para usar o site, reservar um passeio e, para os donos das lanchas parceiras, conectar a agenda Google à Barra Boat Floripa.',
+         [('quem', 'Quem somos', '<p>Barra Boat Floripa, empresa de aluguel de lanchas privativas com marinheiro, com sede na Rod. Jorn. Manoel de Menezes, 3007, Barra da Lagoa, Florianópolis, SC. Estes termos valem para o site barraboatfloripa.com.br, para o atendimento pelo WhatsApp e para a conexão de agenda usada pelos donos das lanchas parceiras. Ao usar o site ou reservar um passeio, você concorda com eles.</p>'),
+          ('site', 'Informações do site', '<p>As fotos, os itens a bordo e a capacidade de cada lancha mostram como ela é hoje e podem mudar. O calendário de datas livres é uma referência: a data só está garantida depois da confirmação da nossa equipe e do pagamento do sinal.</p><p>O site não mostra preços. Valores, roteiros e horários são combinados com a nossa equipe pelo WhatsApp.</p>'),
+          ('reserva', 'Reserva', '<p>A reserva é feita pelo WhatsApp <a href="https://wa.me/5548991153172">(48) 99115-3172</a>. A data fica garantida com o pagamento de 50% do valor, e o restante é pago no dia, antes do embarque. Depois da reserva, enviamos o contrato com os dados do passeio.</p><p>Remarcação, tempo ruim, atraso e devolução de valores seguem a <a href="politica-de-cancelamento/">Política de cancelamento e reembolso</a>.</p>'),
+          ('passeio', 'No passeio', '<ul><li>O número de pessoas a bordo não pode passar da capacidade da lancha, contando crianças e bebês.</li><li>O marinheiro é o responsável pela navegação. Por segurança, ele pode mudar o roteiro, encurtar a parada ou voltar antes, conforme o mar e o tempo.</li><li>Valem as regras de cada lugar visitado. A Ilha do Campeche, por exemplo, não aceita animais e limita o número de visitantes por dia.</li><li>Danos causados à lancha por mau uso do grupo podem ser cobrados do responsável pela reserva.</li></ul>'),
+          ('parceiros', 'Donos das lanchas parceiras e a agenda Google', '<p>O dono de lancha parceira pode conectar a própria conta Google pelo link que a nossa equipe envia. Ao conectar, ele autoriza a Barra Boat a:</p><ul><li>ler os eventos da agenda que ele escolher, para marcar como ocupados os dias das lanchas dele e das lanchas que ele vende;</li><li>criar, mudar e apagar nessa agenda os eventos das reservas que a nossa equipe marcar nas lanchas dele.</li></ul><p>O dono continua responsável por manter a própria agenda em dia e por escrever o nome da lancha nos eventos. Ele pode desligar a conexão a qualquer momento, pedindo à nossa equipe ou nas permissões da conta Google. O que fazemos com esses dados está na <a href="politica-de-privacidade/#agenda-google">Política de privacidade</a>.</p>'),
+          ('conteudo', 'Textos, fotos e marca', '<p>Os textos, as fotos, os vídeos e a marca Barra Boat Floripa pertencem à empresa ou aos donos das lanchas parceiras. Não podem ser copiados ou usados para fins comerciais sem autorização por escrito.</p>'),
+          ('limites', 'Limites de responsabilidade', '<p>Trabalhamos para manter o site no ar e com informações corretas, mas ele pode ficar fora do ar por manutenção ou falha técnica. Serviços de terceiros usados no atendimento, como o WhatsApp e o Google, seguem as regras das próprias empresas.</p>'),
+          ('mudancas', 'Mudanças e foro', '<p>Estes termos podem ser atualizados, e a data da versão em vigor fica no topo da página. Valem as leis brasileiras, e o foro é o da comarca de Florianópolis, SC. Dúvidas: <a href="mailto:contato@barraboatfloripa.com.br">contato@barraboatfloripa.com.br</a>.</p>')],
+         'Termos de uso | Barra Boat Floripa',
+         'Regras de uso do site, da reserva dos passeios de lancha e da conexão da agenda Google dos donos das lanchas parceiras da Barra Boat Floripa.',
+         atualizada='26 de novembro de 2026')
+
 # ---------------------------------------------------------------- 404
 corpo = capa_faixa('Esta página saiu da rota', 'O endereço pode ter mudado. Volte para o início ou escolha a sua lancha.', '', '''
         <div class="capa__acoes">
@@ -886,7 +900,7 @@ corpo = capa_faixa('Esta página saiu da rota', 'O endereço pode ter mudado. Vo
 gerados.append(pagina('404.html', 'Página não encontrada | Barra Boat Floripa', 'Página não encontrada.', corpo))
 
 # ---------------------------------------------------------------- sitemap
-urls = ['', 'lanchas/'] + [f'lanchas/{s}/' for s in ORDEM] + ['roteiros/', 'ilha-do-campeche/', 'costa-da-lagoa/', 'sobre/', 'contato/', 'politica-de-cancelamento/', 'politica-de-privacidade/']
+urls = ['', 'lanchas/'] + [f'lanchas/{s}/' for s in ORDEM] + ['roteiros/', 'ilha-do-campeche/', 'costa-da-lagoa/', 'sobre/', 'contato/', 'politica-de-cancelamento/', 'politica-de-privacidade/', 'termos-de-uso/']
 hoje = datetime.date.today().isoformat()
 # cada página em todos os idiomas (as traduções são servidas pelo site.php em /es/, /en/...),
 # com as alternativas de idioma de cada uma, como o Google pede

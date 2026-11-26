@@ -21,6 +21,7 @@
 - [Contato](https://barraboatfloripa.com.br/contato/)
 - [Política de cancelamento e reembolso](https://barraboatfloripa.com.br/politica-de-cancelamento/)
 - [Política de privacidade](https://barraboatfloripa.com.br/politica-de-privacidade/)
+- [Termos de uso](https://barraboatfloripa.com.br/termos-de-uso/)
 
 ## Idiomas
 - O site também está em espanhol (/es/), inglês (/en/), francês (/fr/), alemão (/de/), italiano (/it/), holandês (/nl/), japonês (/ja/) e chinês simplificado (/zh/), com as mesmas páginas e endereços depois do prefixo do idioma.
