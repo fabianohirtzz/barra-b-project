@@ -596,7 +596,8 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     return h;
   }
   // Leva na hora os passeios marcados, mudados ou cancelados às agendas Google dos donos (o servidor também faz a cada minuto).
-  function sincGoogle() { api('google.php', { acao: 'fila' }).catch(() => {}); }
+  // Quando algo foi levado, relê os dados para a gaveta do passeio dizer que já está na agenda do dono.
+  function sincGoogle() { api('google.php', { acao: 'fila' }).then((r) => { if (r && r.n) atualiza(); }).catch(() => {}); }
 
   // Botões de envio (só aparecem quando há para quem mandar).
   function botoesEnvio(p, pequeno) {
@@ -1214,7 +1215,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       </div>
       <div class="grade-2">
         <label class="campo"><span>Pessoas</span><input data-pessoas inputmode="numeric" value="${(l0 && l0.pessoas) || ''}"></label>
-        <label class="campo"><span>Horário de embarque</span><input type="time" data-hora value="${lIni.embarque_hora ? lIni.embarque_hora.slice(0, 5) : '09:00'}"></label>
+        <label class="campo"><span>Horário de embarque</span><input type="time" data-hora value="${lIni.embarque_hora ? lIni.embarque_hora.slice(0, 5) : '10:00'}"></label>
       </div>
       ${camposPasseio({ roteiro_id: l0 && l0.roteiro_id, marinheiro_id: lIni.marinheiro_id, embarque_local: lIni.embarque_local || embPadrao().local, embarque_maps: lIni.embarque_local ? lIni.embarque_maps : embPadrao().maps })}
       <p class="ajuda">Horário, embarque e marinheiro vêm do cadastro da lancha. Mude aqui se este passeio for diferente.</p>

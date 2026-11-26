@@ -269,7 +269,7 @@ h1,h2,h3{color:var(--tinta);margin:0;line-height:1.15}
 .secao-g{margin-bottom:22px}
 .secao-g > h3{font-size:1rem;color:var(--suave);font-weight:600;margin-bottom:8px}
 .conversa{display:grid;gap:8px;padding:14px;border-radius:var(--r);background:#E9E3DA}
-.msg{max-width:85%;padding:9px 12px;border-radius:12px;font-size:.95rem;line-height:1.4;background:#fff;color:var(--tinta)}
+.msg{max-width:85%;overflow-wrap:anywhere;padding:9px 12px;border-radius:12px;font-size:.95rem;line-height:1.4;background:#fff;color:var(--tinta)}
 .msg small{display:block;font-size:.75rem;color:var(--suave);margin-top:2px;text-align:right}
 .msg--nos{justify-self:end;background:#D8F5C9}
 .msg--robo{justify-self:end;background:#E3F0FA}

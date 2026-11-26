@@ -403,7 +403,7 @@ do dono da lancha (10h + 7 h ou dia inteiro), com `extendedProperties.private.bb
 já está na agenda do dono. Migração `2026-11-26-17-google-agenda.sql`. Config em `config.local.php`: `GOOGLE_CLIENT_ID`,
 `GOOGLE_CLIENT_SECRET`, `GOOGLE_CHAVE`. App do Google "em produção" sem verificação: até 100 contas, com o aviso "app não
 verificado" (a página explica Avançado > Acessar). Política de privacidade ganhou a seção "Agenda Google dos donos das lanchas"
-(uso limitado). Testes: `gteste/t.php` no scratchpad (18 casos). **Na troca para a raiz:** o URI de volta da raiz já precisa estar
+(uso limitado). Testes: `gteste/t.php` no scratchpad (18 casos). **Testado de ponta a ponta em 26/11 no site oficial** (conta freelainhome, agenda de teste): leitura pelo aviso do Google em segundos, reserva gravada 10h às 17h, o próprio evento não volta como "dono", cancelar apaga o evento, apagar o evento do dono libera o dia, desconectar limpa tudo. Chaves no `config.local.php` da raiz (fora do Git). Na tela do Google as caixas de permissão vêm **desmarcadas**: a página de conexão manda marcar "Selecionar tudo". Verificação do app no Google ainda não enviada (precisa de vídeo de demonstração). **Na troca para a raiz:** o URI de volta da raiz já precisa estar
 no cliente OAuth; os canais apontam para o endereço onde foram abertos (reconectar ou esperar a renovação).
 
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
