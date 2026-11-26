@@ -18,9 +18,9 @@ O que já está pronto no código (25/11):
 2. Mover os arquivos do WordPress da raiz para uma pasta fora da web (ex.: `/home/barraboa/wordpress-antigo/`).
    A pasta `novo/` fica onde está.
 3. `BB_FTP_SENHA='...' python tools/publicar.py --producao`.
-4. Pelo FTP/gerenciador: copiar `config.local.php`, `fotos/`, `midia/` e `cron/bin/ffmpeg` (chmod 755)
+4. Pelo FTP/gerenciador: copiar `config.local.php` (já com a `ANTHROPIC_API_KEY`), `fotos/`, `midia/`, `traducoes/` (traduções que o cron fez) e `cron/bin/ffmpeg` (chmod 755)
    de `novo/` para a raiz.
-5. Crons do cPanel: trocar `/public_html/novo/cron/` por `/public_html/cron/` nos dois.
+5. Crons do cPanel: trocar `/public_html/novo/cron/` por `/public_html/cron/` nos três (agendas, vídeos e traduz).
 6. Conferir:
    - `curl -I http://barraboatfloripa.com.br/` e `https://www.barraboatfloripa.com.br/` levam a `https://barraboatfloripa.com.br/` (301);
    - `curl -I https://barraboatfloripa.com.br/shop/` leva a `/lanchas/`;

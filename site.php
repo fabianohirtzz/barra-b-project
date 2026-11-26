@@ -5,15 +5,19 @@
 
 require_once __DIR__ . '/lib/bb.php';
 require_once __DIR__ . '/lib/site.php';
+require_once __DIR__ . '/lib/i18n.php';
 
-$p = isset($_GET['p']) ? (string) $_GET['p'] : '';
+// "/es/lanchas/" chega aqui como p=es/lanchas/: o idioma sai da frente e a página é montada em português
+list($idioma, $p) = bb_separa_idioma(isset($_GET['p']) ? (string) $_GET['p'] : '');
 if (getenv('REDIRECT_STATUS') === '404' || isset($_SERVER['REDIRECT_STATUS']) && $_SERVER['REDIRECT_STATUS'] == 404) {
     list($st, $html) = bb_404();
 } else {
     list($st, $html) = bb_render($p, bb_lanchas(), 'api/disponibilidade.php', bb_conteudo());
+    if ($st === 200) $html = bb_traduz_pagina($html, $idioma, $p);
 }
 
 if (bb_eh_producao($_SERVER['HTTP_HOST'] ?? '')) $html = bb_producao($html, $st, $p);
+if ($st === 200) header('Content-Language: ' . BB_IDIOMAS[$idioma][0]);
 
 http_response_code($st);
 header('Content-Type: text/html; charset=utf-8');

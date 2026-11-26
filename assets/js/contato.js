@@ -3,6 +3,11 @@
    Na produção o PHP também grava o lead no painel antes de abrir o WhatsApp. */
 (function () {
   'use strict';
+  // Textos no idioma da página: nas páginas traduzidas o PHP põe as traduções em window.BB_T
+  // (a chave é o texto em português, que tools/i18n.php acha procurando T('...') nestes arquivos).
+  const T = (s, v) => { let t = (window.BB_T && window.BB_T[s]) || s; if (v) t = t.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)); return t; };
+  const IDIOMA = document.documentElement.lang || 'pt-BR';
+  const EM_PT = IDIOMA.indexOf('pt') === 0;
   const form = document.querySelector('[data-form-contato]');
   if (!form) return;
   const erro = form.querySelector('[data-form-erro]');
@@ -16,8 +21,8 @@
     const p = form.elements.roteiro.value === 'Personalizado';
     pers.hidden = !p;
     local.hidden = !p || form.elements.desloc.value !== 'sim';
-    rotulo.textContent = p ? 'Conte como você quer o passeio' : 'Mensagem';
-    form.elements.mensagem.placeholder = p ? 'Paradas, horário, ocasião especial...' : 'Alguma dúvida ou pedido especial?';
+    rotulo.textContent = p ? T('Conte como você quer o passeio') : T('Mensagem');
+    form.elements.mensagem.placeholder = p ? T('Paradas, horário, ocasião especial...') : T('Alguma dúvida ou pedido especial?');
   };
   if (new URLSearchParams(location.search).get('roteiro') === 'personalizado') form.elements.roteiro.value = 'Personalizado';
   form.elements.roteiro.addEventListener('change', mostraPers);
@@ -35,20 +40,21 @@
     }
     erro.hidden = true;
     form.elements.nome.removeAttribute('aria-invalid');
-    const partes = ['Olá! Meu nome é ' + nome + '. Vim pelo site da Barra Boat.'];
-    if (form.elements.roteiro.value === 'Personalizado') {
-      partes.push('Quero um passeio personalizado.');
-      if (form.elements.desloc.value === 'sim') partes.push('Preciso que a lancha busque o grupo em outro lugar: ' + (form.elements.local.value.trim() || 'a combinar') + '.');
-    } else partes.push('Roteiro: ' + form.elements.roteiro.value + '.');
-    if (dataCampo.value) {
-      const [a, m, d] = dataCampo.value.split('-');
-      partes.push('Data: ' + d + '/' + m + '/' + a + '.');
-    }
+    const pers = form.elements.roteiro.value === 'Personalizado';
+    const buscar = pers && form.elements.desloc.value === 'sim' ? (form.elements.local.value.trim() || T('a combinar')) : '';
+    const partes = [T('Olá! Meu nome é {nome}. Vim pelo site da Barra Boat.', { nome })];
+    if (pers) {
+      partes.push(T('Quero um passeio personalizado.'));
+      if (buscar) partes.push(T('Preciso que a lancha busque o grupo em outro lugar: {local}.', { local: buscar }));
+    } else partes.push(T('Roteiro: {roteiro}.', { roteiro: form.elements.roteiro.value }));
+    if (dataCampo.value) partes.push(T('Data: {data}.', { data: window.BBdataLonga ? window.BBdataLonga(dataCampo.value) : dataCampo.value.split('-').reverse().join('/') }));
     const p = form.elements.pessoas.value;
-    if (p) partes.push('Somos ' + p + ' pessoas.');
+    if (p) partes.push(T('Somos {pessoas}.', { pessoas: T('{n} pessoas', { n: p }) }));
     const msg = form.elements.mensagem.value.trim();
     if (msg) partes.push(msg);
-    const url = 'https://wa.me/5548991153172?text=' + encodeURIComponent(partes.join(' '));
+    let texto = partes.join(' ');
+    if (!EM_PT && window.BBresumoPt) texto += '\n\n' + window.BBresumoPt([['Nome', nome], ['Roteiro', form.elements.roteiro.value], ['Data', dataCampo.value ? dataCampo.value.split('-').reverse().join('/') : 'a definir'], ['Pessoas', p], ['Buscar o grupo em', buscar]]);
+    const url = 'https://wa.me/5548991153172?text=' + encodeURIComponent(texto);
     (window.dataLayer = window.dataLayer || []).push({ event: 'clique_whatsapp', pagina: location.pathname, formulario: 'contato' });
     window.open(url, '_blank', 'noopener');
   });

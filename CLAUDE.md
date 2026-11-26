@@ -360,5 +360,21 @@ o select do popup mantém o recuo do da capa (opções com 14 espaços, `</selec
 (`.planejar__select select` e `.campo select`): o `<select>` nativo fica escondido como fonte do valor; mudar por código exige
 disparar `change`. Saiu o botão "Ver mais no Instagram"; a frase dos vídeos fica em uma linha a partir de 900 px.
 
+**Site em 9 idiomas (25/11):** pt + es, en, fr, de, it, nl, ja, zh (URL `/es/...`, `/zh/...`; hreflang `zh-Hans`). O gerador e o
+painel continuam só em português: o `site.php` monta a página em português e `lib/i18n.php` (`bb_traduz_pagina`) troca cada trecho
+no fim. Trecho = texto de um bloco com as marcas inline viradas etiquetas (`<a1>`, `</a1>`, `<br2/>`), chave igual em qualquer
+profundidade; também alt, title, aria-label, placeholder, metas, JSON-LD (campos de texto; URLs ganham o prefixo) e o texto dos
+links wa.me. `translate="no"` numa marca deixa tudo dentro como está (seletor de idioma). Traduções: `i18n/<idioma>.json` (Git,
+revisável; chave = texto em português) e `traducoes/<idioma>.json` (servidor, fora do Git). Trecho sem tradução sai em português e
+entra em `traducoes/faltam.json`; o **cron `cron/traduz.php` (a cada 15 min, instalado em 25/11)** traduz pela API do Claude
+(`lib/claude.php`, `claude-opus-5-5`, curl direto, chave `ANTHROPIC_API_KEY` no `config.local.php` de `/novo`, hoje a mesma do Tô
+Hospedando). Mudou texto no gerador ou no JS? `ANTHROPIC_API_KEY=... php tools/i18n.php` traduz só o que falta (`--listar` conta,
+`--limpar` tira chaves velhas). JavaScript: textos em `T('...', {campos})` (cada arquivo de assets/js define `T`); o PHP põe
+`window.BB_T` na página. Mensagem do WhatsApp sai no idioma do visitante + `[Resumo em português]` para a equipe. Calendário usa
+`Intl` fora do português. Seletor no cabeçalho (`[data-idioma]`, links montados por `bb_i18n_seletor`) e sugestão discreta para
+quem tem o navegador em outro idioma (lembra a escolha em `localStorage.bb_idioma`). Políticas e avaliações traduzidas ganham aviso
+de tradução automática. Sitemap lista as 26 páginas x 9 idiomas com `xhtml:link`. Teste local: `php -S` com um roteador que imita o
+`.htaccess` (scratchpad da sessão). **Na troca para a raiz: copiar `traducoes/` e trocar o caminho do cron.**
+
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.

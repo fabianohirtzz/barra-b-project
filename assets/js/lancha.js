@@ -4,6 +4,11 @@
    Ao escolher um dia livre, o botão do WhatsApp já leva a lancha e a data escritas. */
 (function () {
   'use strict';
+  // Textos no idioma da página: nas páginas traduzidas o PHP põe as traduções em window.BB_T
+  // (a chave é o texto em português, que tools/i18n.php acha procurando T('...') nestes arquivos).
+  const T = (s, v) => { let t = (window.BB_T && window.BB_T[s]) || s; if (v) t = t.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)); return t; };
+  const IDIOMA = document.documentElement.lang || 'pt-BR';
+  const EM_PT = IDIOMA.indexOf('pt') === 0;
   const WA = '5548991153172';
 
   /* ---------------- galeria ---------------- */
@@ -18,12 +23,13 @@
     const img = gal.querySelector('[data-galeria-img]');
     const n = gal.querySelector('[data-galeria-n]');
     const minis = Array.from(gal.querySelectorAll('[data-foto]'));
-    const nome = img.alt.split(',')[0];
+    const agNome = document.querySelector('[data-agenda][data-nome]');
+    const nome = agNome ? agNome.dataset.nome : img.alt.split(',')[0];
     let atual = 1;
     function mostra(k) {
       atual = ((k - 1 + total) % total) + 1;
       img.src = (lista && lista[atual - 1]) || (pasta + String(atual).padStart(2, '0') + '.webp');
-      img.alt = nome + ', foto ' + atual + ' de ' + total;
+      img.alt = T('{nome}, foto {i} de {total}', { nome, i: atual, total });
       n.textContent = atual;
       minis.forEach((b) => {
         const sim = Number(b.dataset.foto) === atual;
@@ -52,6 +58,15 @@
   const ag = document.querySelector('[data-agenda]');
   if (!ag) return;
   const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  // fora do português, mês e dias da semana saem do próprio navegador no idioma da página
+  const mesAno = (d) => (EM_PT ? MESES[d.getMonth()] + ' de ' + d.getFullYear() : d.toLocaleDateString(IDIOMA, { month: 'long', year: 'numeric' }));
+  const diaMes = (d) => (EM_PT ? d.getDate() + ' de ' + MESES[d.getMonth()] : d.toLocaleDateString(IDIOMA, { day: 'numeric', month: 'long' }));
+  const curta = (d) => (EM_PT ? String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') : d.toLocaleDateString(IDIOMA, { day: 'numeric', month: 'short' }));
+  const longa = (d) => (EM_PT ? String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear() : d.toLocaleDateString(IDIOMA, { day: 'numeric', month: 'long', year: 'numeric' }));
+  if (!EM_PT) {
+    const sem = ag.querySelectorAll('.agenda__semana span');
+    sem.forEach((el, i) => { el.textContent = new Date(2026, 10, 1 + i).toLocaleDateString(IDIOMA, { weekday: 'narrow' }); });   // 1/11/2026 é domingo
+  }
   const dias = ag.querySelector('[data-agenda-dias]');
   const titulo = ag.querySelector('[data-agenda-titulo]');
   const aviso = ag.querySelector('[data-agenda-aviso]');
@@ -60,14 +75,13 @@
   const base = cta.dataset.waBase;
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
   const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  const br = (d) => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
   let ocupadas = new Set();
   let mes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
   let escolhida = null;
   const limite = new Date(hoje.getFullYear(), hoje.getMonth() + 12, 1); // um ano de agenda
 
   function desenha() {
-    titulo.textContent = MESES[mes.getMonth()] + ' de ' + mes.getFullYear();
+    titulo.textContent = mesAno(mes);
     ag.querySelector('[data-agenda-mes="-1"]').disabled = mes <= new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     ag.querySelector('[data-agenda-mes="1"]').disabled = new Date(mes.getFullYear(), mes.getMonth() + 1, 1) >= limite;
     dias.innerHTML = '';
@@ -83,11 +97,11 @@
       const k = iso(data);
       const passado = data < hoje;
       const ocupada = ocupadas.has(k);
-      const rotulo = d + ' de ' + MESES[mes.getMonth()];
-      if (passado) { b.disabled = true; b.classList.add('is-passado'); b.setAttribute('aria-label', rotulo + ', já passou'); }
-      else if (ocupada) { b.disabled = true; b.classList.add('is-ocupada'); b.setAttribute('aria-label', rotulo + ', reservada'); }
+      const rotulo = diaMes(data);
+      if (passado) { b.disabled = true; b.classList.add('is-passado'); b.setAttribute('aria-label', T('{dia}, já passou', { dia: rotulo })); }
+      else if (ocupada) { b.disabled = true; b.classList.add('is-ocupada'); b.setAttribute('aria-label', T('{dia}, reservada', { dia: rotulo })); }
       else {
-        b.setAttribute('aria-label', rotulo + ', livre');
+        b.setAttribute('aria-label', T('{dia}, livre', { dia: rotulo }));
         if (escolhida && iso(escolhida) === k) { b.classList.add('is-escolhida'); b.setAttribute('aria-pressed', 'true'); }
         else b.setAttribute('aria-pressed', 'false');
         b.addEventListener('click', () => escolhe(data));
@@ -99,12 +113,12 @@
 
   function escolhe(data) {
     escolhida = data;
-    const texto = base + ' Data: ' + br(data) + '.';
+    const texto = base + ' ' + T('Data: {data}.', { data: longa(data) });
     cta.href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent(texto);
     cta.dataset.dia = iso(data);   // o popup de reserva já abre com este dia
-    ctaTxt.textContent = 'Consultar o dia ' + br(data).slice(0, 5);
+    ctaTxt.textContent = T('Consultar o dia {data}', { data: curta(data) });
     aviso.hidden = false;
-    aviso.textContent = 'Dia ' + br(data) + ' livre no calendário. A nossa equipe confirma a reserva pelo WhatsApp.';
+    aviso.textContent = T('Dia {data} livre no calendário. A nossa equipe confirma a reserva pelo WhatsApp.', { data: longa(data) });
     desenha();
   }
 

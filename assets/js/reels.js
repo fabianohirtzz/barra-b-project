@@ -4,6 +4,11 @@
    e ele pausa sozinho quando sai da tela. */
 (function () {
   'use strict';
+  // Textos no idioma da página: nas páginas traduzidas o PHP põe as traduções em window.BB_T
+  // (a chave é o texto em português, que tools/i18n.php acha procurando T('...') nestes arquivos).
+  const T = (s, v) => { let t = (window.BB_T && window.BB_T[s]) || s; if (v) t = t.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)); return t; };
+  const IDIOMA = document.documentElement.lang || 'pt-BR';
+  const EM_PT = IDIOMA.indexOf('pt') === 0;
   const sec = document.getElementById('instagram');
   if (!sec) return;
   const reels = Array.from(sec.querySelectorAll('.reel'));
@@ -34,10 +39,10 @@
     function atualiza() {
       const mudo = v.muted || v.volume === 0;
       r.classList.toggle('is-mudo', mudo);
-      som.setAttribute('aria-label', mudo ? 'Ativar som' : 'Desativar som');
+      som.setAttribute('aria-label', mudo ? T('Ativar som') : T('Desativar som'));
       som.setAttribute('aria-pressed', String(mudo));
       if (faixa) faixa.value = mudo ? 0 : v.volume;
-      botoesPlay.forEach((b) => b.setAttribute('aria-label', v.paused ? 'Reproduzir vídeo' : 'Pausar vídeo'));
+      botoesPlay.forEach((b) => b.setAttribute('aria-label', v.paused ? T('Reproduzir vídeo') : T('Pausar vídeo')));
     }
 
     botoesPlay.forEach((b) => b.addEventListener('click', alterna));
@@ -71,7 +76,7 @@
       }
     });
     quadro.addEventListener('fullscreenchange', () => {
-      ampliar.setAttribute('aria-label', emTelaCheia() ? 'Sair da tela cheia' : 'Ver em tela cheia');
+      ampliar.setAttribute('aria-label', emTelaCheia() ? T('Sair da tela cheia') : T('Ver em tela cheia'));
     });
   });
 

@@ -107,6 +107,22 @@ main,.rodape{position:relative;z-index:1}
 .topo__menu:hover .topo__ondas path:first-child{transform:translateX(-2px)}
 .topo__menu:hover .topo__ondas path:last-child{transform:translateX(2px)}
 
+/* idioma: o botão abre a lista com esta mesma página em cada idioma */
+.idioma{position:relative}
+.idioma__globo{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6}
+.idioma__lista{position:absolute;top:calc(100% + 10px);right:0;z-index:60;min-width:210px;margin:0;padding:6px;list-style:none;border-radius:18px;background:#fff;box-shadow:0 24px 48px -20px rgba(8,51,89,.45),0 0 0 1px var(--linha)}
+.idioma__lista a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;color:var(--abismo);text-decoration:none;font-weight:500}
+.idioma__lista a b{min-width:22px;font-size:.74rem;font-weight:700;letter-spacing:.06em;color:var(--suave)}
+.idioma__lista a:hover,.idioma__lista a:focus-visible{background:rgba(24,96,140,.08);outline:0}
+.idioma__lista a[aria-current="true"]{background:rgba(24,96,140,.1);font-weight:700}
+.idioma__lista a[aria-current="true"]::after{content:"";width:7px;height:7px;margin-left:auto;border-radius:50%;background:var(--canal,#18608C)}
+.aviso-traducao{max-width:62ch;margin:0 auto 1.2rem;padding:10px 14px;border-radius:12px;background:rgba(24,96,140,.07);color:var(--abismo);font-size:.9rem;text-align:center}
+/* sugestão de idioma (só nas páginas em português, para quem tem o navegador em outra língua) */
+.sugere-idioma{position:fixed;left:16px;bottom:16px;z-index:45;display:flex;align-items:center;gap:10px;max-width:min(420px,calc(100vw - 104px));padding:10px 10px 10px 16px;border-radius:16px;background:var(--abismo);color:#fff;box-shadow:0 18px 40px -18px rgba(0,0,0,.55);font-size:.95rem;line-height:1.35}
+.sugere-idioma a{flex:none;padding:8px 14px;border-radius:999px;background:#fff;color:var(--abismo);font-weight:700;text-decoration:none;white-space:nowrap}
+.sugere-idioma button{flex:none;display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:1.2rem;line-height:1;cursor:pointer}
+@media (max-width:640px){.sugere-idioma{flex-wrap:wrap;right:84px}}
+
 /* estado sólido: depois do hero */
 .topo.is-solido{padding-top:10px;padding-bottom:10px;background:rgba(243,247,250,.86);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);box-shadow:0 1px 0 var(--linha)}
 .topo.is-solido .topo__logo--branco{opacity:0}
@@ -117,8 +133,9 @@ main,.rodape{position:relative;z-index:1}
 
 @media (max-width:640px){
   .topo{padding-top:14px;padding-bottom:14px}
-  .topo__reservar span,.topo__idioma span,.topo__menu-txt{display:none}
+  .topo__reservar span,.topo__menu-txt{display:none}
   .topo__reservar,.topo__idioma{width:44px;padding:0}
+  .idioma__globo{display:none}
   .topo__menu{width:52px;padding:0;justify-content:center}
 }
 
@@ -637,3 +654,14 @@ html.reserva-aberta{overflow:hidden}
 /* Instagram: a frase da seção numa linha só no computador */
 .insta .secao__cabeca--linha > div{max-width:none}
 @media (min-width:900px){.insta .secao__intro{max-width:none;white-space:nowrap}}
+
+/* Outros idiomas: palavra longa (alemão, holandês) quebra com hífen em vez de alargar a página;
+   japonês e chinês quebram a linha pelas regras do idioma. Em português nada muda. */
+html:not([lang="pt-BR"]) :is(h1,h2,h3,.hero__titulo,.capa__titulo,.botao){overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto}
+html:not([lang="pt-BR"]) .hero__conteudo{min-width:0}
+html:is([lang="ja"],[lang="zh-Hans"]) body{line-break:strict;word-break:normal}
+html:is([lang="ja"],[lang="zh-Hans"]) :is(h1,h2,h3){letter-spacing:0;font-stretch:100%}
+/* texto longo na lista de lanchas (alemão, francês) não alarga o formulário */
+.planejar__campo,.planejar__select{min-width:0}
+.planejar__campo{grid-template-columns:minmax(0,1fr)}
+html[lang="ja"] :is(h1,h2,h3){word-break:auto-phrase}

@@ -25,17 +25,21 @@ RewriteCond %{HTTP:Authorization} .
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
 # Código e cache do servidor não são servidos pela web
-RewriteRule ^(lib|cache|cron)(/|$) - [F,L]
+RewriteRule ^(lib|cache|cron|traducoes)(/|$) - [F,L]
 
 # Pasta das fotos enviadas pelo painel: só imagem, nunca código
 RewriteRule ^(fotos|midia)/.*\.(php[0-9]?|phtml|phar|cgi|pl|py|sh)$ - [F,L,NC]
 # Vídeos ainda na fila (originais do celular) não são servidos
 RewriteRule ^midia/instagram/fila(/|$) - [F,L]
 
+# Site em outros idiomas (/es/, /en/...): arquivos de assets, fotos, mídia e api são os mesmos da raiz
+RewriteRule ^(?:es|en|fr|de|it|nl|ja|zh)/((?:assets|fotos|midia|api)/.*|favicon\.ico)$ $1 [L]
+RewriteRule ^(es|en|fr|de|it|nl|ja|zh)$ /$1/ [R=301,L]
+
 # Páginas (pastas com index.html) são montadas pelo site.php com os dados do banco:
 # "/", "/lanchas/", "/lanchas/<slug>/", "/sobre/"... O painel e a api ficam de fora.
 RewriteCond %{REQUEST_URI} !^/(painel|api|assets)/
-RewriteRule ^((?:[a-z0-9-]+/){0,2})$ site.php?p=$1 [L,QSA]
+RewriteRule ^((?:[a-z0-9-]+/){0,3})$ site.php?p=$1 [L,QSA]
 
 # Segredos do servidor nunca são servidos
 <FilesMatch "^(config\.local\.php|\.publicado\.json)$">

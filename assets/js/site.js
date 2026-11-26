@@ -1,9 +1,14 @@
 /* Barra Boat Floripa | site.js */
 (() => {
   'use strict';
+  // Textos no idioma da página: nas páginas traduzidas o PHP põe as traduções em window.BB_T
+  // (a chave é o texto em português, que tools/i18n.php acha procurando T('...') nestes arquivos).
+  const T = (s, v) => { let t = (window.BB_T && window.BB_T[s]) || s; if (v) t = t.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)); return t; };
+  const IDIOMA = document.documentElement.lang || 'pt-BR';
+  const EM_PT = IDIOMA.indexOf('pt') === 0;
 
   const WA_NUMERO = '5548991153172';
-  const WA_PADRAO = 'Olá! Vim pelo site da Barra Boat e gostaria de mais informações.';
+  const WA_PADRAO = T('Olá! Vim pelo site da Barra Boat e gostaria de mais informações.');
   const reduz = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -38,6 +43,14 @@
     } catch { return 'direto'; }
   })();
 
+  // data no jeito do idioma ("30/11/2026" em português, "November 30, 2026" em inglês)
+  const dataLonga = (iso) => (EM_PT ? iso.split('-').reverse().join('/') : new Date(iso + 'T12:00:00').toLocaleDateString(IDIOMA, { day: 'numeric', month: 'long', year: 'numeric' }));
+  const resumoPt = (pares) => {
+    const cod = (document.querySelector('[data-idioma-cod][aria-current="true"]') || {}).textContent || IDIOMA;
+    return '[Resumo em português] ' + pares.filter((p) => p[1]).map((p) => p[0] + ': ' + p[1]).join(' | ') + ' | Idioma do cliente: ' + cod.replace(/^[A-Z]{2}/, '');
+  };
+  window.BBresumoPt = resumoPt;
+  window.BBdataLonga = dataLonga;
   const linkWa = (texto) => `https://wa.me/${WA_NUMERO}?text=${encodeURIComponent(texto)}`;
   $$('[data-wa]').forEach((a) => { a.href = linkWa(a.dataset.waTexto || WA_PADRAO); });
   document.addEventListener('click', (e) => {
@@ -484,7 +497,7 @@
       const max = Number(op.dataset.pax);
       const passou = sel.value && n > max;
       limite.hidden = !passou;
-      if (passou) limiteTxt.textContent = `A ${sel.value} leva até ${max} pessoas, e o seu grupo tem ${n}. Escolha outra lancha ou peça uma indicação para a nossa equipe.`;
+      if (passou) limiteTxt.textContent = T('A {lancha} leva até {max} pessoas, e o seu grupo tem {n}. Escolha outra lancha ou peça uma indicação para a nossa equipe.', { lancha: sel.value, max, n });
     };
     const poe = (v) => { n = Math.min(maxFrota, Math.max(1, v)); out.textContent = n; confere(); };
     $('[data-menos]', plan).addEventListener('click', () => poe(n - 1));
@@ -503,18 +516,20 @@
       e.preventDefault();
       if (!limite.hidden) { limite.classList.remove('is-chamando'); void limite.offsetWidth; limite.classList.add('is-chamando'); return; }
       const roteiro = plan.roteiro.value;
-      const dia = data.value ? data.value.split('-').reverse().join('/') : null;
-      const pessoas = n === 1 ? '1 pessoa' : `${n} pessoas`;
+      const dia = data.value ? dataLonga(data.value) : null;
+      const pessoas = n === 1 ? T('1 pessoa') : T('{n} pessoas', { n });
+      const ondeBuscar = roteiro === 'Personalizado' && plan.desloc.value === 'sim' ? (plan.local.value.trim() || T('a combinar')) : '';
       let trecho;
       if (roteiro === 'Personalizado') {
-        const ondeBuscar = plan.desloc.value === 'sim' ? (plan.local.value.trim() || 'a combinar') : '';
         const pedido = plan.pedido.value.trim();
-        trecho = 'Quero um passeio personalizado.'
-          + (ondeBuscar ? ` Preciso que a lancha busque o grupo em outro lugar: ${ondeBuscar}.` : ' Podemos embarcar no ponto de vocês.')
-          + (pedido ? ` Como quero o passeio: ${pedido}` + (/[.!?]$/.test(pedido) ? '' : '.') : '');
-      } else trecho = `Quero consultar um passeio para a ${roteiro === 'Costa da Lagoa' ? 'Costa da Lagoa' : 'Ilha do Campeche'}.`;
-      const barco = sel.value ? `Lancha: ${sel.value}.` : 'Quero ajuda da equipe para escolher a lancha.';
-      const texto = `Olá! Vim pelo site da Barra Boat. ${trecho} ${barco} Data: ${dia || 'ainda a definir'}. Somos ${pessoas}.`;
+        trecho = T('Quero um passeio personalizado.')
+          + ' ' + (ondeBuscar ? T('Preciso que a lancha busque o grupo em outro lugar: {local}.', { local: ondeBuscar }) : T('Podemos embarcar no ponto de vocês.'))
+          + (pedido ? ' ' + T('Como quero o passeio: {pedido}', { pedido }) + (/[.!?。！？]$/.test(pedido) ? '' : '.') : '');
+      } else trecho = T('Quero consultar um passeio para a {roteiro}.', { roteiro: roteiro === 'Costa da Lagoa' ? 'Costa da Lagoa' : 'Ilha do Campeche' });
+      const barco = sel.value ? T('Lancha: {lancha}.', { lancha: sel.value }) : T('Quero ajuda da equipe para escolher a lancha.');
+      let texto = [T('Olá! Vim pelo site da Barra Boat.'), trecho, barco, T('Data: {data}.', { data: dia || T('ainda a definir') }), T('Somos {pessoas}.', { pessoas })].join(' ');
+      // site em outro idioma: a equipe recebe também um resumo em português
+      if (!EM_PT) texto += '\n\n' + resumoPt([['Roteiro', roteiro], ['Lancha', sel.value || 'quer ajuda para escolher'], ['Data', data.value ? data.value.split('-').reverse().join('/') : 'a definir'], ['Pessoas', String(n)], ['Buscar o grupo em', ondeBuscar]]);
       (window.dataLayer = window.dataLayer || []).push({ event: 'clique_whatsapp', origem, pagina: location.pathname, formulario: plan.classList.contains('planejar--popup') ? 'popup' : 'planejar' });
       window.open(linkWa(texto), '_blank', 'noopener');
     });
@@ -638,11 +653,65 @@
       cards.forEach((c) => { const p = +c.dataset.pax; c.hidden = p < min || p > max; });
       if (contagem) {
         const n = cards.filter((c) => !c.hidden).length;
-        contagem.textContent = n === 1 ? '1 lancha' : n + ' lanchas';
+        contagem.textContent = n === 1 ? T('1 lancha') : T('{n} lanchas', { n });
       }
       if (trilho) trilho.scrollTo({ left: 0 });
       setas();
     }));
+  }
+
+  /* =========================================================
+     IDIOMA: o botão do cabeçalho abre a lista; nas páginas em português, quem tem o navegador
+     em outro idioma do site recebe uma sugestão discreta (uma vez; a escolha fica guardada).
+     ========================================================= */
+  const idi = $('[data-idioma]');
+  if (idi) {
+    const bt = $('[data-idioma-botao]', idi), lista = $('.idioma__lista', idi);
+    const links = () => $$('a', lista);
+    const fecha = (foco) => { lista.hidden = true; bt.setAttribute('aria-expanded', 'false'); if (foco) bt.focus(); };
+    bt.addEventListener('click', () => {
+      const abrir = lista.hidden;
+      lista.hidden = !abrir; bt.setAttribute('aria-expanded', String(abrir));
+      if (abrir) ($('[aria-current="true"]', lista) || links()[0]).focus();
+    });
+    document.addEventListener('click', (e) => { if (!lista.hidden && !idi.contains(e.target)) fecha(); });
+    idi.addEventListener('keydown', (e) => {
+      if (lista.hidden) return;
+      const l = links(), i = l.indexOf(document.activeElement);
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); fecha(true); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); l[(i + 1) % l.length].focus(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); l[(i - 1 + l.length) % l.length].focus(); }
+      else if (e.key === 'Tab' && !e.shiftKey && i === l.length - 1) fecha();
+    });
+    const guarda = (c) => { try { localStorage.setItem('bb_idioma', c); } catch { /* sem armazenamento: só não lembra */ } };
+    links().forEach((a) => a.addEventListener('click', () => guarda(a.dataset.idiomaCod)));
+
+    let escolheu = null;
+    try { escolheu = localStorage.getItem('bb_idioma'); } catch { escolheu = 'pt'; }
+    const SUGESTAO = {
+      es: ['Este sitio también está en español.', 'Ver en español', 'Cerrar'],
+      en: ['This site is also available in English.', 'View in English', 'Close'],
+      fr: ['Ce site existe aussi en français.', 'Voir en français', 'Fermer'],
+      de: ['Diese Website gibt es auch auf Deutsch.', 'Auf Deutsch ansehen', 'Schließen'],
+      it: ['Questo sito è disponibile anche in italiano.', 'Vedi in italiano', 'Chiudi'],
+      nl: ['Deze site is ook in het Nederlands.', 'Bekijk in het Nederlands', 'Sluiten'],
+      ja: ['このサイトは日本語でもご覧いただけます。', '日本語で見る', '閉じる'],
+      zh: ['本网站也提供简体中文版。', '查看中文版', '关闭'],
+    };
+    const doNavegador = ((navigator.languages || [navigator.language || ''])).map((x) => String(x).toLowerCase().slice(0, 2)).find((c) => c === 'pt' || SUGESTAO[c]);
+    const alvo = doNavegador && SUGESTAO[doNavegador] && $(`a[data-idioma-cod="${doNavegador}"]`, lista);
+    if (EM_PT && !escolheu && alvo) {
+      const [frase, botao, fechar] = SUGESTAO[doNavegador];
+      const caixa = document.createElement('div');
+      caixa.className = 'sugere-idioma';
+      caixa.lang = alvo.lang;
+      caixa.setAttribute('role', 'region');
+      caixa.setAttribute('aria-label', botao);
+      caixa.innerHTML = `<span>${frase}</span><a href="${alvo.getAttribute('href')}">${botao}</a><button type="button" aria-label="${fechar}">&times;</button>`;
+      $('a', caixa).addEventListener('click', () => guarda(doNavegador));
+      $('button', caixa).addEventListener('click', () => { guarda('pt'); caixa.remove(); });
+      document.body.appendChild(caixa);
+    }
   }
 
   /* ---------- rodapé: o sorriso da assinatura aparece ao chegar ---------- */

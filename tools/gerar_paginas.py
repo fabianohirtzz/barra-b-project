@@ -14,7 +14,7 @@ WA = '5548991153172'
 INDEX = open(os.path.join(PROJ, 'index.html'), encoding='utf-8').read()
 L_JSON = {l['slug']: l for l in json.load(open(os.path.join(PROJ, 'docs/conteudo-site-atual/lanchas.json'), encoding='utf-8'))}
 IMGS = json.load(open(os.path.join(PROJ, 'tools/imagens.json'), encoding='utf-8'))
-V_CSS, V_JS = '15', '11'
+V_CSS, V_JS = '16', '12'
 e = html.escape
 
 
@@ -415,7 +415,7 @@ for s in ORDEM:
     gerados.append(pagina(f'lanchas/{s}/', f'{nome}: lancha para {pax} pessoas em Florianópolis | Barra Boat Floripa',
                           f'Aluguel da lancha {nome}, {pes} pés, até {pax} pessoas, com marinheiro e combustível inclusos. Veja fotos, itens a bordo e as datas livres.',
                           corpo, [ld_m, ld_prod], og_img=f'assets/img/lanchas/{s}/01.webp',
-                          js_extra=f'\n  <script src="{{pre}}assets/js/lancha.js?v=4" defer></script>'))
+                          js_extra=f'\n  <script src="{{pre}}assets/js/lancha.js?v=5" defer></script>'))
 
 # Fichas de cada roteiro (os cartõezinhos de dados). Uma lista só por roteiro, até 4, editável no painel
 # (bb_roteiros.fichas): a capa da página do roteiro e a comparação em /roteiros/ mostram todas; o card da
@@ -776,9 +776,9 @@ corpo = capa_faixa('Fale com a Barra Boat', 'Atendimento 24 horas pelo WhatsApp.
           </div>
           <label class="campo">Roteiro
             <select name="roteiro">
-              <option>Ilha do Campeche</option>
-              <option>Costa da Lagoa</option>
-              <option>Personalizado</option>
+              <option value="Ilha do Campeche">Ilha do Campeche</option>
+              <option value="Costa da Lagoa">Costa da Lagoa</option>
+              <option value="Personalizado">Personalizado</option>
             </select>
           </label>
           <div class="campo-pers" data-pers hidden>
@@ -817,7 +817,7 @@ corpo = capa_faixa('Fale com a Barra Boat', 'Atendimento 24 horas pelo WhatsApp.
 gerados.append(pagina('contato/', 'Contato e embarque | Barra Boat Floripa',
                       'Fale com a Barra Boat Floripa pelo WhatsApp (48) 99115-3172, atendimento 24 horas. Sede e embarque no Canal da Barra da Lagoa, Rod. Jorn. Manoel de Menezes, 3007.',
                       corpo, [ld_m, {'@type': 'ContactPage', 'url': DOM + 'contato/', 'about': EMPRESA_REF}],
-                      js_extra='\n  <script src="{pre}assets/js/contato.js?v=3" defer></script>'))
+                      js_extra='\n  <script src="{pre}assets/js/contato.js?v=4" defer></script>'))
 
 
 # ---------------------------------------------------------------- políticas
@@ -836,7 +836,13 @@ def politica(slug, titulo, texto, secoes, seo_t, seo_d, atualizada='16 de novemb
       </div>
     </section>
 '''
-    gerados.append(pagina(f'{slug}/', seo_t, seo_d, corpo, [ld_m]))
+    arq = pagina(f'{slug}/', seo_t, seo_d, corpo, [ld_m])
+    # o sumário aponta para a própria página (o prefixa() trata "#x" como âncora da home)
+    h = open(arq, encoding='utf-8').read()
+    for a, _, _ in secoes:
+        h = h.replace(f'href="../#{a}"', f'href="#{a}"')
+    open(arq, 'w', encoding='utf-8').write(h)
+    gerados.append(arq)
 
 
 politica('politica-de-cancelamento', 'Política de cancelamento e reembolso',
@@ -875,9 +881,24 @@ gerados.append(pagina('404.html', 'Página não encontrada | Barra Boat Floripa'
 # ---------------------------------------------------------------- sitemap
 urls = ['', 'lanchas/'] + [f'lanchas/{s}/' for s in ORDEM] + ['roteiros/', 'ilha-do-campeche/', 'costa-da-lagoa/', 'sobre/', 'contato/', 'politica-de-cancelamento/', 'politica-de-privacidade/']
 hoje = datetime.date.today().isoformat()
+# cada página em todos os idiomas (as traduções são servidas pelo site.php em /es/, /en/...),
+# com as alternativas de idioma de cada uma, como o Google pede
+IDIOMAS = [('pt', 'pt-BR'), ('es', 'es'), ('en', 'en'), ('fr', 'fr'), ('de', 'de'), ('it', 'it'), ('nl', 'nl'), ('ja', 'ja'), ('zh', 'zh-Hans')]
+
+
+def url_i(c, u):
+    return f'{DOM}{"" if c == "pt" else c + "/"}{u}'
+
+
+def entrada(c, u):
+    alt = ''.join(f'\n    <xhtml:link rel="alternate" hreflang="{h}" href="{url_i(c2, u)}"/>' for c2, h in IDIOMAS)
+    alt += f'\n    <xhtml:link rel="alternate" hreflang="x-default" href="{url_i("pt", u)}"/>'
+    return f'  <url><loc>{url_i(c, u)}</loc><lastmod>{hoje}</lastmod>{alt}\n  </url>\n'
+
+
 open(os.path.join(PROJ, 'sitemap.xml'), 'w', encoding='utf-8').write(
-    '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    + ''.join(f'  <url><loc>{DOM}{u}</loc><lastmod>{hoje}</lastmod></url>\n' for u in urls) + '</urlset>\n')
+    '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
+    + ''.join(entrada(c, u) for u in urls for c, _ in IDIOMAS) + '</urlset>\n')
 
 for g in gerados:
     print(os.path.relpath(g, PROJ))
