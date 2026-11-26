@@ -58,7 +58,9 @@ def roteiro(slug):
     m = re.search(r'<div class="aviso-regras">.*?<ul>(.*?)</ul>', h, re.S)
     if m:
         regras = [texto(x) for x in re.findall(r'<li>(.*?)</li>', m.group(1), re.S)]
-    return {'slug': slug, 'paradas': paradas, 'regras': regras}
+    m = re.search(r'<dl class="capa__dados">(.*?)</dl>', h, re.S)
+    fichas = [{'rotulo': texto(a), 'valor': texto(b)} for a, b in re.findall(r'<dt>(.*?)</dt><dd>(.*?)</dd>', m.group(1), re.S)] if m else []
+    return {'slug': slug, 'paradas': paradas, 'regras': regras, 'fichas': fichas}
 
 
 def main():

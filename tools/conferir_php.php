@@ -35,7 +35,7 @@ function normaliza($h)
     return [$h, $lds];
 }
 
-$paginas = ['', 'lanchas/', 'ilha-do-campeche/', 'costa-da-lagoa/'];
+$paginas = ['', 'lanchas/', 'roteiros/', 'ilha-do-campeche/', 'costa-da-lagoa/'];
 foreach ($lanchas as $l) $paginas[] = 'lanchas/' . $l['slug'] . '/';
 $falhas = 0;
 foreach ($paginas as $p) {
@@ -93,6 +93,30 @@ list(, $h) = bb_render('costa-da-lagoa/', $lanchas, 'api/disponibilidade.php', $
 $confere(strpos($h, '<li>Coletes para todos a bordo.</li>') !== false && strpos($h, 'Regras da Costa da Lagoa') !== false, 'regras novas não apareceram na Costa');
 $confere(strpos($h, 'rota-v__parada--sem-foto') !== false, 'parada nova sem foto não apareceu');
 $confere(strpos($h, '"name": "Parada nova"') !== false, 'parada nova fora do itinerário do JSON-LD');
+// fichas dos roteiros: capa da página (todas), /roteiros/ (todas) e home (3 primeiras), com HTML escapado
+$c3 = $conteudo;
+$c3['roteiros'][1]['fichas'] = [['rotulo' => 'Mar', 'valor' => 'Calmo & raso'], ['rotulo' => 'Diária', 'valor' => '7 horas'], ['rotulo' => 'Saída', 'valor' => 'Lagoa'], ['rotulo' => 'Paradas', 'valor' => '6']];
+$c3['roteiros'][0]['fichas'] = [['rotulo' => 'Distância', 'valor' => '11 milhas'], ['rotulo' => '', 'valor' => 'sem rótulo some']];
+list(, $h) = bb_render('costa-da-lagoa/', $lanchas, 'api/disponibilidade.php', $c3);
+$confere(strpos($h, '<dl class="capa__dados"><div><dt>Mar</dt><dd>Calmo &amp; raso</dd></div><div><dt>Diária</dt><dd>7 horas</dd></div><div><dt>Saída</dt><dd>Lagoa</dd></div><div><dt>Paradas</dt><dd>6</dd></div></dl>') !== false, 'fichas novas fora da capa da Costa');
+list(, $h) = bb_render('ilha-do-campeche/', $lanchas, 'api/disponibilidade.php', $c3);
+$confere(strpos($h, '<dl class="capa__dados"><div><dt>Distância</dt><dd>11 milhas</dd></div></dl>') !== false, 'ficha sem rótulo deveria sumir da capa do Campeche');
+list(, $h) = bb_render('', $lanchas, 'api/disponibilidade.php', $c3);
+$confere(preg_match('#costa-da-lagoa/">Costa da Lagoa</a></h3>.*?<dl class="roteiro__dados">
+(.*?)
+            </dl>#s', $h, $g) && substr_count($g[1], '<div>') === 3 && strpos($g[1], '7 horas') !== false && strpos($g[1], 'Paradas') === false, 'home deveria mostrar as 3 primeiras fichas da Costa');
+$confere(preg_match('#ilha-do-campeche/">Ilha do Campeche</a></h3>.*?<dl class="roteiro__dados">
+(.*?)
+            </dl>#s', $h, $g) && substr_count($g[1], '<div>') === 1 && strpos($g[1], '11 milhas') !== false, 'home: fichas do Campeche não trocaram');
+list(, $h) = bb_render('roteiros/', $lanchas, 'api/disponibilidade.php', $c3);
+$confere(preg_match('#costa-da-lagoa/">Costa da Lagoa</a></h3>\s*<dl class="comparar__dados">
+(.*?)
+            </dl>#s', $h, $g) && substr_count($g[1], '<div>') === 4 && strpos($g[1], 'Calmo &amp; raso') !== false, '/roteiros/: fichas da Costa não trocaram');
+$c4 = $conteudo;
+foreach ($c4['roteiros'] as &$r) $r['fichas'] = null;
+unset($r);
+list(, $h) = bb_render('roteiros/', $lanchas, 'api/disponibilidade.php', $c4);
+$confere($h === bb_render('roteiros/', $lanchas, 'api/disponibilidade.php', $conteudo)[1], 'sem fichas no banco, /roteiros/ deveria ficar como o molde');
 $sem = array_values(array_filter($lanchas, function ($l) { return $l['slug'] !== '1564'; }));
 list(, $h) = bb_render('costa-da-lagoa/', $sem, 'api/disponibilidade.php', $conteudo);
 $confere(preg_match('#data-grade-lanchas>.*?</section>#s', $h, $g) && strpos($g[0], 'lanchas/1564/') === false && substr_count($g[0], '<li class="lancha"') === 4, 'amostra do roteiro com lancha escondida ou sem 4 lanchas');

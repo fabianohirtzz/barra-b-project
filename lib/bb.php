@@ -106,6 +106,14 @@ function bb_conteudo()
         if ($s1 !== 200 || $s2 !== 200 || $s3 !== 200 || !is_array($faq) || !is_array($av) || !is_array($rt)) return null;
         // vídeos: só os prontos (o cron já comprimiu); antes da migração de 25/11 a coluna não existe e fica o molde
         list($s4, $ig) = bb_supabase('GET', 'bb_instagram?select=video_url,poster_url,legenda,largura,altura&ativo=eq.true&pronto=eq.true&order=ordem,created_at');
+        // fichas dos roteiros (migração 16): leitura à parte, para a falta da coluna não derrubar o resto
+        list($s5, $fi) = bb_supabase('GET', 'bb_roteiros?select=slug,fichas');
+        if ($s5 === 200 && is_array($fi)) {
+            $por = [];
+            foreach ($fi as $x) if (isset($x['slug'])) $por[$x['slug']] = $x['fichas'] ?? null;
+            foreach ($rt as &$r) $r['fichas'] = $por[$r['slug']] ?? null;
+            unset($r);
+        }
         return ['faq' => $faq, 'avaliacoes' => $av, 'roteiros' => $rt, 'instagram' => ($s4 === 200 && is_array($ig)) ? $ig : []];
     });
 }

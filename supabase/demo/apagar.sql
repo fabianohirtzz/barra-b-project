@@ -20,6 +20,7 @@ delete from public.bb_comissoes    where id::text like 'de300000-%' or parceiro_
 delete from public.bb_despesas     where id::text like 'de300000-%'
                                        or id = '80d3da53-2dc5-4ed0-ace6-ad9df52ab703';   -- teste de 19/11
 delete from public.bb_passeios     where id::text like 'de300000-%';
+delete from public.bb_despesas_fixas where id::text like 'de300000-%';   -- contas fixas de relatorios.sql (as despesas delas já saíram acima)
 delete from public.bb_recebimentos where id::text like 'de300000-%';
 delete from public.bb_leads        where id::text like 'de300000-%' or origem_import = 'demo';
 delete from public.bb_bloqueios    where id::text like 'de300000-%'
@@ -46,6 +47,7 @@ commit;
 select 'clientes' o, count(*) from public.bb_leads where origem_import = 'demo' or id::text like 'de300000-%'
 union all select 'passeios', count(*) from public.bb_passeios where id::text like 'de300000-%'
 union all select 'despesas', count(*) from public.bb_despesas where id::text like 'de300000-%'
+union all select 'contas fixas', count(*) from public.bb_despesas_fixas where id::text like 'de300000-%'
 union all select 'parceiros', count(*) from public.bb_parceiros where id::text like 'de300000-%'
 union all select 'metas de exemplo', count(*) from public.bb_metas where demo
 union all select 'marinheiros', count(*) from public.bb_marinheiros where id::text like 'de300000-%'

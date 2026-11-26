@@ -204,5 +204,5 @@ function bb_conteudo_na_pagina($h, $p, $pre, $c)
     foreach (isset($c['roteiros']) ? $c['roteiros'] : [] as $r) {
         if ($p === $r['slug'] . '/') $h = bb_pagina_roteiro($h, $r, $pre);
     }
-    return $h;
+    return bb_fichas_na_pagina($h, $p, $c);
 }

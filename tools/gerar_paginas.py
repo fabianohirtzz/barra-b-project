@@ -417,6 +417,19 @@ for s in ORDEM:
                           corpo, [ld_m, ld_prod], og_img=f'assets/img/lanchas/{s}/01.webp',
                           js_extra=f'\n  <script src="{{pre}}assets/js/lancha.js?v=3" defer></script>'))
 
+# Fichas de cada roteiro (os cartõezinhos de dados). Uma lista só por roteiro, até 4, editável no painel
+# (bb_roteiros.fichas): a capa da página do roteiro e a comparação em /roteiros/ mostram todas; o card da
+# home (index.html, editado à mão) mostra as 3 primeiras. Mudou aqui? Mude a home e lib/conteudo.php confere.
+FICHAS = {
+    'ilha-do-campeche': [('Distância', '10,4 milhas'), ('Cada trajeto', '30 a 40 min'), ('Diária', '8 horas'), ('Saída', 'Canal da Barra')],
+    'costa-da-lagoa': [('Mar', 'Águas calmas'), ('Saída', 'Barra ou Lagoa'), ('Diária', '6 horas'), ('Paradas', '5')],
+}
+
+
+def fichas_comparar(slug):
+    return '\n'.join(f'              <div><dt>{a}</dt><dd>{b}</dd></div>' for a, b in FICHAS[slug])
+
+
 # ---------------------------------------------------------------- /roteiros/
 migs, ld_m = migalhas([('Início', './'), ('Roteiros', None)])
 corpo = capa_foto('roteiros', 'Lanchas ancoradas em frente a uma praia de areia branca, vistas de cima', 'Roteiros de lancha em Florianópolis',
@@ -433,10 +446,7 @@ corpo = capa_foto('roteiros', 'Lanchas ancoradas em frente a uma praia de areia 
             <p class="roteiro__fama">O roteiro mais pedido</p>
             <h3 class="comparar__nome"><a href="ilha-do-campeche/">Ilha do Campeche</a></h3>
             <dl class="comparar__dados">
-              <div><dt>Mar</dt><dd>Aberto</dd></div>
-              <div><dt>Distância</dt><dd>10,4 milhas</dd></div>
-              <div><dt>Cada trajeto</dt><dd>30 a 40 min</dd></div>
-              <div><dt>Diária</dt><dd>8 horas</dd></div>
+''' + fichas_comparar('ilha-do-campeche') + '''
             </dl>
             <p>Água cristalina e areia branca, tapete flutuante, stand up e mergulho com snorkel. Churrasco a bordo com a ilha na frente.</p>
             <p class="comparar__ideal"><b>Ideal para</b> quem quer praia de água clara e não enjoa no mar aberto.</p>
@@ -449,10 +459,7 @@ corpo = capa_foto('roteiros', 'Lanchas ancoradas em frente a uma praia de areia 
             <p class="roteiro__fama">Lagoa calma e mesa farta</p>
             <h3 class="comparar__nome"><a href="costa-da-lagoa/">Costa da Lagoa</a></h3>
             <dl class="comparar__dados">
-              <div><dt>Mar</dt><dd>Águas calmas</dd></div>
-              <div><dt>Saída</dt><dd>Barra ou Lagoa</dd></div>
-              <div><dt>Paradas</dt><dd>5</dd></div>
-              <div><dt>Diária</dt><dd>6 horas</dd></div>
+''' + fichas_comparar('costa-da-lagoa') + '''
             </dl>
             <p>Castelinho, Praia do Saquinho, cachoeira, Pedra do Navio e restaurantes de frutos do mar à beira da água.</p>
             <p class="comparar__ideal"><b>Ideal para</b> famílias com crianças, idosos e quem enjoa com facilidade.</p>
@@ -565,7 +572,7 @@ pagina_roteiro(
     lambda migs, d: capa_foto('ilha-do-campeche', 'Lancha com grupo a bordo em frente às pedras da Ilha do Campeche',
                               'Passeio de lancha para a Ilha do Campeche',
                               'O roteiro mais pedido da Barra Boat: água cristalina e areia branca, no lugar que muita gente chama de Caribe brasileiro.', migs, d),
-    dados_html([('Distância', '10,4 milhas'), ('Cada trajeto', '30 a 40 min'), ('Diária', '8 horas'), ('Saída', 'Canal da Barra')]),
+    dados_html(FICHAS['ilha-do-campeche']),
     [('Canal da Barra da Lagoa', 'Embarque no canal, ao lado da ponte pênsil. Daqui a lancha sai para o mar aberto.',
       'assets/img/fotos/canal-barra.webp', 'Lancha passando pelo Canal da Barra da Lagoa, com as casas e os barcos de pesca na margem'),
      ('Prainha da Barra', 'Vista panorâmica da Prainha logo na saída do canal.',
@@ -640,7 +647,7 @@ def capa_costa(migs, d):
 
 pagina_roteiro(
     'costa-da-lagoa', 'Costa da Lagoa', capa_costa,
-    dados_html([('Mar', 'Águas calmas'), ('Saída', 'Barra ou Lagoa'), ('Paradas', '5'), ('Diária', '6 horas')]),
+    dados_html(FICHAS['costa-da-lagoa']),
     [('Castelinho', 'Construção histórica à beira da Lagoa, ligada aos primeiros moradores da região.',
       'assets/img/paginas/costa-castelinho.webp', 'Castelinho de pedra entre as árvores da Costa da Lagoa'),
      ('Praia do Saquinho', 'Prainha de areia clara e água tranquila para banho.',

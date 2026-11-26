@@ -143,10 +143,13 @@
     // A previsão é um extra: se a tabela ainda não existir ou a leitura falhar, o painel segue sem o alerta.
     S.clima = await um(sb.from('bb_clima').select('*').gte('dia', iso(hoje())).lte('dia', iso(somaDias(hoje(), 3))).order('dia')).catch(() => []);
     if (dona()) {
-      const [despesas, metas] = await Promise.all([
+      const [despesas, metas, comissoes, fixas] = await Promise.all([
         todos(() => sb.from('bb_despesas').select('*').gte('dia', anoPassado).order('dia', { ascending: false }).order('id')),
         um(sb.from('bb_metas').select('*')),
+        um(sb.from('bb_comissoes').select('*')).catch(() => []),
+        um(sb.from('bb_despesas_fixas').select('*').order('dia_do_mes')).catch(() => []),
       ]);
+      S.comissoesTodas = comissoes; S.fixas = fixas;
       S.despesas = despesas;
       S.metas = Object.fromEntries(metas.map((m) => [m.mes.slice(0, 7), Number(m.valor)]));
     }
@@ -1707,7 +1710,8 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
 
       <section class="bloco grafico" aria-labelledby="g4"><h3 id="g4">De onde vieram os clientes</h3>
         ${origem.length ? `<p class="grafico__frase">${chegaram.length} ${chegaram.length === 1 ? 'pessoa chegou' : 'pessoas chegaram'} ${noP}. <b>${esc(origem[0][0])}</b> trouxe ${origem[0][1]}%.</p>${barras(origem.map(([n, v, q]) => [n, v, `${v}% (${q})`]), 100)}`
-          : `<p class="grafico__frase">Ninguém chegou ${noP} ainda.</p>`}</section>`;
+          : `<p class="grafico__frase">Ninguém chegou ${noP} ainda.</p>`}</section>
+      ${resumoExtra(dentro, noP, vendas, chegaram)}`;
     const bm = $('#dinheiro-corpo [data-meta]');
     if (bm) bm.addEventListener('click', () => definirMeta(m));
   }
@@ -1736,21 +1740,285 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     });
   }
 
+  /* ---------- Relatórios: o que vem depois do resumo de vendas ----------
+     Caixa (recebido, a receber, comissões), já vendido para frente, funil, por lancha, por roteiro,
+     quanto cada canal vendeu e o perfil dos grupos. Tudo do período escolhido (mês, semestre ou ano). */
+  const soma = (lista, f) => lista.reduce((s, x) => s + (Number(f(x)) || 0), 0);
+  const frasePeriodo = () => (periodo === 'mes' ? 'do mês' : periodo === 'semestre' ? 'do semestre' : 'do ano');
+  const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+  function resumoExtra(dentro, noP, vendas, chegaram) {
+    const hj = iso(hoje());
+    // caixa
+    const recebidoP = soma(S.receb.filter((r) => dentro(r.recebido_em)), (r) => r.valor);
+    const fechados = S.leads.filter((l) => l.etapa === 'fechados' && Number(l.valor_fechado) > 0);
+    const jaFoi = fechados.filter((l) => { const d = diaVenda(l); return d && d <= hj && falta(l) > 0; });
+    const vai = fechados.filter((l) => { const d = diaVenda(l); return d && d > hj && falta(l) > 0; });
+    const comAPagar = (S.comissoesTodas || []).filter((c) => c.status === 'a_pagar');
+    const passP = S.passeios.filter((p) => dentro(p.dia));
+    const desloc = soma(passP.filter((p) => p.deslocamento), (p) => p.deslocamento_valor);
+    const nDesloc = passP.filter((p) => p.deslocamento).length;
+    // já vendido: os próximos 3 meses, a partir de hoje
+    const meses3 = [0, 1, 2].map((i) => somaMes(hj.slice(0, 7), i));
+    const vendidoMes = meses3.map((m) => {
+      const ps = S.passeios.filter((p) => p.dia >= hj && p.dia.startsWith(m));
+      return [nomeMes(m).replace(/^./, (x) => x.toUpperCase()), soma(ps, (p) => (lead(p.lead_id) || {}).valor_fechado), ps.length];
+    });
+    // funil do período
+    const fecharam = S.leads.filter((l) => l.etapa === 'fechados' && l.fechado_at && dentro(iso(new Date(l.fechado_at))));
+    const perderam = S.leads.filter((l) => l.etapa === 'perdidos' && l.perdido_at && dentro(iso(new Date(l.perdido_at))));
+    const conv = chegaram.length ? Math.round(fecharam.length / chegaram.length * 100) : null;
+    const motivos = {};
+    perderam.forEach((l) => { const m = l.motivo_perda || 'Sem motivo anotado'; motivos[m] = (motivos[m] || 0) + 1; });
+    const motivosL = Object.entries(motivos).sort((a, b) => b[1] - a[1]);
+    // por lancha, por roteiro, por canal
+    const agrupa = (chave) => {
+      const g = {};
+      vendas.forEach((l) => { const k = chave(l); if (!g[k]) g[k] = [0, 0]; g[k][0] += Number(l.valor_fechado); g[k][1]++; });
+      return Object.entries(g).sort((a, b) => b[1][0] - a[1][0]);
+    };
+    const lanchaDe = (l) => { const p = passeioDoLead(l.id); return lancha((p && p.lancha_id) || l.lancha_id); };
+    const porLancha = agrupa((l) => (lanchaDe(l) || {}).nome || 'Sem lancha');
+    const propria = soma(vendas.filter((l) => { const x = lanchaDe(l); return x && !x.parceiro_id; }), (l) => l.valor_fechado);
+    const totalV = soma(vendas, (l) => l.valor_fechado);
+    const porRoteiro = agrupa((l) => { const p = passeioDoLead(l.id); return p && p.personalizado ? 'Personalizado' : (roteiro((p && p.roteiro_id) || l.roteiro_id) || {}).nome || 'A combinar'; });
+    const porCanal = agrupa((l) => nomeOrigem(l.origem_manual || l.origem));
+    // grupos
+    const comPessoas = vendas.filter((l) => Number(l.pessoas) > 0);
+    const grupo = comPessoas.length ? (soma(comPessoas, (l) => l.pessoas) / comPessoas.length) : 0;
+    const antecs = vendas.map((l) => { const d = diaVenda(l); return d && l.fechado_at ? Math.round((deIso(d) - deIso(iso(new Date(l.fechado_at)))) / 86400000) : null; }).filter((x) => x != null && x >= 0);
+    const antec = antecs.length ? Math.round(antecs.reduce((s, x) => s + x, 0) / antecs.length) : null;
+    const chaves = [...new Set(vendas.map(chavePessoa))];
+    const todasP = pessoas();
+    const voltaram = chaves.filter((k) => { const x = todasP.find((y) => y.k === k); return x && x.reservas > 1; }).length;
+    const semana = DIAS_SEMANA.map(() => 0);
+    passP.forEach((p) => { semana[deIso(p.dia).getDay()]++; });
+    const semanaL = [1, 2, 3, 4, 5, 6, 0].map((i) => [DIAS_SEMANA[i], semana[i]]);
+    const maxSem = Math.max(...semana);
+    const rotV = (v, n) => `${R(v)} (${n} ${n === 1 ? 'passeio' : 'passeios'})`;
+
+    return `
+      <section class="bloco"><h2>Caixa</h2>
+        <div class="numeros numeros--4">
+          <div class="numero"><span>Recebido ${noP}</span><b>${R(recebidoP)}</b><small>pagamentos anotados nos clientes</small></div>
+          <div class="numero${jaFoi.length ? ' numero--alerta' : ''}"><span>Passeios feitos sem pagar tudo</span><b>${R(soma(jaFoi, falta))}</b><small>${jaFoi.length ? `${jaFoi.length} ${jaFoi.length === 1 ? 'cliente' : 'clientes'}, confira na tabela abaixo` : 'nenhum cliente devendo'}</small></div>
+          <div class="numero"><span>A receber dos próximos passeios</span><b>${R(soma(vai, falta))}</b><small>${vai.length} ${vai.length === 1 ? 'passeio marcado' : 'passeios marcados'} com saldo</small></div>
+          <div class="numero"><span>Comissões a pagar</span><b>${R(soma(comAPagar, (c) => c.valor))}</b><small>${comAPagar.length ? `${comAPagar.length} para parceiros que venderam` : 'nada a pagar aos parceiros'}</small></div>
+        </div>
+        ${jaFoi.length ? `<details class="tabela" style="margin-top:12px"><summary>Ver quem ainda deve</summary><table><thead><tr><th>Cliente</th><th>Passeio</th><th>Falta</th></tr></thead><tbody>
+          ${jaFoi.sort((a, b) => diaVenda(a).localeCompare(diaVenda(b))).map((l) => `<tr><td>${esc(l.nome || foneTela(l.wa_id) || 'Sem nome')}${seloExemplo(l)}</td><td>${ddIso(diaVenda(l))}/${diaVenda(l).slice(0, 4)}</td><td>${R(falta(l))}</td></tr>`).join('')}</tbody></table></details>` : ''}
+        ${nDesloc ? `<p class="ajuda" style="margin-top:12px">Deslocamentos cobrados à parte ${noP}: <b>${R(desloc)}</b> em ${nDesloc} ${nDesloc === 1 ? 'passeio' : 'passeios'}. Esse valor não entra no bruto acima.</p>` : ''}
+      </section>
+
+      <section class="bloco grafico" aria-labelledby="g5"><h3 id="g5">Já vendido para os próximos meses</h3>
+        <p class="grafico__frase">${vendidoMes.some((x) => x[2]) ? `Passeios marcados daqui para frente: <b>${R(soma(vendidoMes, (x) => x[1]))}</b> em ${soma(vendidoMes, (x) => x[2])} passeios nos próximos 3 meses.` : 'Nenhum passeio marcado para os próximos 3 meses ainda.'}</p>
+        ${vendidoMes.some((x) => x[2]) ? barras(vendidoMes.map(([n, v, q]) => [n, v, rotV(v, q)])) : ''}
+      </section>
+
+      <div class="grade-2 bloco">
+        <section class="grafico" aria-labelledby="g6"><h3 id="g6">Funil ${frasePeriodo()}</h3>
+          ${chegaram.length ? `<p class="grafico__frase">De ${chegaram.length} ${chegaram.length === 1 ? 'pedido' : 'pedidos'}, <b>${fecharam.length} ${fecharam.length === 1 ? 'fechou' : 'fecharam'}</b>${conv != null ? ` (${conv}%)` : ''}.</p>
+          ${barras([['Chegaram', chegaram.length, String(chegaram.length)], ['Orçamento enviado', S.leads.filter((l) => l.orcamento_at && dentro(iso(new Date(l.orcamento_at)))).length, ''], ['Fecharam', fecharam.length, ''], ['Não fecharam', perderam.length, '']].map(([n, v, r]) => [n, v, r || String(v)]), Math.max(1, chegaram.length))}`
+            : `<p class="grafico__frase">Nenhum pedido chegou ${noP}.</p>`}
+        </section>
+        <section class="grafico" aria-labelledby="g7"><h3 id="g7">Por que não fecharam</h3>
+          ${motivosL.length ? `<p class="grafico__frase">O motivo que mais aparece é <b>${esc(motivosL[0][0].toLowerCase())}</b>: ${motivosL[0][1]} de ${perderam.length}.</p>${barras(motivosL.map(([n, q]) => [n, q, `${Math.round(q / perderam.length * 100)}% (${q})`]))}`
+            : `<p class="grafico__frase">Nenhum pedido perdido ${noP}.</p>`}
+        </section>
+      </div>
+
+      <section class="bloco grafico" aria-labelledby="g8"><h3 id="g8">Quanto cada lancha vendeu</h3>
+        ${porLancha.length ? `<p class="grafico__frase">A <b>${esc(porLancha[0][0])}</b> vendeu mais: ${R(porLancha[0][1][0])}. ${totalV ? `As lanchas próprias trouxeram ${Math.round(propria / totalV * 100)}% e as de parceiros, ${100 - Math.round(propria / totalV * 100)}%.` : ''}</p>
+          ${barras(porLancha.slice(0, 10).map(([n, [v, q]]) => [n, v, rotV(v, q)]))}` : `<p class="grafico__frase">Nenhuma venda ${noP}.</p>`}
+      </section>
+
+      <div class="grade-2 bloco">
+        <section class="grafico" aria-labelledby="g9"><h3 id="g9">Por roteiro</h3>
+          ${porRoteiro.length ? `<p class="grafico__frase"><b>${esc(porRoteiro[0][0])}</b> foi o roteiro que mais vendeu ${frasePeriodo()}.</p>${barras(porRoteiro.map(([n, [v, q]]) => [n, v, rotV(v, q)]))}`
+            : `<p class="grafico__frase">Nenhuma venda ${noP}.</p>`}
+        </section>
+        <section class="grafico" aria-labelledby="g10"><h3 id="g10">Quanto cada canal vendeu</h3>
+          ${porCanal.length ? `<p class="grafico__frase">Quem chegou pelo <b>${esc(porCanal[0][0])}</b> comprou mais: ${R(porCanal[0][1][0])}.</p>${barras(porCanal.map(([n, [v, q]]) => [n, v, rotV(v, q)]))}`
+            : `<p class="grafico__frase">Nenhuma venda ${noP}.</p>`}
+        </section>
+      </div>
+
+      <section class="bloco"><h2>Os grupos</h2>
+        <div class="numeros">
+          <div class="numero"><span>Tamanho médio do grupo</span><b>${grupo ? String(Math.round(grupo * 10) / 10).replace('.', ',') : '-'}</b><small>pessoas por passeio vendido</small></div>
+          <div class="numero"><span>Reservam com antecedência de</span><b>${antec != null ? antec + (antec === 1 ? ' dia' : ' dias') : '-'}</b><small>em média, do fechamento até o passeio</small></div>
+          <div class="numero"><span>Clientes que voltaram</span><b>${chaves.length ? Math.round(voltaram / chaves.length * 100) + '%' : '-'}</b><small>${voltaram} de ${chaves.length} já tinham feito outro passeio</small></div>
+        </div>
+      </section>
+      <section class="bloco grafico" aria-labelledby="g11"><h3 id="g11">Dias da semana com mais passeios</h3>
+        ${passP.length ? `<p class="grafico__frase"><b>${semanaL.filter((x) => x[1] === maxSem).map((x) => x[0]).join(' e ')}</b> ${semanaL.filter((x) => x[1] === maxSem).length > 1 ? 'são os dias' : 'é o dia'} com mais passeios ${frasePeriodo()}.</p>${barras(semanaL.map(([n, q]) => [n, q, String(q)]), Math.max(1, maxSem))}`
+          : `<p class="grafico__frase">Nenhum passeio ${noP}.</p>`}
+      </section>`;
+  }
+
+  /* ---------- Despesas: cartões, gráfico, categorias, lanchas, contas fixas e a lista ---------- */
+  let catDesp = '';
   function despesas() {
-    const lista = S.despesas.filter((d) => noPeriodo(mesesDoPeriodo())(d.dia));
+    const ms = mesesDoPeriodo(), dentro = noPeriodo(ms);
+    const [ano, mesN] = mesSel.split('-').map(Number);
+    const umMes = periodo === 'mes';
+    const noP = umMes ? 'no mês' : periodo === 'semestre' ? 'no semestre' : 'no ano';
+    const anterior = noPeriodo(mesesDoPeriodo(somaMes(mesSel, -PASSO[periodo])));
+    const msAP = ms.map((x) => `${ano - 1}${x.slice(4)}`), dentroAP = noPeriodo(msAP);
+    const doP = S.despesas.filter((d) => dentro(d.dia));
+    const total = soma(doP, (d) => d.valor);
+    const totalAP = soma(S.despesas.filter((d) => dentroAP(d.dia)), (d) => d.valor);
+    const dif = pct(total, totalAP);
+    const vendas = S.leads.filter((l) => l.etapa === 'fechados' && Number(l.valor_fechado) > 0 && dentro(diaVenda(l)));
+    const bruto = soma(vendas, (l) => l.valor_fechado);
+    const fixas = (S.fixas || []).filter((f) => f.ativo !== false);
+    const custoFixo = soma(fixas, (f) => f.valor);
+    // por categoria, com a variação contra o período anterior
+    const porCat = {}, porCatAnt = {};
+    doP.forEach((d) => { porCat[d.categoria] = (porCat[d.categoria] || 0) + Number(d.valor); });
+    S.despesas.filter((d) => anterior(d.dia)).forEach((d) => { porCatAnt[d.categoria] = (porCatAnt[d.categoria] || 0) + Number(d.valor); });
+    const cats = Object.entries(porCat).sort((a, b) => b[1] - a[1]);
+    const nomeAnt = umMes ? 'o mês anterior' : periodo === 'semestre' ? 'o semestre anterior' : 'o ano anterior';
+    const variacao = (c, v) => { const p = pct(v, porCatAnt[c] || 0); return p == null ? 'nova' : p === 0 ? 'igual' : `${p > 0 ? 'subiu' : 'caiu'} ${Math.abs(p)}%`; };
+    const subiu = cats.map(([c, v]) => [c, v - (porCatAnt[c] || 0)]).filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1])[0];
+    const porL = {};
+    doP.forEach((d) => { const n = (lancha(d.lancha_id) || {}).nome || 'Gerais (sem lancha)'; porL[n] = (porL[n] || 0) + Number(d.valor); });
+    const lanchasL = Object.entries(porL).sort((a, b) => b[1] - a[1]);
+    // gráfico do ano: despesas mês a mês contra o ano anterior
+    const despMes = (m) => soma(despesasDoMes(m), (d) => d.valor);
+    const g = colunasAno(ano, despMes, ms);
+    const ate = Math.min(mesN, 12) - 1;
+    const acum1 = g.F1.slice(0, ate + 1).reduce((s, v) => s + v, 0), acum0 = g.F0.slice(0, ate + 1).reduce((s, v) => s + v, 0);
+    // contas fixas do mês escolhido
+    const mesRef = mesSel + '-01';
+    const paga = (f) => S.despesas.find((d) => d.fixa_id === f.id && d.mes_ref === mesRef);
+    const pendentes = umMes ? fixas.filter((f) => !paga(f)) : [];
+    const lista = catDesp ? doP.filter((d) => d.categoria === catDesp) : doP;
     const porDia = {};
     lista.forEach((d) => { (porDia[d.dia] = porDia[d.dia] || []).push(d); });
     const hs = iso(hoje()), ontem = iso(somaDias(hoje(), -1));
-    const html = Object.keys(porDia).sort().reverse().map((dia) => `
+    const listaHtml = Object.keys(porDia).sort().reverse().map((dia) => `
       <p class="despesa-dia">${dia === hs ? 'Hoje' : dia === ontem ? 'Ontem' : diaLongo(deIso(dia)) + (periodo === 'ano' && dia.slice(0, 4) !== String(hoje().getFullYear()) ? ' de ' + dia.slice(0, 4) : '')}</p>
       <ul class="lista">${porDia[dia].map((d) => `<li class="linha"><span class="linha__icone"><svg><use href="#p-dinheiro"/></svg></span>
-        <span class="linha__corpo"><b>${esc(d.categoria)}${seloExemplo(d)}</b><span>${esc([(lancha(d.lancha_id) || {}).nome, d.obs].filter(Boolean).join(' · ') || 'sem observação')}</span></span>
+        <span class="linha__corpo"><b>${esc(d.categoria)}${d.fixa_id ? ' <span class="selo selo--neutro">fixa</span>' : ''}${seloExemplo(d)}</b><span>${esc([(lancha(d.lancha_id) || {}).nome, d.obs].filter(Boolean).join(' · ') || 'sem observação')}</span></span>
         <b style="color:var(--tinta);white-space:nowrap">${R(d.valor)}</b>
         <button class="botao-icone" type="button" data-despesa-ver="${d.id}" aria-label="Ver despesa"><svg><use href="#p-seta"/></svg></button></li>`).join('')}</ul>`).join('');
+
     $('#dinheiro-corpo').innerHTML = `
-      <div class="numeros"><div class="numero"><span>Gasto em ${esc(nomePeriodo())}</span><b>${R(lista.reduce((s, d) => s + Number(d.valor), 0))}</b><small>${lista.length} ${lista.length === 1 ? 'anotação' : 'anotações'}</small></div></div>
-      ${html || `<p class="cartao vazio" style="margin-top:16px">Nenhuma despesa anotada ${periodo === 'mes' ? 'neste mês' : periodo === 'semestre' ? 'neste semestre' : 'neste ano'}.</p>`}`;
-    $('#dinheiro-corpo').querySelectorAll('[data-despesa-ver]').forEach((b) => b.addEventListener('click', () => verDespesa(b.dataset.despesaVer)));
+      <div class="numeros numeros--4">
+        <div class="numero"><span>Gasto ${noP}</span><b>${R(total)}</b><small class="${dif == null ? '' : dif > 0 ? 'desce' : 'sobe'}">${dif == null ? `${doP.length} ${doP.length === 1 ? 'anotação' : 'anotações'}` : `${Math.abs(dif)}% ${dif > 0 ? 'a mais' : 'a menos'} que ${umMes ? `${MESES_LONGOS[mesN - 1]} de ${ano - 1}` : 'no mesmo período de ' + (ano - 1)}`}</small></div>
+        <div class="numero"><span>Gasto por passeio vendido</span><b>${vendas.length ? R(total / vendas.length) : '-'}</b><small>${vendas.length} ${vendas.length === 1 ? 'passeio vendido' : 'passeios vendidos'} ${noP}</small></div>
+        <div class="numero"><span>Peso no faturamento</span><b>${bruto ? Math.round(total / bruto * 100) + '%' : '-'}</b><small>${bruto ? `de cada R$ 100 que entraram, R$ ${Math.round(total / bruto * 100)} foram para despesas` : 'nenhuma venda no período'}</small></div>
+        <div class="numero"><span>Contas fixas por mês</span><b>${R(custoFixo)}</b><small>${fixas.length ? `${fixas.length} ${fixas.length === 1 ? 'conta cadastrada' : 'contas cadastradas'}` : 'nenhuma cadastrada ainda'}</small></div>
+      </div>
+
+      ${pendentes.length ? `<div class="alerta bloco"><svg><use href="#p-relogio"/></svg><div><b>${pendentes.length === 1 ? '1 conta fixa' : pendentes.length + ' contas fixas'} de ${MESES_LONGOS[mesN - 1]} ainda sem anotar: ${R(soma(pendentes, (f) => f.valor))}</b>
+        <p style="margin:2px 0 0">${pendentes.map((f) => `${esc(f.categoria)} (dia ${f.dia_do_mes})`).join(', ')}. Anote em Contas fixas, logo abaixo, quando pagar.</p></div></div>` : ''}
+
+      <section class="bloco grafico" aria-labelledby="d1"><h3 id="d1">Despesas mês a mês</h3>
+        <p class="grafico__frase">${acum1 || acum0 ? `De janeiro a ${MESES_LONGOS[ate]}, <b>${ano} soma ${R(acum1)}</b> em despesas${acum0 ? `, contra ${R(acum0)} no mesmo período de ${ano - 1}` : ''}.` : 'Ainda não há despesas anotadas para mostrar.'}</p>
+        ${g.html}
+      </section>
+
+      <div class="grade-2 bloco">
+        <section class="grafico" aria-labelledby="d2"><h3 id="d2">Por categoria</h3>
+          ${cats.length ? `<p class="grafico__frase">O maior gasto ${frasePeriodo()} foi <b>${esc(cats[0][0].toLowerCase())}</b>: ${Math.round(cats[0][1] / total * 100)}% das despesas.${subiu ? ` O que mais subiu contra ${nomeAnt}: <b>${esc(subiu[0].toLowerCase())}</b>, ${R(subiu[1])} a mais.` : ''}</p>
+            ${barras(cats.map(([c, v]) => [c, v, `${R(v)} · ${variacao(c, v)}`]))}` : `<p class="grafico__frase">Nenhuma despesa anotada ${noP}.</p>`}
+        </section>
+        <section class="grafico" aria-labelledby="d3"><h3 id="d3">Por lancha</h3>
+          ${lanchasL.length ? `<p class="grafico__frase">${lanchasL[0][0].startsWith('Gerais') ? 'A maior parte foi de despesas gerais' : `A <b>${esc(lanchasL[0][0])}</b> foi a que mais gastou`}: ${R(lanchasL[0][1])}.</p>
+            ${barras(lanchasL.slice(0, 10).map(([n, v]) => [n, v, R(v)]))}` : `<p class="grafico__frase">Nenhuma despesa anotada ${noP}.</p>`}
+        </section>
+      </div>
+
+      <section class="bloco"><h2>Contas fixas <small>as que se repetem todo mês</small></h2>
+        <ul class="lista">${(S.fixas || []).map((f) => {
+          const pg = umMes && paga(f), enc = f.ativo === false;
+          return `<li class="linha linha--fixa"><span class="linha__icone"><svg><use href="#p-relogio"/></svg></span>
+            <span class="linha__corpo"><b>${esc(f.categoria)}${enc ? ' <span class="selo selo--neutro">encerrada</span>' : ''}${seloExemplo(f)}</b><span>${esc([`todo dia ${f.dia_do_mes}`, (lancha(f.lancha_id) || {}).nome, f.obs].filter(Boolean).join(' · '))}</span></span>
+            <b style="color:var(--tinta);white-space:nowrap">${R(f.valor)}</b>
+            ${umMes && !enc ? (pg ? '<span class="selo selo--bom"><svg><use href="#p-ok"/></svg>anotada</span>' : `<button class="botao botao--leve botao--pequeno" type="button" data-fixa-paga="${f.id}">Anotar ${MESES[mesN - 1]}</button>`) : ''}
+            <button class="botao-icone" type="button" data-fixa="${f.id}" aria-label="Mudar a conta fixa"><svg><use href="#p-seta"/></svg></button></li>`;
+        }).join('') || vazio('Nenhuma conta fixa ainda. Cadastre as que se repetem todo mês: marina, seguro, contador, internet.')}</ul>
+        ${!umMes && fixas.length ? '<p class="ajuda" style="margin-top:10px">Para anotar uma conta fixa como paga, veja por Mês.</p>' : ''}
+        <button class="botao botao--leve" type="button" data-nova-fixa style="margin-top:12px"><svg><use href="#p-mais-um"/></svg>Cadastrar conta fixa</button>
+      </section>
+
+      <section class="bloco"><h2>Todas as despesas ${noP}</h2>
+        ${cats.length > 1 ? `<div class="chips chips--periodo" role="group" aria-label="Filtrar por categoria" style="margin-bottom:12px">
+          <button class="chip" type="button" aria-pressed="${!catDesp}" data-cat-desp="">Todas</button>
+          ${cats.map(([c]) => `<button class="chip" type="button" aria-pressed="${c === catDesp}" data-cat-desp="${esc(c)}">${esc(c)}</button>`).join('')}</div>` : ''}
+        ${listaHtml || `<p class="cartao vazio">Nenhuma despesa ${catDesp ? 'desta categoria ' : ''}anotada ${noP}.</p>`}
+      </section>`;
+    const c = $('#dinheiro-corpo');
+    c.querySelectorAll('[data-despesa-ver]').forEach((b) => b.addEventListener('click', () => verDespesa(b.dataset.despesaVer)));
+    c.querySelectorAll('[data-cat-desp]').forEach((b) => b.addEventListener('click', () => { catDesp = b.dataset.catDesp; despesas(); }));
+    c.querySelectorAll('[data-fixa]').forEach((b) => b.addEventListener('click', () => editaFixa((S.fixas || []).find((f) => f.id === b.dataset.fixa))));
+    c.querySelector('[data-nova-fixa]').addEventListener('click', () => editaFixa(null));
+    c.querySelectorAll('[data-fixa-paga]').forEach((b) => aoSalvar(b, async () => {
+      const f = fixas.find((x) => x.id === b.dataset.fixaPaga);
+      const ultimo = new Date(ano, mesN, 0).getDate();
+      const dia = `${mesSel}-${pad(Math.min(f.dia_do_mes, ultimo))}`;
+      if (!(await grava(sb.from('bb_despesas').insert({ dia, categoria: f.categoria, valor: f.valor, lancha_id: f.lancha_id, fixa_id: f.id, mes_ref: mesRef, obs: f.obs || 'Conta fixa' })))) return;
+      await atualiza(); avisa(`${f.categoria} de ${MESES_LONGOS[mesN - 1]} anotada.`);
+    }));
+  }
+
+  // Colunas do ano escolhido contra o ano anterior (mesmo desenho do faturamento mês a mês).
+  function colunasAno(ano, fn, ms) {
+    const atual = iso(hoje()).slice(0, 7);
+    const F1 = Array.from({ length: 12 }, (_, i) => fn(`${ano}-${pad(i + 1)}`));
+    const F0 = Array.from({ length: 12 }, (_, i) => fn(`${ano - 1}-${pad(i + 1)}`));
+    const futuro = (i) => `${ano}-${pad(i + 1)}` > atual;
+    const max = Math.max(1, ...F1, ...F0);
+    const html = `<ul class="legenda"><li><i style="background:var(--serie2)"></i>${ano - 1}</li><li><i style="background:var(--serie1)"></i>${ano}</li></ul>
+      <div class="colunas">${F1.map((v, i) => `<div class="colunas__mes ${ms.includes(`${ano}-${pad(i + 1)}`) ? 'is-atual' : ''}">
+        <span class="coluna coluna--b" tabindex="0" style="height:${F0[i] / max * 100}%" data-dica="<b>${MESES_LONGOS[i]} de ${ano - 1}</b><br>${R(F0[i])}" aria-label="${MESES_LONGOS[i]} de ${ano - 1}: ${R(F0[i])}"></span>
+        ${!futuro(i) || v ? `<span class="coluna coluna--a" tabindex="0" style="height:${v / max * 100}%" data-dica="<b>${MESES_LONGOS[i]} de ${ano}</b><br>${R(v)}" aria-label="${MESES_LONGOS[i]} de ${ano}: ${R(v)}"></span>` : ''}
+      </div>`).join('')}</div>
+      <div class="colunas__rotulos">${MESES.map((x) => `<span>${x}</span>`).join('')}</div>
+      <details class="tabela"><summary>Ver os números em tabela</summary><table><thead><tr><th>Mês</th><th>${ano}</th><th>${ano - 1}</th></tr></thead><tbody>
+        ${F1.map((v, i) => `<tr><td>${MESES_LONGOS[i]}</td><td>${futuro(i) && !v ? 'ainda não' : R(v)}</td><td>${R(F0[i])}</td></tr>`).join('')}</tbody></table></details>`;
+    return { F1, F0, html };
+  }
+
+  // Conta fixa: o que se repete todo mês. "Anotar" na lista vira uma despesa do mês ligada a ela.
+  function editaFixa(f) {
+    const nova = !f;
+    f = f || { dia_do_mes: 5 };
+    abreGaveta(nova ? 'Cadastrar conta fixa' : f.categoria, `
+      <label class="campo"><span>O que é</span><select data-fx="categoria">${categorias().map((c) => `<option${c === f.categoria ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></label>
+      <div class="grade-2">
+        <label class="campo"><span>Valor por mês</span><input data-fx="valor" inputmode="decimal" value="${f.valor ? Rc(f.valor) : ''}" placeholder="R$ 0"></label>
+        <label class="campo"><span>Vence todo dia</span><input data-fx="dia_do_mes" type="number" min="1" max="28" value="${f.dia_do_mes}"></label>
+      </div>
+      <label class="campo"><span>Lancha <small style="font-weight:400;color:var(--suave)">(se for de uma lancha só)</small></span><select data-fx="lancha_id">${opcoes(S.lanchas, f.lancha_id, (x) => x.nome, 'Geral (não é de uma lancha)')}</select></label>
+      <label class="campo"><span>Observação <small style="font-weight:400;color:var(--suave)">(opcional)</small></span><input data-fx="obs" value="${esc(f.obs || '')}" placeholder="Ex.: vaga na marina da Barra"></label>
+      <p class="erro" data-erro hidden></p>
+      <button class="botao botao--principal botao--cheio" type="button" data-salvar>${nova ? 'Cadastrar conta fixa' : 'Salvar'}</button>
+      ${nova ? '' : `<section class="bloco"><div class="acoes">
+        <button class="botao botao--leve" type="button" data-fx-ativa>${f.ativo === false ? 'Voltar a cobrar todo mês' : 'Parar de cobrar (encerrada)'}</button>
+        <button class="botao botao--perigo-leve" type="button" data-fx-apagar>Apagar a conta fixa</button></div>
+        <p class="ajuda">As despesas já anotadas desta conta ficam no histórico.</p></section>`}`, (g) => {
+      const v = (k) => g.querySelector(`[data-fx="${k}"]`).value;
+      aoSalvar(g.querySelector('[data-salvar]'), async () => {
+        const valor = num(v('valor')), dia = parseInt(v('dia_do_mes'), 10);
+        if (!valor) return erroCampo(g, 'Escreva o valor por mês.');
+        if (!(dia >= 1 && dia <= 28)) return erroCampo(g, 'O dia do vencimento vai de 1 a 28.');
+        const dados = { categoria: v('categoria'), valor, dia_do_mes: dia, lancha_id: v('lancha_id') || null, obs: v('obs').trim() || null };
+        if (!(await grava(nova ? sb.from('bb_despesas_fixas').insert(dados) : sb.from('bb_despesas_fixas').update(dados).eq('id', f.id)))) return;
+        fechaGaveta(); await atualiza(); avisa(nova ? 'Conta fixa cadastrada.' : 'Conta fixa salva.');
+      });
+      const at = g.querySelector('[data-fx-ativa]');
+      if (at) aoSalvar(at, async () => {
+        if (!(await grava(sb.from('bb_despesas_fixas').update({ ativo: f.ativo === false }).eq('id', f.id)))) return;
+        fechaGaveta(); await atualiza(); avisa(f.ativo === false ? 'A conta voltou a entrar todo mês.' : 'Conta encerrada. Ela sai da lista do mês.');
+      });
+      const ap = g.querySelector('[data-fx-apagar]');
+      if (ap) confirmaNoBotao(ap, 'Toque de novo para apagar', async () => {
+        if (!(await grava(sb.from('bb_despesas_fixas').delete().eq('id', f.id)))) return;
+        fechaGaveta(); await atualiza(); avisa('Conta fixa apagada.');
+      });
+    });
   }
 
   function verDespesa(id) {
@@ -2517,7 +2785,33 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
      só no navegador. Nada vai para o banco até tocar em "Cadastrar roteiro" no fim da página;
      aí grava o roteiro e sobe as fotos das paradas. */
   let rascunho = null;
-  const rascunhoVazio = () => ({ id: null, nome: '', resumo: '', paradas: [], regras: [], ativo: true });
+  const rascunhoVazio = () => ({ id: null, nome: '', resumo: '', paradas: [], regras: [], ativo: true,
+    fichas: [{ rotulo: 'Distância', valor: '' }, { rotulo: 'Cada trajeto', valor: '' }, { rotulo: 'Diária', valor: '' }] });
+  /* Cartões do roteiro (bb_roteiros.fichas): até 4 pares rótulo e valor, os mesmos do topo da página do
+     roteiro e dos cartões dele na home e em /roteiros/. Vazio: o site mostra os cartões de hoje. */
+  const FICHAS_MAX = 4;
+  const linhaFicha = (f, i) => `<div class="ficha-ed" data-ficha="${i}">
+      <label class="campo"><span>Título do cartão</span><input data-ficha-rot value="${esc(f.rotulo || '')}" placeholder="Ex.: Distância" maxlength="24"></label>
+      <label class="campo"><span>O que aparece</span><input data-ficha-val value="${esc(f.valor || '')}" placeholder="Ex.: 10,4 milhas" maxlength="32"></label>
+      <button class="botao-icone botao-icone--perigo" type="button" data-ficha-tira aria-label="Tirar este cartão"><svg><use href="#p-fechar"/></svg></button></div>`;
+  const leFichas = (c) => [...c.querySelectorAll('[data-ficha]')].map((d) => ({ rotulo: d.querySelector('[data-ficha-rot]').value.trim(), valor: d.querySelector('[data-ficha-val]').value.trim() }));
+  function ligaFichas(c, aoMudar) {
+    const caixa = c.querySelector('[data-fichas]'), mais = c.querySelector('[data-ficha-mais]');
+    const confere = () => { mais.hidden = caixa.querySelectorAll('[data-ficha]').length >= FICHAS_MAX; if (aoMudar) aoMudar(); };
+    caixa.addEventListener('click', (e) => { const b = e.target.closest('[data-ficha-tira]'); if (b) { b.closest('[data-ficha]').remove(); confere(); } });
+    caixa.addEventListener('input', () => { if (aoMudar) aoMudar(); });
+    mais.addEventListener('click', () => {
+      caixa.insertAdjacentHTML('beforeend', linhaFicha({}, caixa.querySelectorAll('[data-ficha]').length));
+      caixa.lastElementChild.querySelector('input').focus(); confere();
+    });
+    confere();
+  }
+  // null + mensagem se um cartão ficou pela metade
+  function validaFichas(lista) {
+    const meio = lista.find((f) => !!f.rotulo !== !!f.valor);
+    if (meio) return [null, `Complete o cartão "${meio.rotulo || meio.valor}": ele precisa do título e do que aparece.`];
+    return [lista.filter((f) => f.rotulo && f.valor).slice(0, FICHAS_MAX), null];
+  }
   // um rascunho começado e abandonado continua lá ao voltar (só sai com "Descartar" ou ao cadastrar)
   function novoRoteiro() { if (!rascunho) rascunho = rascunhoVazio(); location.hash = '#roteiro/novo'; }
   const leRegras = (t) => String(t || '').split('\n').map((x) => x.trim().replace(/^[-•*]\s*/, '')).filter(Boolean);
@@ -2551,6 +2845,12 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         <label class="campo"><span>Resumo <small style="font-weight:400;color:var(--suave)">(opcional)</small></span><textarea data-r-resumo rows="3" placeholder="Por onde passa e o que tem de bom">${esc(r.resumo || '')}</textarea></label>
         ${novo ? '' : '<button class="botao botao--principal" type="button" data-salvar-dados>Salvar nome e resumo</button>'}
       </section>`}
+      <section class="bloco cartao"><h2 style="font-size:1.1rem;margin-bottom:6px">Cartões do roteiro</h2>
+        <p class="ajuda" style="margin-top:0">Os números que aparecem em destaque no topo da página do roteiro e no cartão dele na home e em Roteiros. Até ${FICHAS_MAX} cartões, curtos: "Distância" e "10,4 milhas".${novo ? '' : ' Sem nenhum, o site mostra os de hoje.'}</p>
+        <div class="fichas-ed" data-fichas>${(Array.isArray(r.fichas) && r.fichas.length ? r.fichas : novo ? [] : [{}]).map(linhaFicha).join('')}</div>
+        <div class="acoes" style="margin-top:4px"><button class="botao botao--leve botao--pequeno" type="button" data-ficha-mais><svg><use href="#p-mais-um"/></svg>Adicionar cartão</button>
+          ${novo ? '' : '<button class="botao botao--principal" type="button" data-salvar-fichas>Salvar os cartões</button>'}</div>
+      </section>
       <section class="bloco"><h2>Paradas <small>a ordem é a do passeio</small></h2>
         <ol class="lista paradas-l">${paradas.map((p, i) => `<li><button class="linha" type="button" data-parada="${i}">
           ${fotoParada(p) ? `<img class="paradas-l__foto" src="${esc(fotoParada(p))}" alt="">` : '<span class="paradas-l__foto paradas-l__foto--sem">sem foto</span>'}
@@ -2579,7 +2879,9 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     const guardaCampos = () => {
       if (!novo) return;
       r.nome = campo('[data-r-nome]').value; r.resumo = campo('[data-r-resumo]').value; r.regras = leRegras(campo('[data-regras]').value);
+      r.fichas = leFichas(tela);
     };
+    ligaFichas(tela, novo ? guardaCampos : null);
     if (novo) {
       ['[data-r-nome]', '[data-r-resumo]', '[data-regras]'].forEach((s) => campo(s).addEventListener('input', guardaCampos));
       if (!r.nome) campo('[data-r-nome]').focus();
@@ -2601,10 +2903,12 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         const nome = r.nome.trim();
         if (!nome) { erroCampo(tela, 'Escreva o nome do roteiro.'); campo('[data-r-nome]').focus(); return; }
         if (nomeRepetido(nome)) return erroCampo(tela, 'Já existe um roteiro com esse nome.');
+        const [fichas, erroF] = validaFichas(r.fichas || []);
+        if (erroF) return erroCampo(tela, erroF);
         erroCampo(tela, '');
         const limpa = (lista) => lista.map((p) => ({ nome: p.nome, texto: p.texto, foto: p.foto || null, alt: p.alt || '' }));
         const criado = await grava(sb.from('bb_roteiros').insert({ nome, slug: slugRoteiro(nome), resumo: r.resumo.trim() || null,
-          paradas: limpa(r.paradas), regras: r.regras, ativo: true, ordem: S.roteiros.length + 1 }).select('id').single());
+          paradas: limpa(r.paradas), regras: r.regras, ativo: true, ordem: S.roteiros.length + 1, ...(fichas.length ? { fichas } : {}) }).select('id').single());
         if (!criado) return;
         // fotos das paradas: só sobem agora, que o roteiro tem endereço próprio
         let falhou = 0;
@@ -2647,6 +2951,11 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       const { error } = await sb.from('bb_roteiros').delete().eq('id', r.id);
       if (error) { console.error(error); avisa(msgErro(error), true); return; }
       roteirosCompletos = null; location.hash = '#roteiros'; await atualiza(); avisa(`${r.nome} apagado.`);
+    });
+    aoSalvar(campo('[data-salvar-fichas]'), async () => {
+      const [fichas, erroF] = validaFichas(leFichas(tela));
+      if (erroF) { avisa(erroF, true); return; }
+      await salvaRoteiro({ fichas: fichas.length ? fichas : null }, fichas.length ? 'Cartões salvos. O site já mostra.' : 'Cartões tirados. O site voltou a mostrar os de antes.');
     });
     aoSalvar(campo('[data-salvar-regras]'), async () => {
       const novas = leRegras(campo('[data-regras]').value);

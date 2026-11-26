@@ -136,6 +136,24 @@ create temp table _carga as select $carga${
     "Sem som alto e sem cadeiras na areia.",
     "Recolha o seu lixo e evite canudos e copos descartáveis.",
     "Animais de estimação não podem entrar na ilha, por isso não embarcam neste roteiro. Para passear com o seu pet, escolha a Costa da Lagoa."
+   ],
+   "fichas": [
+    {
+     "rotulo": "Distância",
+     "valor": "10,4 milhas"
+    },
+    {
+     "rotulo": "Cada trajeto",
+     "valor": "30 a 40 min"
+    },
+    {
+     "rotulo": "Diária",
+     "valor": "8 horas"
+    },
+    {
+     "rotulo": "Saída",
+     "valor": "Canal da Barra"
+    }
    ]
   },
   {
@@ -172,7 +190,25 @@ create temp table _carga as select $carga${
      "alt": "Mesa com frutos do mar em um restaurante à beira da Lagoa"
     }
    ],
-   "regras": []
+   "regras": [],
+   "fichas": [
+    {
+     "rotulo": "Mar",
+     "valor": "Águas calmas"
+    },
+    {
+     "rotulo": "Saída",
+     "valor": "Barra ou Lagoa"
+    },
+    {
+     "rotulo": "Diária",
+     "valor": "6 horas"
+    },
+    {
+     "rotulo": "Paradas",
+     "valor": "5"
+    }
+   ]
   }
  ]
 }$carga$::jsonb as d;

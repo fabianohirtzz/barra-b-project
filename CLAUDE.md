@@ -237,8 +237,10 @@ Alt+setas no teclado), caixa de seleção para apagar em massa, a **primeira fot
 paradas, regras (some o quadro sem regras; cria o quadro se a Costa ganhar regras) e itinerário do TouristTrip; a
 amostra de 4 lanchas dos roteiros passou a sair das ativas. Sem linha no banco, vale o molde. Conteúdo inicial:
 `python tools/extrair_conteudo.py` gera `supabase/seed/02-conteudo.sql` a partir do HTML (o conferidor usa o mesmo
-JSON; 21 páginas iguais). Duração, distância e tempo de trajeto **não** são editáveis no painel: aparecem em até 22
-páginas e ainda dependem das respostas da cliente; mudar no gerador. **Conteúdo editável no painel ainda não tem
+JSON; hoje 22 páginas iguais). Os **cartões** do roteiro (distância, trajeto, diária, saída) são editáveis no painel
+(`bb_roteiros.fichas`, migração `2026-11-25-16-fichas-dos-roteiros.sql`; lista única `FICHAS` no gerador; o PHP troca a capa do
+roteiro, a comparação de /roteiros/ e o card da home, que mostra só as 3 primeiras). Texto corrido com esses números (descrições
+para o Google, JSON-LD do Campeche, topo de /roteiros/) continua fixo: mudar no gerador. **Conteúdo editável no painel ainda não tem
 tradução** (pensar nisso quando entrar o i18n).
 
 **Vídeos do Instagram pelo painel (25/11):** Mais > Vídeos do Instagram. `api/videos.php` guarda o arquivo como veio
@@ -333,6 +335,16 @@ CPF e nascimento opcionais, documento estrangeiro opcional: tipo, número, país
 migração `2026-11-25-15-documentos-do-cliente.sql`: `cpf` só dígitos com DV conferido no painel, `doc_tipo/doc_numero/doc_pais`,
 `nascimento`). O painel lê `bb_leads` com `select('*')` e só mostra os campos de documento depois da migração (`temDocs()`).
 A ficha do pedido tem o atalho "Cadastro do cliente"; a tabela tem a coluna Documento e a planilha exporta os documentos.
+
+**Relatórios ampliados (25/11):** Resumo ganhou Caixa (recebido no período por `bb_recebimentos.recebido_em`, passeios feitos
+com saldo e a lista de quem deve, a receber dos próximos, comissões `a_pagar` de `bb_comissoes`; deslocamentos aparecem à parte,
+fora do bruto), já vendido nos próximos 3 meses, funil do período e motivos de perda, vendas por lancha (próprias x parceiros),
+por roteiro, por canal, perfil dos grupos (tamanho, antecedência, quem voltou) e dias da semana. Despesas ganhou cartões (gasto
+x ano anterior, por passeio, peso no faturamento, contas fixas por mês), gráfico mês a mês, categorias com variação contra o
+período anterior, por lancha, **Contas fixas** (`bb_despesas_fixas`: cadastrar, encerrar, apagar; "Anotar <mês>" cria a despesa
+com `fixa_id` e `mes_ref`; aviso das pendentes do mês) e filtro por categoria. Exemplos: `supabase/demo/relatorios.sql` (contas
+fixas, as despesas delas e deslocamentos em passeios de exemplo); o `apagar.sql` já tira.
+**Cartões dos roteiros:** editáveis no painel (até 4 pares título/valor em `bb_roteiros.fichas`); vazio = molde do site.
 
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.

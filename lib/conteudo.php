@@ -1,9 +1,62 @@
 <?php
 /* Barra Boat Floripa | lib/conteudo.php
    Trechos do site que a Michele edita no painel: perguntas frequentes e avaliações (home),
-   paradas e regras dos roteiros. Mesma marcação do tools/gerar_paginas.py e do index.html
+   paradas, regras e fichas (os cartõezinhos de dados) dos roteiros. Mesma marcação do tools/gerar_paginas.py e do index.html
    (o tools/conferir_php.php compara com a prévia estática). Sem linha no banco, o trecho
    fica como está no molde. */
+
+/* ---------- fichas dos roteiros ----------
+   bb_roteiros.fichas = [{rotulo, valor}, ...], até 4. A capa da página do roteiro e a comparação em
+   /roteiros/ mostram todas; o card do roteiro na home mostra as 3 primeiras. Vazio: fica o molde. */
+function bb_fichas($r)
+{
+    $f = isset($r['fichas']) && is_array($r['fichas']) ? $r['fichas'] : [];
+    $f = array_values(array_filter($f, function ($x) {
+        return is_array($x) && trim((string) ($x['rotulo'] ?? '')) !== '' && trim((string) ($x['valor'] ?? '')) !== '';
+    }));
+    return array_slice($f, 0, 4);
+}
+
+function bb_fichas_linhas($fichas, $recuo)
+{
+    return implode("\n", array_map(function ($x) use ($recuo) {
+        return $recuo . '<div><dt>' . bb_e(trim($x['rotulo'])) . '</dt><dd>' . bb_e(trim($x['valor'])) . '</dd></div>';
+    }, $fichas));
+}
+
+/* Troca o <dl class="$classe"> que vem logo depois do título do card do roteiro. */
+function bb_fichas_no_card($h, $slug, $classe, $fichas, $recuo)
+{
+    // ancora no título do card (roteiro__nome na home, comparar__nome em /roteiros/), não nos links do menu
+    if (!preg_match('#__nome"><a href="(?:\.\./)*' . preg_quote($slug, '#') . '/">#', $h, $m, PREG_OFFSET_CAPTURE)) return $h;
+    $ini = '<dl class="' . $classe . '">' . "\n";
+    $a = strpos($h, $ini, $m[0][1]);
+    if ($a === false) return $h;
+    // o <dl> precisa ser do mesmo card (antes do próximo </article>)
+    $fimCard = strpos($h, '</article>', $m[0][1]);
+    if ($fimCard !== false && $a > $fimCard) return $h;
+    return substr($h, 0, $a) . bb_troca_entre(substr($h, $a), $ini, "\n" . substr($recuo, 2) . '</dl>', bb_fichas_linhas($fichas, $recuo));
+}
+
+function bb_fichas_na_pagina($h, $p, $c)
+{
+    foreach (isset($c['roteiros']) ? $c['roteiros'] : [] as $r) {
+        $f = bb_fichas($r);
+        if (!$f || empty($r['slug'])) continue;
+        if ($p === '') {
+            $h = bb_fichas_no_card($h, $r['slug'], 'roteiro__dados', array_slice($f, 0, 3), '              ');
+        } elseif ($p === 'roteiros/') {
+            $h = bb_fichas_no_card($h, $r['slug'], 'comparar__dados', $f, '              ');
+        } elseif ($p === $r['slug'] . '/') {
+            $h = preg_replace_callback('#<dl class="capa__dados">.*?</dl>#s', function () use ($f) {
+                return '<dl class="capa__dados">' . implode('', array_map(function ($x) {
+                    return '<div><dt>' . bb_e(trim($x['rotulo'])) . '</dt><dd>' . bb_e(trim($x['valor'])) . '</dd></div>';
+                }, $f)) . '</dl>';
+            }, $h, 1);
+        }
+    }
+    return $h;
+}
 
 /* ---------- home: perguntas frequentes ---------- */
 function bb_faq_html($faq)
