@@ -672,13 +672,19 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
   /* ================= MENSAGENS DO PASSEIO =================
      Os textos que os botões "Mandar ao cliente / marinheiro / parceiro" abrem no WhatsApp.
      Cada um tem {campos}; a prévia usa o próximo passeio marcado. */
+  let msgPasseio = null;   // passeio escolhido para a prévia das mensagens
   function telaMensagens() {
     const hj = iso(hoje());
-    const ex = S.passeios.find((p) => p.dia >= hj && lancha(p.lancha_id)) || S.passeios[S.passeios.length - 1];
+    // passeios que podem servir de prévia: os de hoje em diante (e o último que passou, se não houver nenhum)
+    const opcoes = S.passeios.filter((p) => p.dia >= hj && lancha(p.lancha_id));
+    if (!opcoes.length && S.passeios.length) opcoes.push(S.passeios[S.passeios.length - 1]);
+    const ex = opcoes.find((p) => p.id === msgPasseio) || opcoes[0];
+    const rotuloEx = (p) => { const c = lead(p.lead_id), l = lancha(p.lancha_id); return `${ddIso(p.dia)}${p.hora_saida ? ' ' + hora(p.hora_saida) : ''}, ${c ? c.nome || 'Sem nome' : 'sem cliente'} (${l ? l.nome : 'lancha'})`; };
     tela.innerHTML = `<header class="cab"><div><h1>Mensagens do passeio</h1><p>O texto que abre no WhatsApp quando você toca em "Mandar ao cliente", "Mandar ao marinheiro" ou "Mandar ao parceiro". Você confere e envia.</p></div></header>
       <section class="cartao bloco"><h2 style="font-size:1.05rem;margin-bottom:8px">Como funciona</h2>
         <p style="margin:0 0 8px;color:var(--suave)">As palavras entre chaves, como <b>{dia}</b> e <b>{lancha}</b>, são trocadas pelos dados do passeio. Se um dado estiver vazio (por exemplo, sem marinheiro definido), a linha inteira sai da mensagem.</p>
-        <div class="msg-campos">${Object.entries(MSG_CAMPOS).map(([k, d]) => `<span><code>{${k}}</code> ${esc(d)}</span>`).join('')}</div></section>
+        <div class="msg-campos">${Object.entries(MSG_CAMPOS).map(([k, d]) => `<span><code>{${k}}</code> ${esc(d)}</span>`).join('')}</div>
+        ${opcoes.length > 1 ? `<label class="campo" style="margin:14px 0 0"><span>Ver a prévia com o passeio de</span><select data-msg-passeio>${opcoes.map((p) => `<option value="${p.id}"${p === ex ? ' selected' : ''}>${esc(rotuloEx(p))}</option>`).join('')}</select></label>` : ''}</section>
       ${MSG_INFO.map(([k, nome, ajuda]) => `<section class="cartao bloco msg-ed" data-msg="${k}">
         <h2 style="font-size:1.1rem;margin-bottom:4px">${esc(nome)}${S.msgs && S.msgs[k] ? ' <span class="selo selo--bom">editada</span>' : ''}</h2>
         <p class="ajuda" style="margin-top:0">${esc(ajuda)}</p>
@@ -690,6 +696,14 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
           <button class="botao botao--leve" type="button" data-padrao${S.msgs && S.msgs[k] ? '' : ' hidden'}>Voltar ao texto padrão</button></div>
       </section>`).join('')}`;
     const para = (k) => (k.startsWith('cliente') ? 'cliente' : k.replace(/_pt$/, ''));
+    const sel = tela.querySelector('[data-msg-passeio]');
+    // troca o passeio da prévia sem perder o que estiver sendo editado nas caixas
+    if (sel) sel.addEventListener('change', () => {
+      const textos = {};
+      tela.querySelectorAll('[data-msg]').forEach((sec) => { textos[sec.dataset.msg] = sec.querySelector('[data-texto]').value; });
+      msgPasseio = sel.value; telaMensagens();
+      tela.querySelectorAll('[data-msg]').forEach((sec) => { const ta = sec.querySelector('[data-texto]'); if (textos[sec.dataset.msg] != null && ta.value !== textos[sec.dataset.msg]) { ta.value = textos[sec.dataset.msg]; ta.dispatchEvent(new Event('input')); } });
+    });
     tela.querySelectorAll('[data-msg]').forEach((sec) => {
       const k = sec.dataset.msg, ta = sec.querySelector('[data-texto]'), pre = sec.querySelector('[data-previa]');
       const previa = () => {
