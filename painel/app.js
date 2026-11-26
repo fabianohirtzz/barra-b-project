@@ -293,7 +293,7 @@
       todos(() => sb.from('bb_recebimentos').select('*').order('recebido_em').order('id')),
       todos(() => sb.from('bb_passeios').select('*').neq('status', 'cancelado').gte('dia', anoPassado).order('dia').order('id')),
       um(sb.from('bb_bloqueios').select('*').gte('fim', recente).order('inicio')),
-      todos(() => sb.from('bb_agenda_dono').select('lancha_id,dia,origem').gte('dia', recente).order('dia')),
+      todos(() => sb.from('bb_agenda_dono').select('*').gte('dia', recente).order('dia')),
     ]);
     Object.assign(S, { lanchas, parceiros, marinheiros, roteiros, leads, receb, passeios, bloqueios, dono });
     S.vende = await um(sb.from('bb_parceiro_lanchas').select('parceiro_id,lancha_id')).catch(() => []);
@@ -580,6 +580,24 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     };
     return montaMsg(modeloMsg(para === 'cliente' ? (es ? 'cliente_es' : 'cliente_pt') : para + '_pt'), v);
   }
+  // Passeio x agendas Google: alerta de venda em dobro e se o evento já está na agenda do dono.
+  function blocoGoogle(p, conf) {
+    const l = lancha(p.lancha_id) || {}, dono = parceiro(l.parceiro_id);
+    let h = '';
+    if (conf) {
+      const vend = quemMarcou(l, conf);
+      h += `<div class="alerta" style="margin-top:12px"><div><b>Possível venda em dobro</b><p style="margin:2px 0 0">${vend ? `O ${esc(vend)} também anotou esta lancha neste dia na agenda dele.` : 'A agenda do dono também tem um compromisso nesta lancha neste dia.'} Confirme com ${vend ? 'ele' : 'o dono'} antes de seguir.</p></div></div>`;
+    }
+    if (dono && dono.agenda_tipo === 'conta') {
+      const q = esc(primeiroNome(dono.nome) || 'dono');
+      h += p.google_erro ? `<div class="alerta" style="margin-top:12px"><div><b>Não foi para a agenda do ${q}.</b><p style="margin:2px 0 0">${esc(p.google_erro)}</p></div></div>`
+        : `<p class="ajuda" style="margin-top:12px">${p.google_evento_id ? `Este passeio está na agenda Google do ${q}.` : `Indo para a agenda Google do ${q}.`}</p>`;
+    }
+    return h;
+  }
+  // Leva na hora os passeios marcados, mudados ou cancelados às agendas Google dos donos (o servidor também faz a cada minuto).
+  function sincGoogle() { api('google.php', { acao: 'fila' }).catch(() => {}); }
+
   // Botões de envio (só aparecem quando há para quem mandar).
   function botoesEnvio(p, pequeno) {
     const l = lancha(p.lancha_id) || {}, dono = parceiro(l.parceiro_id), m = marinheiro(p.marinheiro_id), c = lead(p.lead_id);
@@ -730,6 +748,22 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     }).join('');
   }
 
+  // Passeios marcados em dia que a agenda Google de um parceiro (ou do dono conectado) também marcou.
+  function alertasConflito(hs) {
+    const ate = iso(somaDias(hoje(), 120));
+    const lista = S.passeios.filter((p) => p.dia >= hs && p.dia <= ate).map((p) => {
+      const l = lancha(p.lancha_id);
+      const conf = l ? conflitoDe(l, p.dia) : null;
+      return conf ? { p, l, quem: quemMarcou(l, conf) } : null;
+    }).filter(Boolean);
+    if (!lista.length) return '';
+    return `<div class="alerta bloco" role="note"><svg><use href="#p-agenda"/></svg><div>
+      <b>${lista.length === 1 ? 'Um passeio pode estar vendido em dobro' : lista.length + ' passeios podem estar vendidos em dobro'}</b>
+      <p>A agenda Google de um parceiro também marcou a lancha nesses dias. Confirme antes do passeio.</p>
+      <ul class="alerta__lista">${lista.map(({ p, l, quem }) => { const c = lead(p.lead_id); return `<li><span><b>${esc(l.nome)}</b>, ${ddIso(p.dia)}${c ? ' · ' + esc(c.nome || 'Sem nome') : ''} · ${quem ? 'também na agenda do ' + esc(quem) : 'também na agenda do dono'}</span>
+        <button class="botao botao--leve botao--pequeno" type="button" data-dia="${l.id}|${p.dia}">Ver o dia</button></li>`; }).join('')}</ul></div></div>`;
+  }
+
   // Previsão do Windguru (spot "Barra Boat Floripa", o que a Michele já acompanha).
   // Widget oficial: o script põe um iframe logo depois do elemento com o id `uid`.
   // A tela é redesenhada inteira, então o widget é montado de novo a cada vez.
@@ -810,6 +844,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         <div class="acoes">${dona() ? '<button class="botao botao--principal" type="button" data-despesa><svg><use href="#p-mais-um"/></svg>Anotar despesa</button>' : ''}</div></header>
 
       ${alertasClima(h)}
+      ${alertasConflito(hs)}
 
       <section class="bloco"><h2>Previsão do Windguru <small>próximos 4 dias, vento em km/h</small></h2>
         <div class="cartao windguru"><div data-windguru></div>
@@ -836,7 +871,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
 
   function estadoDia(l, s) {
     const p = S.passeios.find((x) => x.lancha_id === l.id && x.dia === s);
-    if (p) return { t: 'passeio', p };
+    if (p) return { t: 'passeio', p, conf: conflitoDe(l, s) };
     const noDia = (x) => s >= x.inicio && s <= x.fim && (!x.lancha_id || x.lancha_id === l.id);
     const man = S.bloqueios.find((x) => x.tipo === 'manutencao' && noDia(x));
     if (man) return { t: 'manut', b: man };
@@ -845,6 +880,19 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     const d = S.dono.find((x) => x.lancha_id === l.id && x.dia === s);
     if (d) return { t: 'dono', d };
     return null;
+  }
+
+  /* Venda em dobro: o dia tem passeio da equipe e uma agenda Google também marcou esta lancha.
+     Vale quando quem marcou é um parceiro que vende a lancha (fonte diferente do dono) ou o próprio
+     dono pela conta conectada (os eventos que o sistema escreve na agenda dele não contam). Agenda por
+     link (iCal) do próprio dono não acusa: ele pode ter copiado a reserva que recebeu no WhatsApp. */
+  function conflitoDe(l, s) {
+    return S.dono.find((x) => x.lancha_id === l.id && x.dia === s && x.origem !== 'manual' && x.fonte && (x.fonte !== l.parceiro_id || x.origem === 'conta')) || null;
+  }
+  // Nome de quem marcou o dia na agenda (parceiro que vende ou o dono).
+  function quemMarcou(l, d) {
+    const q = d && d.fonte && d.fonte !== l.parceiro_id ? parceiro(d.fonte) : null;
+    return q ? primeiroNome(q.nome) || 'parceiro' : null;
   }
 
   function telaAgenda() {
@@ -859,10 +907,11 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         const q = `${esc(l.nome)}, ${DIAS[d.getDay()]} ${dd(d)}`;
         const bt = (cls, txt, rot) => `<td><button class="dia dia--${cls}" type="button" data-dia="${l.id}|${s}" aria-label="${q}, ${rot}"><span>${txt}</span></button></td>`;
         if (!e) return bt('livre', 'livre', 'livre');
-        if (e.t === 'passeio') { const c = lead(e.p.lead_id); const n = c ? primeiroNome(c.nome) || 'Reservada' : 'Reservada'; return bt('reservada', esc(n), 'reservada para ' + esc(n)); }
+        if (e.t === 'passeio') { const c = lead(e.p.lead_id); const n = c ? primeiroNome(c.nome) || 'Reservada' : 'Reservada'; return e.conf ? bt('conflito', esc(n), 'reservada para ' + esc(n) + ', também marcada em outra agenda') : bt('reservada', esc(n), 'reservada para ' + esc(n)); }
         if (e.t === 'manut') return bt('bloqueio', 'manut.', 'manutenção');
         if (e.t === 'fechado') return bt('fechado', 'fech.', 'agenda fechada');
-        return bt('dono', 'dono', 'ocupada na agenda do dono');
+        const vend = quemMarcou(l, e.d);
+        return vend ? bt('dono', esc(vend), 'reservada na agenda de ' + esc(vend)) : bt('dono', 'dono', 'ocupada na agenda do dono');
       }).join('');
       return `<tr><th scope="row"><i class="bolinha" style="background:${corLancha(l)}"></i> ${esc(l.nome)}<small>${l.passageiros} pessoas · ${esc(donoNome(l))}</small></th>${cel}</tr>`;
     }).join('');
@@ -986,6 +1035,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
           ${p.deslocamento ? `<div><dt>Deslocamento:</dt><dd>${Number(p.deslocamento_valor) ? R(p.deslocamento_valor) + ', cobrado do cliente' : 'sim, valor não anotado'}</dd></div>` : ''}
           <div><dt>Marinheiro:</dt><dd>${esc(m ? m.nome : 'a definir')}</dd></div>
         </dl>${exemplo(p) ? '<p class="selo selo--neutro" style="white-space:normal;margin:10px 0 0">Passeio de exemplo: será apagado antes do lançamento.</p>' : ''}</div>
+        ${blocoGoogle(p, e.conf)}
         ${botoesEnvio(p) ? `<div class="acoes" style="margin-top:16px">${botoesEnvio(p)}</div>` : ''}
         <div class="acoes" style="margin-top:12px">
           ${c ? `<button class="botao botao--principal" type="button" data-abrir-c="${c.id}">Abrir o cliente</button>` : ''}
@@ -996,6 +1046,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         g.querySelector('[data-editar]').addEventListener('click', () => editarPasseio(p));
         confirmaNoBotao(g.querySelector('[data-cancelar]'), 'Toque de novo para cancelar', async () => {
           if (!(await grava(sb.from('bb_passeios').update({ status: 'cancelado' }).eq('id', p.id)))) return;
+          sincGoogle();
           fechaGaveta(); await atualiza(); avisa('Passeio cancelado. O dia ficou livre.');
         });
       });
@@ -1011,8 +1062,8 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       return;
     }
     // dia do dono
-    const manual = e.d.origem === 'manual';
-    abreGaveta(titulo, `<div class="estado">${manual ? 'O dono vai usar a lancha neste dia (anotado pela equipe).' : 'Ocupada na agenda do dono. Esse dia vem sozinho da agenda dele.'}</div>
+    const manual = e.d.origem === 'manual', vend = quemMarcou(l, e.d);
+    abreGaveta(titulo, `<div class="estado">${manual ? 'O dono vai usar a lancha neste dia (anotado pela equipe).' : vend ? `Reservada pelo ${esc(vend)}, que vende esta lancha. Esse dia vem sozinho da agenda Google dele: se ele apagar o evento, o dia fica livre.` : 'Ocupada na agenda do dono. Esse dia vem sozinho da agenda dele.'}</div>
       ${manual ? '<button class="botao botao--leve botao--cheio" type="button" data-liberar>Liberar o dia</button>' : ''}`, (g) => {
       const b = g.querySelector('[data-liberar]');
       if (b) aoSalvar(b, async () => {
@@ -1239,6 +1290,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         if (pessoas) muda.pessoas = pessoas;
         if (x.etapa !== 'fechados') { muda.etapa = 'fechados'; if (!Number(x.valor_fechado) && Number(x.valor_orcado)) muda.valor_fechado = x.valor_orcado; }
         await grava(sb.from('bb_leads').update(muda).eq('id', leadId));
+        sincGoogle();
         fechaGaveta(); await atualiza();
         avisa(`Passeio marcado: ${lancha(lanchaId).nome}, ${ddIso(dia)}.`);
       });
@@ -1278,6 +1330,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         if (!ok) return;
         // o pedido do cliente acompanha o passeio (data e lancha)
         if (p.lead_id && mudou) await grava(sb.from('bb_leads').update({ data_desejada: dia, lancha_id: lanchaId }).eq('id', p.lead_id));
+        sincGoogle();
         fechaGaveta(); await atualiza();
         avisa(mudou ? `Passeio mudado para ${lancha(lanchaId).nome}, ${ddIso(dia)}.` : 'Passeio atualizado.');
       });
@@ -2420,7 +2473,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     const dono = parceiro(l.parceiro_id);
     const quem = dono ? primeiroNome(dono.nome) : 'dono';
     const ocupados = S.dono.filter((a) => a.lancha_id === l.id && a.origem !== 'manual' && a.dia >= iso(hoje())).length;
-    const porLink = dono && ['google', 'planilha'].includes(dono.agenda_tipo);
+    const porLink = dono && ['google', 'planilha', 'conta'].includes(dono.agenda_tipo);
     const varias = dono && S.lanchas.filter((x) => x.parceiro_id === dono.id).length > 1;
     const estado = !dono ? '<div class="estado"><svg><use href="#p-ok"/></svg>Lancha sua: a agenda é a deste painel.</div>'
       : `${estadoAgenda(dono)}${porLink ? `<p class="ajuda">Desta lancha: ${ocupados === 1 ? '1 dia ocupado' : ocupados + ' dias ocupados'} daqui para frente.</p>` : ''}`;
@@ -2750,9 +2803,11 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
   function estadoAgenda(p) {
     const quem = primeiroNome(p.nome) || 'dono';
     const lidaEm = p.agenda_lida_at ? new Date(p.agenda_lida_at) : null;
-    const lida = lidaEm ? `Lida pela última vez em ${ddIso(iso(lidaEm))} às ${lidaEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}. O painel lê de novo sozinho a cada 15 minutos.` : 'Ainda não foi lida. O painel lê sozinho a cada 15 minutos, ou toque em "Ler agora".';
+    const lida = lidaEm ? `Lida pela última vez em ${ddIso(iso(lidaEm))} às ${lidaEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}. ${p.agenda_tipo === 'conta' ? 'O Google avisa o painel na hora de cada mudança.' : 'O painel lê de novo sozinho a cada minuto.'}` : 'Ainda não foi lida. O painel lê sozinho a cada minuto, ou toque em "Ler agora".';
     const erro = p.agenda_erro ? `<div class="alerta"><div><b>A última leitura não deu certo.</b><p style="margin:2px 0 0">${esc(p.agenda_erro)}</p></div></div>` : '';
-    return p.agenda_tipo === 'google' ? `<div class="estado"><svg><use href="#p-ok"/></svg>Conectada ao Google Agenda do ${esc(quem)}.</div><p class="ajuda">${esc(lida)}</p>${erro}`
+    return p.agenda_tipo === 'conta' ? `<div class="estado"><svg><use href="#p-ok"/></svg>Conectada à conta Google do ${esc(quem)}${p.google_agenda_nome ? `, agenda "${esc(p.google_agenda_nome)}"` : ''}.</div>
+        <p class="ajuda">${p.google_email ? esc(p.google_email) + '. ' : ''}Os dias ocupados chegam na hora, e os passeios que vocês marcarem nas lanchas dele entram sozinhos na agenda dele. ${esc(lida)}</p>${erro}`
+      : p.agenda_tipo === 'google' ? `<div class="estado"><svg><use href="#p-ok"/></svg>Conectada ao Google Agenda do ${esc(quem)} por link (só leitura).</div><p class="ajuda">${esc(lida)} Conectando a conta Google, os passeios que vocês marcarem também entram na agenda dele.</p>${erro}`
       : p.agenda_tipo === 'planilha' ? `<div class="estado"><svg><use href="#p-ok"/></svg>Conectada à planilha do ${esc(quem)}.</div><p class="ajuda">${esc(lida)}</p>${erro}`
       : p.agenda_tipo === 'manual' ? `<div class="estado"><svg><use href="#p-ok"/></svg>O ${esc(quem)} avisa pelo WhatsApp e você marca na Agenda.</div>`
       : '<div class="estado estado--sem">Agenda ainda não conectada. Enquanto isso, os dias ocupados das lanchas dele não aparecem no site.</div>';
@@ -2762,7 +2817,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
   function blocoAgenda(p) {
     const dele = S.lanchas.filter((l) => l.parceiro_id === p.id);
     const quem = primeiroNome(p.nome) || 'dono';
-    const porLink = ['google', 'planilha'].includes(p.agenda_tipo);
+    const porLink = ['google', 'planilha', 'conta'].includes(p.agenda_tipo);
     const nomes = dele.map((l) => `<li><a href="#lancha/${l.id}">${esc(l.nome)}</a>: <b>${esc(l.agenda_palavra || l.nome)}</b></li>`).join('');
     return `<section class="agenda-parceiro" data-bloco-agenda><h3><svg><use href="#p-agenda"/></svg>Agenda do ${esc(quem)}</h3>
       ${estadoAgenda(p)}
@@ -2773,8 +2828,9 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
           <option value="nenhuma"${p.agenda_sem_nome === 'nenhuma' ? ' selected' : ''}>Não ocupa nenhuma</option></select></label>` : ''}
       ${!dele.length && p.agenda_tipo ? '<p class="ajuda">Marque acima as lanchas dele para a agenda valer.</p>' : ''}
       <div class="acoes">${porLink ? `<button class="botao botao--principal botao--cheio" type="button" data-ler-agora="${p.id}">Ler agora</button>` : ''}
-        <button class="botao ${p.agenda_tipo ? 'botao--leve' : 'botao--principal'} botao--cheio" type="button" data-conectar="${p.id}">${p.agenda_tipo ? 'Trocar a agenda conectada' : 'Conectar a agenda dele'}</button>
-        <button class="botao botao--wa botao--cheio" type="button" data-instrucoes="${p.id}"><svg><use href="#p-wa"/></svg>Mandar instruções ao ${esc(quem)}</button></div>
+        ${p.agenda_tipo === 'conta' ? '' : `<button class="botao botao--wa botao--cheio" type="button" data-link-google="${p.id}"><svg><use href="#p-wa"/></svg>Mandar o link de conexão ao ${esc(quem)}</button>`}
+        <button class="botao botao--leve botao--cheio" type="button" data-conectar="${p.id}">${p.agenda_tipo ? 'Trocar a forma de conexão' : 'Outras formas de conectar'}</button>
+        ${p.agenda_tipo === 'conta' ? `<button class="botao botao--perigo-leve botao--cheio" type="button" data-desconectar-google="${p.id}">Desconectar a conta Google</button>` : ''}</div>
     </section>`;
   }
 
@@ -2783,11 +2839,13 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     abreGaveta(`Agenda do ${quem}`, `
       <p style="margin-top:0">Como o ${esc(quem)} anota os dias ocupados das lanchas dele?</p>
       <div class="escolhas">
-        <button class="escolha" type="button" data-tipo="google"><span class="linha__icone"><svg><use href="#p-agenda"/></svg></span><span><b>No Google Agenda</b><span>O mais comum. Ele te manda um link e você cola aqui.</span></span></button>
+        <button class="escolha" type="button" data-tipo="conta"><span class="linha__icone"><svg><use href="#p-agenda"/></svg></span><span><b>No Google Agenda, conectando a conta (recomendado)</b><span>Você manda um link, ele toca em "Conectar com Google". Os dias chegam na hora e os passeios de vocês entram na agenda dele.</span></span></button>
+        <button class="escolha" type="button" data-tipo="google"><span class="linha__icone"><svg><use href="#p-agenda"/></svg></span><span><b>No Google Agenda, só por link</b><span>Ele te manda o endereço secreto da agenda e você cola aqui. Só lê os dias: os passeios não vão para a agenda dele.</span></span></button>
         <button class="escolha" type="button" data-tipo="planilha"><span class="linha__icone"><svg><use href="#p-mais"/></svg></span><span><b>Numa planilha do Google</b><span>Ele publica a planilha e te manda o link.</span></span></button>
         <button class="escolha" type="button" data-tipo="manual"><span class="linha__icone"><svg><use href="#p-wa"/></svg></span><span><b>Ele me avisa pelo WhatsApp</b><span>Você marca os dias dele na Agenda do painel.</span></span></button>
       </div>`, (c) => {
       c.querySelectorAll('[data-tipo]').forEach((b) => b.addEventListener('click', async () => {
+        if (b.dataset.tipo === 'conta') { linkGoogle(p.id); return; }
         if (b.dataset.tipo !== 'manual') { colarLink(p, b.dataset.tipo); return; }
         if (!(await grava(sb.from('bb_parceiros').update({ agenda_tipo: 'manual', agenda_url: null, agenda_erro: null }).eq('id', p.id)))) return;
         await atualiza(); editaPessoa('parceiros', p.id); avisa('Pronto. Marque os dias dele na Agenda.');
@@ -2831,7 +2889,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       r = await resp.json();
     } catch (e) {
       // prévia sem PHP (GitHub Pages) ou sem internet
-      if (!logoAposConectar) avisa('A leitura na hora só funciona no site novo. Lá o painel lê sozinho a cada 15 minutos.', true);
+      if (!logoAposConectar) avisa('A leitura na hora só funciona no site novo. Lá o painel lê sozinho a cada minuto.', true);
       return;
     }
     await atualiza();
@@ -2840,6 +2898,28 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       const partes = Object.entries(r.lanchas || {}).map(([n, k]) => `${n}: ${k}`);
       avisa(`Agenda do ${primeiroNome(p && p.nome) || 'dono'} lida: ${partes.length > 1 ? partes.join(', ') + ' dias ocupados' : (r.total === 1 ? '1 dia ocupado' : r.total + ' dias ocupados')}.`);
     } else avisa(r.erro || 'Não consegui ler a agenda agora.', true);
+  }
+
+  // Link de conexão da conta Google (api/google.php gera, vale 14 dias) com a mensagem pronta para o WhatsApp.
+  async function linkGoogle(id) {
+    const dono = parceiro(id), quem = primeiroNome(dono && dono.nome) || 'dono';
+    const r = await api('google.php', { acao: 'link', parceiro_id: id });
+    if (!r.ok) { avisa(r.erro || 'Não consegui gerar o link agora.', true); return; }
+    const dele = S.lanchas.filter((l) => l.parceiro_id === id).map((l) => l.agenda_palavra ? l.agenda_palavra.split(',')[0].trim() : l.nome);
+    const nomes = dele.length > 1 ? dele.slice(0, -1).join(', ') + ' ou ' + dele[dele.length - 1] : dele[0];
+    let txt = `Oi, ${quem === 'dono' ? 'tudo bem' : quem}! Para os dias ocupados ${dele.length > 1 ? 'das suas lanchas' : 'da sua lancha'} aparecerem na hora no site da Barra Boat, e as reservas que a gente marcar entrarem direto na sua agenda Google, toque neste link e depois em "Conectar com Google". Leva 1 minuto e é uma vez só: ${r.url}`;
+    if (dele.length) txt += ` No dia a dia, escreva o nome da lancha no título de cada reserva (${nomes}).`;
+    const num2 = String((dono && dono.telefone) || '').replace(/\D/g, '');
+    abreGaveta('Link de conexão', `
+      <p style="margin-top:0">Esta mensagem vai pronta no WhatsApp. O link vale por 14 dias e só serve para o ${esc(quem)}.</p>
+      <div class="conversa"><div class="msg msg--nos">${esc(txt)}</div></div>
+      <a class="botao botao--wa botao--cheio" href="https://wa.me/${num2}?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener" style="margin-top:16px"><svg><use href="#p-wa"/></svg>Abrir no WhatsApp</a>
+      <button class="botao botao--leve botao--cheio" type="button" data-copiar style="margin-top:10px">Copiar só o link</button>
+      ${num2 ? '' : '<p class="ajuda" style="margin-top:12px">O dono não tem telefone cadastrado. O WhatsApp vai pedir para escolher o contato.</p>'}`, (c) => {
+      c.querySelector('[data-copiar]').addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(r.url); avisa('Link copiado.'); } catch (e) { avisa('Não consegui copiar. Use o botão do WhatsApp.', true); }
+      });
+    });
   }
 
   function instrucoes(id) {
@@ -2864,7 +2944,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         <button class="botao botao--principal" type="button" data-pessoa="${tipo}|"><svg><use href="#p-mais-um"/></svg>Cadastrar</button></header>
       <ul class="lista">${lista.map((x) => {
         const lanchasDele = parc ? S.lanchas.filter((l) => l.parceiro_id === x.id).map((l) => l.nome) : [];
-        const agenda = parc && lanchasDele.length ? ({ google: 'agenda conectada', planilha: 'planilha conectada', manual: 'avisa pelo WhatsApp' }[x.agenda_tipo] || 'agenda não conectada') : '';
+        const agenda = parc && lanchasDele.length ? ({ conta: 'agenda Google conectada', google: 'agenda por link', planilha: 'planilha conectada', manual: 'avisa pelo WhatsApp' }[x.agenda_tipo] || 'agenda não conectada') : '';
         const sub = [foneTela(x.telefone), parc ? { dono: 'Dono de lancha', revendedor: 'Vende passeios', ambos: 'Dono e vende' }[x.tipo] : '', lanchasDele.join(', '), agenda, x.ativo ? '' : 'inativo'].filter(Boolean).join(' · ');
         return `<li><button class="linha" type="button" data-pessoa="${tipo}|${x.id}"><span class="avatar">${esc((x.nome || '?')[0].toUpperCase())}</span>
           <span class="linha__corpo"><b>${esc(x.nome)}${seloExemplo(x)}</b><span>${esc(sub || 'sem telefone')}</span></span><svg><use href="#p-seta"/></svg></button></li>`;
@@ -3752,7 +3832,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
   window.addEventListener('hashchange', () => { fechaMenu(); rota(); window.scrollTo(0, 0); tela.focus({ preventScroll: true }); });
 
   document.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-cliente],[data-despesa],[data-dia],[data-etapa],[data-aba-d],[data-conectar],[data-ler-agora],[data-vista-cli],[data-historico],[data-instrucoes],[data-breve],[data-receber],[data-ag],[data-mes],[data-periodo],[data-sair],[data-novo-cliente],[data-pessoa],[data-nova-lancha]');
+    const t = e.target.closest('[data-cliente],[data-despesa],[data-dia],[data-etapa],[data-aba-d],[data-conectar],[data-ler-agora],[data-vista-cli],[data-historico],[data-instrucoes],[data-breve],[data-receber],[data-ag],[data-mes],[data-periodo],[data-sair],[data-novo-cliente],[data-pessoa],[data-nova-lancha],[data-link-google],[data-desconectar-google]');
     if (!t) return;
     const d = t.dataset;
     if (d.cliente) abreCliente(d.cliente);
@@ -3768,6 +3848,16 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       lerAgora(d.lerAgora).finally(() => { if (document.contains(t)) { t.disabled = false; t.textContent = 'Ler agora'; } });
     }
     else if (d.instrucoes) instrucoes(d.instrucoes);
+    else if (d.linkGoogle) linkGoogle(d.linkGoogle);
+    else if (d.desconectarGoogle) {
+      if (t.disabled) return;
+      if (t.dataset.confirma !== '1') { t.dataset.confirma = '1'; t.textContent = 'Toque de novo para desconectar'; setTimeout(() => { if (document.contains(t)) { t.dataset.confirma = ''; t.textContent = 'Desconectar a conta Google'; } }, 4000); return; }
+      t.disabled = true; t.textContent = 'Desconectando';
+      api('google.php', { acao: 'desconectar', parceiro_id: d.desconectarGoogle }).then(async (r) => {
+        if (!r.ok) { avisa(r.erro || 'Não consegui desconectar agora.', true); if (document.contains(t)) { t.disabled = false; t.textContent = 'Desconectar a conta Google'; } return; }
+        await atualiza(); editaPessoa('parceiros', d.desconectarGoogle); avisa('Conta Google desconectada. Os eventos que o sistema tinha posto na agenda dele saíram.');
+      });
+    }
     else if (d.receber) anotarRecebimento(d.receber, 'restante');
     else if (d.ag != null) { agIni = d.ag === '0' ? 0 : Math.max(agIni + Number(d.ag), -56); telaAgenda(); }
     else if (d.mes) { mesSel = somaMes(mesSel, Number(d.mes) * PASSO[periodo]); if (mesSel > iso(hoje()).slice(0, 7)) mesSel = iso(hoje()).slice(0, 7); telaDinheiro(); }

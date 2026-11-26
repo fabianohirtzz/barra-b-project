@@ -19,5 +19,6 @@ if (is_file($marca) && time() - filemtime($marca) < 20) bb_responde(429, ['ok' =
 @touch($marca);
 $ps = bb_agenda_parceiros($id);
 if ($ps === null) bb_responde(503, ['ok' => false, 'erro' => 'Não consegui falar com o banco agora. Tente de novo.']);
-if (!$ps) bb_responde(404, ['ok' => false, 'erro' => 'Este parceiro não tem agenda conectada por link.']);
-bb_responde(200, bb_agenda_ler_parceiro($ps[0][0], $ps[0][1]));
+if (!$ps) bb_responde(404, ['ok' => false, 'erro' => 'Este parceiro não tem agenda conectada.']);
+if ($ps[0][0]['agenda_tipo'] === 'conta') { require_once dirname(__DIR__) . '/lib/google.php'; bb_responde(200, bb_google_ler_agora($id)); }
+bb_responde(200, bb_agenda_ler_parceiro($ps[0][0], $ps[0][1], $ps[0][2]));

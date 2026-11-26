@@ -387,5 +387,23 @@ caminhos passados, nos 9 idiomas). Passo a passo do Search Console e do Bing em 
 
 **Dados de exemplo apagados em 26/11** (`apagar.sql` rodado e conferido). Diária definida em 26/11: 7 horas, das 10h às 17h.
 
+**Agenda Google pela conta, nos dois sentidos (26/11, pedido do Fabiano):** o parceiro recebe pelo WhatsApp o link
+`/conectar-agenda/?c=<convite>` (Parceiros > parceiro > "Mandar o link de conexão"; `api/google.php` acao `link`, vale 14 dias,
+assinado com `GOOGLE_CHAVE`), toca em "Conectar com Google" (OAuth, escopos `calendar.events` + `calendar.calendarlist.readonly`),
+volta por `api/google-volta.php` e escolhe a agenda (`conectar.php`). O refresh token fica cifrado (AES-GCM) em `bb_google_contas`
+(sem policy). **Leitura:** o Google avisa `api/google-aviso.php` a cada mudança (canal de 7 dias, renovado pelo cron) e o servidor relê
+na hora; o cron `cron/agendas.php` agora roda **a cada minuto** (crontab trocado em 26/11) e também lê os links. O leitor reconhece
+as lanchas DELE e as que ele VENDE (`bb_parceiro_lanchas`): "Phantom 30 BBF, João" na agenda do parceiro fecha o dia da lancha da
+Michele (só pelo nome; evento sem nome nunca cai na vendida). Cada dia guarda a fonte (`bb_agenda_dono.fonte` = parceiro;
+`bb_agenda_troca2`). **Escrita:** gatilho em `bb_passeios` enche `bb_google_fila`; `bb_google_processa_fila()` (cron e o painel
+logo depois de salvar, `sincGoogle()`) cria, muda ou apaga o evento "Reserva Barra Boat: <lancha>, <cliente>, N pessoas" na agenda
+do dono da lancha (10h + 7 h ou dia inteiro), com `extendedProperties.private.bb_passeio` (o leitor pula). Painel: venda em dobro
+(passeio + outra agenda no mesmo dia) em vermelho na Agenda, alerta na tela Hoje e na gaveta do passeio, que também diz se o evento
+já está na agenda do dono. Migração `2026-11-26-17-google-agenda.sql`. Config em `config.local.php`: `GOOGLE_CLIENT_ID`,
+`GOOGLE_CLIENT_SECRET`, `GOOGLE_CHAVE`. App do Google "em produção" sem verificação: até 100 contas, com o aviso "app não
+verificado" (a página explica Avançado > Acessar). Política de privacidade ganhou a seção "Agenda Google dos donos das lanchas"
+(uso limitado). Testes: `gteste/t.php` no scratchpad (18 casos). **Na troca para a raiz:** o URI de volta da raiz já precisa estar
+no cliente OAuth; os canais apontam para o endereço onde foram abertos (reconectar ou esperar a renovação).
+
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.

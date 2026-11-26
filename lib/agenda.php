@@ -1,7 +1,7 @@
 <?php
 /* Barra Boat Floripa | lib/agenda.php
    Leitor das agendas dos donos das lanchas (item 48). Usado pelo cron
-   (cron/agendas.php, a cada 15 min) e pelo botão "Ler agora" do painel (api/agenda.php).
+   (cron/agendas.php, a cada minuto) e pelo botão "Ler agora" do painel (api/agenda.php).
 
    - Google Agenda (ou qualquer agenda iCal: iCloud, Outlook): endereço secreto .ics.
      Lê eventos de dia inteiro e com horário, repetições (RRULE), exceções (EXDATE)
@@ -442,54 +442,68 @@ function bb_agenda_acha_tudo(array $pal, $texto)
 }
 
 /* Função (título, descrição) -> [ids]. Procura no título; se não achar, na descrição; se não achar
-   em nenhum, todas as lanchas dele ('todas') ou nenhuma ('nenhuma'). Uma lancha só: sempre ela. */
-function bb_agenda_classificador(array $lanchas, $sem_nome)
+   em nenhum, todas as lanchas dele ('todas') ou nenhuma ('nenhuma'). Uma lancha só: sempre ela.
+   $vende: lanchas de outros donos (a Michele ou outro parceiro) que ele também vende. Elas só valem
+   pelo nome: "Phantom 30 BBF, João" na agenda dele fecha o dia da Phantom 30 BBF; compromisso sem
+   nome nunca cai nelas. */
+function bb_agenda_classificador(array $lanchas, $sem_nome, array $vende = [])
 {
     $ids = array_map(function ($l) { return $l['id']; }, $lanchas);
-    if (count($lanchas) === 1) return function ($t, $d = '') use ($ids) { return $ids; };
+    if (count($lanchas) === 1 && !$vende) return function ($t, $d = '') use ($ids) { return $ids; };
     $pal = [];
-    foreach ($lanchas as $l) $pal[$l['id']] = bb_agenda_palavras($l);
-    return function ($titulo, $desc = '') use ($pal, $ids, $sem_nome) {
+    foreach (array_merge($lanchas, $vende) as $l) $pal[$l['id']] = bb_agenda_palavras($l);
+    $padrao = count($lanchas) === 1 ? $ids : ($sem_nome === 'nenhuma' ? [] : $ids);
+    return function ($titulo, $desc = '') use ($pal, $padrao) {
         $a = bb_agenda_acha_tudo($pal, $titulo);
         if (!$a && $desc !== '') $a = bb_agenda_acha_tudo($pal, $desc);
-        if ($a) return $a;
-        return $sem_nome === 'nenhuma' ? [] : $ids;
+        return $a ?: $padrao;
     };
 }
 
 /* ---------- leitura da agenda de um parceiro ---------- */
 
-/* Lê a agenda do parceiro e grava os dias de cada lancha dele.
-   $p = [id, nome, agenda_tipo, agenda_url, agenda_sem_nome]; $lanchas = [[id, nome, agenda_palavra], ...].
+/* Lê a agenda do parceiro e grava os dias de cada lancha dele e das que ele vende.
+   $p = [id, nome, agenda_tipo, agenda_url, agenda_sem_nome]; $lanchas = [[id, nome, agenda_palavra], ...] (dele);
+   $vende = as lanchas de outros donos que ele vende (mesmo formato).
+   agenda_tipo 'conta': a conta Google conectada (lib/google.php); 'google' e 'planilha': por link.
+   Cada dia gravado guarda a fonte (o id do parceiro): duas agendas podem marcar a mesma lancha.
    Devolve ['ok' => true, 'total' => n, 'lanchas' => [nome => n], 'entraram', 'sairam'] ou ['ok' => false, 'erro' => texto]. */
-function bb_agenda_ler_parceiro(array $p, array $lanchas)
+function bb_agenda_ler_parceiro(array $p, array $lanchas, array $vende = [])
 {
     $tipo = $p['agenda_tipo'] ?? '';
-    if (!in_array($tipo, ['google', 'planilha'], true) || empty($p['agenda_url'])) return ['ok' => false, 'erro' => 'Este parceiro não tem agenda conectada por link.'];
-    if (!$lanchas) return ['ok' => false, 'erro' => 'Este parceiro ainda não tem lancha no nome dele. Marque as lanchas dele no cadastro.'];
+    $conta = $tipo === 'conta';
+    if (!$conta && (!in_array($tipo, ['google', 'planilha'], true) || empty($p['agenda_url']))) return ['ok' => false, 'erro' => 'Este parceiro não tem agenda conectada.'];
+    $ids_dele = array_map(function ($l) { return $l['id']; }, $lanchas);
+    $vende = array_values(array_filter($vende, function ($l) use ($ids_dele) { return !in_array($l['id'], $ids_dele, true); }));
+    if (!$lanchas && !$vende) return ['ok' => false, 'erro' => 'Este parceiro ainda não tem lancha no nome dele nem lancha que ele vende. Marque as lanchas no cadastro dele.'];
     $hoje = bb_hoje();
     $de = $hoje->format('Y-m-d');
     $ate = $hoje->modify('+' . BB_AGENDA_DIAS . ' days')->format('Y-m-d');
     $google = $tipo === 'google';
-    $classifica = bb_agenda_classificador($lanchas, $p['agenda_sem_nome'] ?? 'todas');
+    $classifica = bb_agenda_classificador($lanchas, $p['agenda_sem_nome'] ?? 'todas', $vende);
 
-    list($st, $txt) = bb_agenda_baixa(bb_agenda_url_real($tipo, $p['agenda_url']));
     $erro = null;
     $por = null;
-    if ($st === 0 && $txt === 'endereco') $erro = 'O link salvo não é um endereço válido. Cole o link de novo.';
-    elseif ($st === 0) $erro = 'Não consegui abrir o link agora. Tento de novo na próxima leitura.';
-    elseif (in_array($st, [401, 403, 404, 410], true)) {
-        $erro = $google ? 'O Google recusou o link. O dono pode ter trocado o endereço secreto da agenda: peça o link de novo.'
-                        : 'A planilha não está publicada na web. Peça ao dono para publicar de novo (Arquivo, Compartilhar, Publicar na Web, formato CSV).';
-    } elseif ($st >= 500 || $st < 200 || $st >= 300) $erro = 'O site da agenda não respondeu direito agora. Tento de novo na próxima leitura.';
-    elseif ($google) {
-        $por = bb_ical_dias($txt, $de, $ate, $classifica);
-        if ($por === null) $erro = 'Esse link não é de uma agenda. Confira se é o "Endereço secreto no formato iCal" (termina em .ics).';
+    if ($conta) {
+        require_once __DIR__ . '/google.php';
+        list($erro, $por) = bb_google_dias_parceiro($p, $classifica, $de, $ate);
     } else {
-        $r = bb_csv_dias($txt, $de, $ate, $classifica);
-        if ($r === null) $erro = 'A planilha não está publicada como CSV. Peça ao dono para publicar na web escolhendo "Valores separados por vírgula (.csv)".';
-        elseif (!$r[1] && trim($txt) !== '') $erro = 'Não achei nenhuma data na planilha. As datas precisam estar como 23/11/2026.';
-        else $por = $r[0];
+        list($st, $txt) = bb_agenda_baixa(bb_agenda_url_real($tipo, $p['agenda_url']));
+        if ($st === 0 && $txt === 'endereco') $erro = 'O link salvo não é um endereço válido. Cole o link de novo.';
+        elseif ($st === 0) $erro = 'Não consegui abrir o link agora. Tento de novo na próxima leitura.';
+        elseif (in_array($st, [401, 403, 404, 410], true)) {
+            $erro = $google ? 'O Google recusou o link. O dono pode ter trocado o endereço secreto da agenda: peça o link de novo.'
+                            : 'A planilha não está publicada na web. Peça ao dono para publicar de novo (Arquivo, Compartilhar, Publicar na Web, formato CSV).';
+        } elseif ($st >= 500 || $st < 200 || $st >= 300) $erro = 'O site da agenda não respondeu direito agora. Tento de novo na próxima leitura.';
+        elseif ($google) {
+            $por = bb_ical_dias($txt, $de, $ate, $classifica);
+            if ($por === null) $erro = 'Esse link não é de uma agenda. Confira se é o "Endereço secreto no formato iCal" (termina em .ics).';
+        } else {
+            $r = bb_csv_dias($txt, $de, $ate, $classifica);
+            if ($r === null) $erro = 'A planilha não está publicada como CSV. Peça ao dono para publicar na web escolhendo "Valores separados por vírgula (.csv)".';
+            elseif (!$r[1] && trim($txt) !== '') $erro = 'Não achei nenhuma data na planilha. As datas precisam estar como 23/11/2026.';
+            else $por = $r[0];
+        }
     }
 
     if ($erro !== null) {
@@ -497,12 +511,12 @@ function bb_agenda_ler_parceiro(array $p, array $lanchas)
         return ['ok' => false, 'erro' => $erro];
     }
     $saida = ['ok' => true, 'total' => 0, 'lanchas' => [], 'entraram' => 0, 'sairam' => 0];
-    foreach ($lanchas as $l) {
+    foreach (array_merge($lanchas, $vende) as $l) {
         $dias = $por[$l['id']] ?? [];
-        list($st2, $res) = bb_supabase('POST', 'rpc/bb_agenda_troca', ['p_lancha' => $l['id'], 'p_origem' => $tipo, 'p_dias' => $dias, 'p_de' => $de]);
+        list($st2, $res) = bb_supabase('POST', 'rpc/bb_agenda_troca2', ['p_lancha' => $l['id'], 'p_origem' => $conta ? 'conta' : $tipo, 'p_fonte' => $p['id'], 'p_dias' => $dias, 'p_de' => $de]);
         if ($st2 !== 200 || !is_array($res)) return ['ok' => false, 'erro' => 'Li a agenda, mas não consegui gravar no painel. Tento de novo na próxima leitura.'];
         $n = (int) ($res['total'] ?? count($dias));
-        $saida['lanchas'][$l['nome']] = $n;
+        if ($n || in_array($l['id'], $ids_dele, true)) $saida['lanchas'][$l['nome']] = $n;
         $saida['total'] += $n;
         $saida['entraram'] += (int) ($res['entraram'] ?? 0);
         $saida['sairam'] += (int) ($res['sairam'] ?? 0);
@@ -512,18 +526,29 @@ function bb_agenda_ler_parceiro(array $p, array $lanchas)
     return $saida;
 }
 
-/* Parceiros com agenda por link, cada um com as lanchas dele: [[parceiro, [lanchas]], ...]. null se o banco falhar. */
-function bb_agenda_parceiros($id = null)
+/* Parceiros com agenda conectada (conta Google ou link), cada um com as lanchas dele e as que ele vende:
+   [[parceiro, [lanchas dele], [lanchas que vende]], ...]. $tipos limita ('conta' ou os de link). null se o banco falhar. */
+function bb_agenda_parceiros($id = null, array $tipos = ['google', 'planilha', 'conta'])
 {
-    $q = 'bb_parceiros?select=id,nome,agenda_tipo,agenda_url,agenda_sem_nome&agenda_tipo=in.(google,planilha)&agenda_url=not.is.null';
+    $q = 'bb_parceiros?select=id,nome,agenda_tipo,agenda_url,agenda_sem_nome&agenda_tipo=in.(' . implode(',', $tipos) . ')';
     if ($id !== null) $q .= '&id=eq.' . rawurlencode($id);
     list($st, $ps) = bb_supabase('GET', $q);
     if ($st !== 200 || !is_array($ps)) return null;
+    $ps = array_values(array_filter($ps, function ($p) { return $p['agenda_tipo'] === 'conta' || !empty($p['agenda_url']); }));
     if (!$ps) return [];
     $ids = implode(',', array_map(function ($p) { return $p['id']; }, $ps));
-    list($st, $ls) = bb_supabase('GET', 'bb_lanchas?select=id,nome,agenda_palavra,parceiro_id&parceiro_id=in.(' . $ids . ')&order=nome');
+    list($st, $ls) = bb_supabase('GET', 'bb_lanchas?select=id,nome,agenda_palavra,parceiro_id&order=nome');
     if ($st !== 200 || !is_array($ls)) return null;
+    list($st, $vs) = bb_supabase('GET', 'bb_parceiro_lanchas?select=parceiro_id,lancha_id&parceiro_id=in.(' . $ids . ')');
+    if ($st !== 200 || !is_array($vs)) return null;
+    $por_id = [];
+    foreach ($ls as $l) $por_id[$l['id']] = $l;
     $saida = [];
-    foreach ($ps as $p) $saida[] = [$p, array_values(array_filter($ls, function ($l) use ($p) { return $l['parceiro_id'] === $p['id']; }))];
+    foreach ($ps as $p) {
+        $dele = array_values(array_filter($ls, function ($l) use ($p) { return $l['parceiro_id'] === $p['id']; }));
+        $vende = [];
+        foreach ($vs as $v) if ($v['parceiro_id'] === $p['id'] && isset($por_id[$v['lancha_id']])) $vende[] = $por_id[$v['lancha_id']];
+        $saida[] = [$p, $dele, $vende];
+    }
     return $saida;
 }
