@@ -61,11 +61,11 @@ foreach ($paginas as $p) {
     }
 }
 
-// lancha escondida ou inexistente vira 404; sem banco, a estática
+// lancha inexistente vira 404; escondida (com página antiga) vai para a lista; sem banco, a estática
 list($st) = bb_render('lanchas/nao-existe/', $lanchas);
 if ($st !== 404) { $falhas++; echo "lancha inexistente devolveu $st\n"; }
-list($st) = bb_render('lanchas/1564/', array_values(array_filter($lanchas, function ($l) { return $l['slug'] !== '1564'; })));
-if ($st !== 404) { $falhas++; echo "lancha escondida devolveu $st\n"; }
+list($st, $destino) = bb_render('lanchas/1564/', array_values(array_filter($lanchas, function ($l) { return $l['slug'] !== '1564'; })));
+if ($st !== 301 || $destino !== 'lanchas/') { $falhas++; echo "lancha escondida devolveu $st\n"; }
 list($st, $h) = bb_render('lanchas/1564/', null);
 if ($st !== 200 || $h !== bb_molde('lanchas/1564/index.html')) { $falhas++; echo "sem banco não serviu a estática\n"; }
 list($st) = bb_render('../config.local.php', $lanchas);

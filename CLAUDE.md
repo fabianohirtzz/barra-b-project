@@ -178,7 +178,7 @@ automático continua dependendo do `bb_clima`. Puxar os números do Windguru par
 **Site pelo PHP (19/11):** em novo.barraboatfloripa.com.br as páginas passam pelo `site.php` (o `.htaccess`
 manda as pastas para lá). O molde de cada página é o HTML estático do gerador; `lib/site.php` troca só o que
 vem do banco: cards da home e de `/lanchas/`, opções do formulário, a página `/lanchas/<slug>/` inteira e os
-números da frota ("17 lanchas de 23 a 37 pés"). Lancha escondida no painel vira 404. `lib/bb.php` lê o Supabase
+números da frota ("17 lanchas de 23 a 37 pés"). Lancha escondida no painel: se já teve página, 301 para /lanchas/ (links antigos e Google); endereço que nunca existiu é 404. O /sitemap.xml sai do `sitemap.php` (só lanchas ativas, 9 idiomas). `lib/bb.php` lê o Supabase
 com a service_role e guarda em `cache/` por 2 min (Supabase fora do ar: usa a última cópia; sem cópia, serve a
 estática). `api/disponibilidade.php` entrega as datas ocupadas (passeios, agenda do dono, bloqueios) ao
 calendário. **Mudou o HTML de lancha ou de card no gerador? Mude também `lib/lanchas.php` e rode

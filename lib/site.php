@@ -62,8 +62,8 @@ function bb_opcoes_form($html, $lanchas)
 function bb_textos_frota($html, $f)
 {
     return preg_replace(
-        ['/\b17 lanchas\b/u', '/\bde 23 a 37 pés\b/u', '/\b(de|para) 7 a 13 pessoas\b/u', '#<b data-frota-n>\d+</b>#'],
-        [$f['n'] . ' lanchas', 'de ' . $f['pes_min'] . ' a ' . $f['pes_max'] . ' pés', '$1 ' . $f['pax_min'] . ' a ' . $f['pax_max'] . ' pessoas', '<b data-frota-n>' . $f['n'] . '</b>'],
+        ['/\b17 lanchas\b/u', '/\bde 23 a 37 pés\b/u', '/\b(de|para) 7 a 13 pessoas\b/u', '#<b data-frota-n>\d+</b>#', '#(<input name="pessoas" type="number" min="1" max=")\d+(")#'],
+        [$f['n'] . ' lanchas', 'de ' . $f['pes_min'] . ' a ' . $f['pes_max'] . ' pés', '$1 ' . $f['pax_min'] . ' a ' . $f['pax_max'] . ' pessoas', '<b data-frota-n>' . $f['n'] . '</b>', '${1}' . $f['pax_max'] . '$2'],
         $html
     );
 }
@@ -128,7 +128,7 @@ function bb_404()
 /* $p: caminho pedido sem a barra inicial ("", "lanchas/", "lanchas/1564/", "sobre/").
    $lanchas: lanchas ativas na ordem do site, ou null se o banco não respondeu.
    $conteudo: ['faq' => [...], 'avaliacoes' => [...], 'roteiros' => [...]] do painel, ou null.
-   Devolve [status, html]. */
+   Devolve [status, html]; com status 301, o segundo item é o caminho de destino (sem o idioma). */
 function bb_render($p, $lanchas, $fonte_api = 'api/disponibilidade.php', $conteudo = null)
 {
     $p = ltrim($p, '/');
@@ -144,16 +144,22 @@ function bb_render($p, $lanchas, $fonte_api = 'api/disponibilidade.php', $conteu
         }
         $l = null;
         foreach ($lanchas as $x) if ($x['slug'] === $m[1]) $l = $x;
-        if ($l === null) return bb_404();   // não existe ou está escondida no painel
+        // escondida no painel: se a lancha já teve página (o Google e links antigos conhecem o endereço),
+        // leva para a lista de lanchas; endereço que nunca existiu é 404
+        if ($l === null) return is_file(BB_RAIZ . '/' . $p . 'index.html') ? [301, 'lanchas/'] : bb_404();
         $h = bb_molde($p . 'index.html');
         if ($h === null) {
             $outras = glob(BB_RAIZ . '/lanchas/*/index.html') ?: [];
-            $h = $outras ? file_get_contents($outras[0]) : null;
+            // lancha nova (cadastrada no painel, sem página no gerador): o molde de outra lancha serve de
+            // casca; o miolo inteiro é trocado abaixo. Sempre pelo bb_molde, que troca CRLF por LF.
+            $h = $outras ? bb_molde(substr($outras[0], strlen(BB_RAIZ) + 1)) : null;
         }
         if ($h === null) return bb_404();
         list($titulo, $desc, $og, $corpo, $ld) = bb_pagina_lancha($l, $lanchas, $pre, $pre . $fonte_api);
         $h = bb_cabeca($h, $titulo, $desc, BB_DOM . $p, $og, $ld);
+        $antes = $h;
         $h = bb_troca_entre($h, '<main id="conteudo">' . "\n", "\n  </main>", $corpo);
+        if ($h === $antes) return bb_404();   // não achou onde trocar: melhor 404 que a página de outra lancha
         return [200, bb_textos_frota(bb_opcoes_form($h, $lanchas), bb_frota($lanchas))];
     }
 

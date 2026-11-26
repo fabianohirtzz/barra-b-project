@@ -13,13 +13,8 @@
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 
-  /* ---------- GTM: só no domínio de produção (a prévia não suja as contas de anúncio) ---------- */
-  if (/(^|\.)barraboatfloripa\.com\.br$/.test(location.hostname)) {
-    (function (w, d, s, l, i) { w[l] = w[l] || []; w[l].push({ 'gtm.start': Date.now(), event: 'gtm.js' });
-      const f = d.getElementsByTagName(s)[0], j = d.createElement(s); j.async = true;
-      j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i; f.parentNode.insertBefore(j, f);
-    })(window, document, 'script', 'dataLayer', 'GTM-5FJVHJRJ');
-  }
+  /* GTM: quem põe é o PHP, só no domínio oficial (bb_producao em lib/site.php). Aqui não carrega de novo,
+     para não contar a visita duas vezes nem sujar as contas de anúncio com a prévia. */
 
   /* ---------- origem do visitante (vai junto com o clique no WhatsApp) ---------- */
   const origem = (() => {

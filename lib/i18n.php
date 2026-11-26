@@ -227,7 +227,8 @@ function bb_i18n_fecha_trecho(array $run, $idioma, callable $coleta = null)
         }
         break;
     }
-    if ($ini > $fim) return implode('', $run);
+    // só marcas, sem texto (link com ícone ou imagem): os atributos delas (aria-label, title, href do WhatsApp) também traduzem
+    if ($ini > $fim) return bb_i18n_attrs_lista($run, $idioma);
     $miolo = array_slice($run, $ini, $fim - $ini + 1);
     // espaço nas pontas do texto fica de fora
     $primeiro = $miolo[0];

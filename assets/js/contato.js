@@ -40,6 +40,8 @@
     }
     erro.hidden = true;
     form.elements.nome.removeAttribute('aria-invalid');
+    // data no passado ou número de pessoas fora do limite: o navegador mostra o aviso no próprio campo
+    if (!form.checkValidity()) { form.reportValidity(); return; }
     const pers = form.elements.roteiro.value === 'Personalizado';
     const buscar = pers && form.elements.desloc.value === 'sim' ? (form.elements.local.value.trim() || T('a combinar')) : '';
     const partes = [T('Olá! Meu nome é {nome}. Vim pelo site da Barra Boat.', { nome })];

@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /painel/
+Disallow: /api/
+Disallow: /novo/
 
 Sitemap: https://barraboatfloripa.com.br/sitemap.xml

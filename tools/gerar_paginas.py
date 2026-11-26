@@ -14,7 +14,7 @@ WA = '5548991153172'
 INDEX = open(os.path.join(PROJ, 'index.html'), encoding='utf-8').read()
 L_JSON = {l['slug']: l for l in json.load(open(os.path.join(PROJ, 'docs/conteudo-site-atual/lanchas.json'), encoding='utf-8'))}
 IMGS = json.load(open(os.path.join(PROJ, 'tools/imagens.json'), encoding='utf-8'))
-V_CSS, V_JS = '16', '12'
+V_CSS, V_JS = '18', '13'
 e = html.escape
 
 
@@ -817,7 +817,7 @@ corpo = capa_faixa('Fale com a Barra Boat', 'Atendimento 24 horas pelo WhatsApp.
 gerados.append(pagina('contato/', 'Contato e embarque | Barra Boat Floripa',
                       'Fale com a Barra Boat Floripa pelo WhatsApp (48) 99115-3172, atendimento 24 horas. Sede e embarque no Canal da Barra da Lagoa, Rod. Jorn. Manoel de Menezes, 3007.',
                       corpo, [ld_m, {'@type': 'ContactPage', 'url': DOM + 'contato/', 'about': EMPRESA_REF}],
-                      js_extra='\n  <script src="{pre}assets/js/contato.js?v=4" defer></script>'))
+                      js_extra='\n  <script src="{pre}assets/js/contato.js?v=5" defer></script>'))
 
 
 # ---------------------------------------------------------------- políticas

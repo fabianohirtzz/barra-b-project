@@ -3449,7 +3449,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     const ul = tela.querySelector('[data-equipe]');
     if (!ul) return;
     if (error) { console.error(error); ul.innerHTML = vazio('Não consegui carregar a lista agora. Tente de novo.'); return; }
-    equipe = data || [];
+    equipe = Array.isArray(data) ? data : [];
     ul.innerHTML = equipe.map((x) => {
       const de = x.papel === 'parceiro' ? (parceiro(x.parceiro_id) || {}).nome : x.papel === 'marinheiro' ? (marinheiro(x.marinheiro_id) || {}).nome : '';
       return `<li><button class="linha" type="button" data-acesso="${x.user_id}">

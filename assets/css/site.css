@@ -665,3 +665,5 @@ html:is([lang="ja"],[lang="zh-Hans"]) :is(h1,h2,h3){letter-spacing:0;font-stretc
 .planejar__campo,.planejar__select{min-width:0}
 .planejar__campo{grid-template-columns:minmax(0,1fr)}
 html[lang="ja"] :is(h1,h2,h3){word-break:auto-phrase}
+/* foco do teclado visível sobre o fundo marinho do rodapé */
+.rodape :focus-visible{outline:2px solid #fff;outline-offset:3px}
