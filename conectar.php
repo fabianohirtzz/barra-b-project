@@ -102,7 +102,7 @@ if (!bb_google_pronto()) {
         . '<li>Entre com a conta Google da agenda onde você anota as lanchas.</li>'
         . '<li>Se aparecer <b>"O Google não verificou este app"</b>, toque em <b>Avançado</b> e depois em <b>Acessar Barra Boat Floripa (não seguro)</b>. É o aviso padrão enquanto o Google analisa o nosso pedido.</li>'
         . '<li>Na lista de permissões, marque <b>Selecionar tudo</b> (as caixas vêm desmarcadas) e toque em <b>Continuar</b>.</li><li>Escolha a agenda onde você anota as reservas das lanchas.</li></ol>'
-        . '<a class="botao botao--google" href="' . cx(bb_google_url_autorizacao($c)) . '">Conectar com Google</a>';
+        . '<a class="botao botao--google" href="' . cx(bb_google_url_autorizacao($c, (string) ($_GET['hl'] ?? ''))) . '">Conectar com Google</a>';
 }
 ?><!doctype html>
 <html lang="pt-BR">

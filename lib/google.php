@@ -107,9 +107,10 @@ function bb_google_http($metodo, $url, $corpo = null, $token = null, $form = fal
 
 /* ---------- OAuth ---------- */
 
-function bb_google_url_autorizacao($state)
+function bb_google_url_autorizacao($state, $idioma = '')
 {
-    return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query([
+    // $idioma: idioma das telas do Google (ex.: 'en' no vídeo para a verificação); vazio = o da conta
+    return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query(array_filter([
         'client_id' => bb_config('GOOGLE_CLIENT_ID'),
         'redirect_uri' => bb_google_volta(),
         'response_type' => 'code',
@@ -118,7 +119,8 @@ function bb_google_url_autorizacao($state)
         'prompt' => 'consent',          // garante o refresh token mesmo se ele já autorizou antes
         'include_granted_scopes' => 'true',
         'state' => $state,
-    ]);
+        'hl' => preg_match('/^[a-z]{2}(-[A-Z]{2})?$/', $idioma) ? $idioma : '',
+    ]));
 }
 
 /* Troca o código da volta pelos tokens. ['ok' => true, 'refresh', 'access', 'expira', 'email', 'escopos'] ou ['ok' => false, 'erro']. */
