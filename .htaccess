@@ -35,6 +35,9 @@ RewriteRule ^midia/instagram/fila(/|$) - [F,L]
 # Sitemap com as lanchas ativas no painel, nos 9 idiomas
 RewriteRule ^sitemap\.xml$ sitemap.php [L]
 RewriteRule ^llms\.txt$ llms.php [L]
+RewriteRule ^llms-full\.txt$ llms.php?completo=1 [L]
+# Imagem de compartilhamento em JPEG 1200x630, feita da foto WebP de mesmo caminho
+RewriteRule ^og/(.+)\.jpg$ og.php?f=$1 [L]
 
 # Site em outros idiomas (/es/, /en/...): arquivos de assets, fotos, mídia e api são os mesmos da raiz
 RewriteRule ^(?:es|en|fr|de|it|nl|ja|zh)/((?:assets|fotos|midia|api)/.*|favicon\.ico)$ $1 [L]

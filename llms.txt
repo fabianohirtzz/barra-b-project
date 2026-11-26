@@ -24,3 +24,6 @@
 
 ## Idiomas
 - O site também está em espanhol (/es/), inglês (/en/), francês (/fr/), alemão (/de/), italiano (/it/), holandês (/nl/), japonês (/ja/) e chinês simplificado (/zh/), com as mesmas páginas e endereços depois do prefixo do idioma.
+
+## Mais detalhes
+- [Versão completa](https://barraboatfloripa.com.br/llms-full.txt): cada lancha com tamanho, capacidade e itens a bordo, as paradas e regras de cada roteiro e as perguntas frequentes.

@@ -37,7 +37,7 @@ const BB_VAZIAS = ['br', 'wbr', 'img', 'input', 'meta', 'link', 'source', 'hr', 
 /* atributos com texto para pessoas */
 const BB_ATRIBUTOS = ['alt', 'title', 'aria-label', 'placeholder'];
 /* campos de texto do JSON-LD */
-const BB_LD_CAMPOS = ['name', 'description', 'text', 'reviewBody', 'headline', 'alternateName', 'disambiguatingDescription', 'slogan'];
+const BB_LD_CAMPOS = ['name', 'description', 'text', 'reviewBody', 'headline', 'alternateName', 'disambiguatingDescription', 'slogan', 'serviceType'];
 const BB_LD_SEM_TRADUCAO = ['Person', 'PostalAddress', 'GeoCoordinates', 'Organization', 'Brand', 'ImageObject'];
 
 function bb_idioma_valido($c)

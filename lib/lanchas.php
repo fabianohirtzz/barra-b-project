@@ -278,19 +278,15 @@ function bb_pagina_lancha($l, $todas, $pre, $fonte)
             ['@type' => 'ListItem', 'position' => 1, 'name' => 'Início', 'item' => BB_DOM],
             ['@type' => 'ListItem', 'position' => 2, 'name' => 'Lanchas', 'item' => BB_DOM . 'lanchas/'],
             ['@type' => 'ListItem', 'position' => 3, 'name' => $nome]]],
-        ['@type' => 'Product', 'name' => 'Aluguel da lancha ' . $nome . ' em Florianópolis', 'category' => 'Aluguel de lancha com marinheiro',
+        // Service, não Product: sem preço no site, o Google acusaria erro em Product sem offers/review
+        ['@type' => 'Service', 'name' => 'Aluguel da lancha ' . $nome . ' em Florianópolis', 'serviceType' => 'Aluguel de lancha com marinheiro',
             'description' => $intro, 'url' => BB_DOM . 'lanchas/' . $s . '/',
             'image' => array_map(function ($f) { return BB_DOM . ltrim(preg_replace('#^https?://[^/]+#', '', $f['url']), '/'); }, array_slice($fotos, 0, 6)),
-            'brand' => ['@id' => BB_DOM . '#empresa'],
-            'additionalProperty' => array_merge(
-                [['@type' => 'PropertyValue', 'name' => 'Capacidade', 'value' => $pax . ' pessoas'],
-                    ['@type' => 'PropertyValue', 'name' => 'Tamanho', 'value' => $pes . ' pés'],
-                    ['@type' => 'PropertyValue', 'name' => 'Região', 'value' => $reg]],
-                array_map(function ($x) { return ['@type' => 'PropertyValue', 'name' => 'A bordo', 'value' => $x[1]]; }, array_slice($itens, 0, 12)))],
+            'provider' => ['@id' => BB_DOM . '#empresa'], 'areaServed' => 'Florianópolis, Santa Catarina'],
     ];
     $og = $nf ? ltrim(preg_replace('#^https?://[^/]+#', '', $fotos[0]['url']), '/') : 'assets/img/fotos/hero.webp';
     return [
-        $nome . ': lancha para ' . $pax . ' pessoas em Florianópolis | Barra Boat Floripa',
+        $nome . ', lancha para ' . $pax . ' pessoas | Barra Boat Floripa',
         'Aluguel da lancha ' . $nome . ', ' . $pes . ' pés, até ' . $pax . ' pessoas, com marinheiro e combustível inclusos. Veja fotos, itens a bordo e as datas livres.',
         $og, $corpo, $ld,
     ];

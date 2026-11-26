@@ -74,6 +74,12 @@ function bb_ld_script($grafo)
     return '<script type="application/ld+json">' . "\n  " . str_replace("\n", "\n  ", $j) . "\n  </script>";
 }
 
+/* Imagem de compartilhamento: o og.php entrega a foto em JPEG 1200x630 (/og/<foto>.jpg). Igual ao og_url do gerador. */
+function bb_og_url($foto)
+{
+    return BB_DOM . 'og/' . preg_replace('#\.(webp|jpg)(\?.*)?$#', '', ltrim($foto, '/')) . '.jpg';
+}
+
 function bb_cabeca($html, $titulo, $desc, $canonico, $og, $grafo)
 {
     $t = bb_e($titulo);
@@ -83,7 +89,8 @@ function bb_cabeca($html, $titulo, $desc, $canonico, $og, $grafo)
     $html = preg_replace('#<link rel="canonical" href="[^"]*">#', '<link rel="canonical" href="' . bb_e($canonico) . '">', $html, 1);
     $html = preg_replace('#<meta property="og:title" content="[^"]*">#', '<meta property="og:title" content="' . $t . '">', $html, 1);
     $html = preg_replace('#<meta property="og:description" content="[^"]*">#', '<meta property="og:description" content="' . $d . '">', $html, 1);
-    $html = preg_replace('#<meta property="og:image" content="[^"]*">#', '<meta property="og:image" content="' . BB_DOM . bb_e($og) . '">', $html, 1);
+    $html = preg_replace('#<meta property="og:url" content="[^"]*">#', '<meta property="og:url" content="' . bb_e($canonico) . '">', $html, 1);
+    $html = preg_replace('#<meta property="og:image" content="[^"]*">#', '<meta property="og:image" content="' . bb_e(bb_og_url($og)) . '">', $html, 1);
     $ld = bb_ld_script($grafo);
     return preg_replace_callback('#<script type="application/ld\+json">.*?</script>#s', function () use ($ld) { return $ld; }, $html, 1);
 }

@@ -376,5 +376,14 @@ quem tem o navegador em outro idioma (lembra a escolha em `localStorage.bb_idiom
 de tradução automática. Sitemap lista as 26 páginas x 9 idiomas com `xhtml:link`. Teste local: `php -S` com um roteador que imita o
 `.htaccess` (scratchpad da sessão). **Na troca para a raiz: copiar `traducoes/` e trocar o caminho do cron.**
 
+**SEO e GEO para o lançamento (26/11):** compartilhamento em JPEG 1200x630 pelo `og.php` (`/og/<foto sem extensão>.jpg`, recorte
+central do WebP de `assets/img` ou `fotos/lanchas|roteiros`, cache em `cache/og/`), com `og:url` (o i18n troca pelo idioma),
+`og:image:width/height` e `twitter:card`; `og_url()` no gerador e `bb_og_url()` no PHP fazem o mesmo caminho. Lancha no JSON-LD é
+`Service` (não `Product`: sem preço o Google acusaria erro); a home tem `hasMap` e o perfil do Maps em `sameAs` (Place ID).
+Títulos de lancha e roteiro encurtados para caber no Google (até uns 62 caracteres). `/llms-full.txt` (`llms.php?completo=1`):
+lanchas ativas com pés, pessoas, região e itens, fichas, paradas e regras dos 2 roteiros e as perguntas, tudo do banco.
+IndexNow: chave em `6bf75e866e649d7e10f128b1517138df.txt` na raiz e `python tools/indexnow.py` (sitemap inteiro ou só os
+caminhos passados, nos 9 idiomas). Passo a passo do Search Console e do Bing em `docs/lancamento.md` > Indexação.
+
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.

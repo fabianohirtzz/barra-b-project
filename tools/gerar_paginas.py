@@ -71,6 +71,11 @@ def menu_atual(trecho, caminho):
     return trecho
 
 
+def og_url(foto):
+    """Imagem de compartilhamento: o og.php do servidor entrega a foto em JPEG 1200x630 (/og/<foto>.jpg)."""
+    return DOM + 'og/' + re.sub(r'\.(webp|jpg)(\?.*)?$', '', foto) + '.jpg'
+
+
 def pagina(caminho, titulo, descricao, corpo, ld=None, og_img='assets/img/fotos/hero.webp', css_extra='', js_extra='', preload=''):
     prof = caminho.count('/')
     pre = '../' * prof
@@ -92,7 +97,11 @@ def pagina(caminho, titulo, descricao, corpo, ld=None, og_img='assets/img/fotos/
   <meta property="og:site_name" content="Barra Boat Floripa">
   <meta property="og:title" content="{e(titulo)}">
   <meta property="og:description" content="{e(descricao)}">
-  <meta property="og:image" content="{DOM}{og_img}">
+  <meta property="og:url" content="{DOM}{caminho}">
+  <meta property="og:image" content="{og_url(og_img)}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#083359">
   <link rel="icon" href="{pre}favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="{pre}assets/img/marca/favicon.png">
@@ -405,14 +414,11 @@ for s in ORDEM:
 {grade_lanchas(parecidas)}
     </section>
 '''
-    ld_prod = {'@type': 'Product', 'name': f'Aluguel da lancha {nome} em Florianópolis', 'category': 'Aluguel de lancha com marinheiro',
+    # Service, não Product: sem preço no site, o Google acusaria erro em Product sem offers/review
+    ld_prod = {'@type': 'Service', 'name': f'Aluguel da lancha {nome} em Florianópolis', 'serviceType': 'Aluguel de lancha com marinheiro',
                'description': intro, 'url': f'{DOM}lanchas/{s}/', 'image': [f'{DOM}assets/img/lanchas/{s}/{f["n"]:02d}.webp' for f in fotos[:6]],
-               'brand': EMPRESA_REF,
-               'additionalProperty': [{'@type': 'PropertyValue', 'name': 'Capacidade', 'value': f'{pax} pessoas'},
-                                      {'@type': 'PropertyValue', 'name': 'Tamanho', 'value': f'{pes} pés'},
-                                      {'@type': 'PropertyValue', 'name': 'Região', 'value': reg}]
-               + [{'@type': 'PropertyValue', 'name': 'A bordo', 'value': t} for _, t in itens[:12]]}
-    gerados.append(pagina(f'lanchas/{s}/', f'{nome}: lancha para {pax} pessoas em Florianópolis | Barra Boat Floripa',
+               'provider': EMPRESA_REF, 'areaServed': 'Florianópolis, Santa Catarina'}
+    gerados.append(pagina(f'lanchas/{s}/', f'{nome}, lancha para {pax} pessoas | Barra Boat Floripa',
                           f'Aluguel da lancha {nome}, {pes} pés, até {pax} pessoas, com marinheiro e combustível inclusos. Veja fotos, itens a bordo e as datas livres.',
                           corpo, [ld_m, ld_prod], og_img=f'assets/img/lanchas/{s}/01.webp',
                           js_extra=f'\n  <script src="{{pre}}assets/js/lancha.js?v=5" defer></script>'))
@@ -504,8 +510,8 @@ corpo = capa_foto('roteiros', 'Lanchas ancoradas em frente a uma praia de areia 
 ''' + chamada('Já sabe o roteiro?', 'Mande a data e quantas pessoas vão. A nossa equipe responde pelo WhatsApp com as lanchas livres.', 'Consultar uma data',
               'Olá! Vim pelo site da Barra Boat. Quero consultar um passeio de lancha.')
 ld = [ld_m]
-gerados.append(pagina('roteiros/', 'Roteiros de lancha em Florianópolis: Campeche e Costa da Lagoa | Barra Boat Floripa',
-                      'Compare os passeios de lancha saindo da Barra da Lagoa: Ilha do Campeche em mar aberto (10,4 milhas) ou Costa da Lagoa em águas calmas. Também montamos roteiro personalizado.',
+gerados.append(pagina('roteiros/', 'Roteiros de lancha em Florianópolis | Barra Boat Floripa',
+                      'Compare os passeios de lancha saindo da Barra da Lagoa: Ilha do Campeche em mar aberto ou Costa da Lagoa em águas calmas. Também montamos roteiro personalizado.',
                       corpo, ld, og_img='assets/img/capas/roteiros.webp'))
 
 
@@ -621,7 +627,7 @@ pagina_roteiro(
     </section>
 ''',
     'Olá! Vim pelo site da Barra Boat. Quero consultar um passeio para a Ilha do Campeche.',
-    'Passeio de lancha para a Ilha do Campeche saindo da Barra da Lagoa | Barra Boat Floripa',
+    'Passeio de lancha para a Ilha do Campeche | Barra Boat Floripa',
     'Passeio de lancha privativa para a Ilha do Campeche: 10,4 milhas desde o Canal da Barra da Lagoa, 30 a 40 minutos por trajeto, diária de 8 horas com marinheiro.',
     {'@type': 'TouristTrip', 'name': 'Passeio de lancha para a Ilha do Campeche', 'touristType': ['Famílias', 'Grupos de amigos'],
      'description': 'Passeio de lancha privativa saindo do Canal da Barra da Lagoa até a Ilha do Campeche, 10,4 milhas, diária de 8 horas com marinheiro e combustível inclusos.',
@@ -673,7 +679,7 @@ pagina_roteiro(
     </section>
 ''', '',
     'Olá! Vim pelo site da Barra Boat. Quero consultar um passeio para a Costa da Lagoa.',
-    'Passeio de lancha pela Costa da Lagoa, Lagoa da Conceição | Barra Boat Floripa',
+    'Passeio de lancha pela Costa da Lagoa | Barra Boat Floripa',
     'Passeio de lancha privativa pela Costa da Lagoa: Castelinho, Praia do Saquinho, cachoeira, Pedra do Navio e restaurantes. Águas calmas, saída da Barra ou da Lagoa.',
     {'@type': 'TouristTrip', 'name': 'Passeio de lancha pela Costa da Lagoa', 'touristType': ['Famílias com crianças', 'Grupos de amigos'],
      'description': 'Passeio de lancha privativa em águas calmas pela Lagoa da Conceição e a Costa da Lagoa, com marinheiro e combustível inclusos.',
