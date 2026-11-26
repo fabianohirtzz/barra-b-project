@@ -38,8 +38,169 @@
   const foneTela = (e) => {
     const d = String(e || '').replace(/\D/g, '');
     if (d.startsWith('55') && d.length >= 12) { const n = d.slice(4); return `(${d.slice(2, 4)}) ${n.length === 9 ? n.slice(0, 5) + '-' + n.slice(5) : n.slice(0, 4) + '-' + n.slice(4)}`; }
+    if (d.length >= 8 && String(e).trim().startsWith('+')) { const [p, n] = separaFone(e); return `+${ddiBase(p)} ${agrupa(n)}`; }
     return e || '';
   };
+  /* Campo de WhatsApp com o país: botão com a sigla e o código (+55), lista com busca por nome, sigla ou
+     código, e o número sem o código do país. Grava sempre em E.164 (+5548991153172).
+     Os primeiros da lista são os que mais aparecem por aqui; o resto em ordem alfabética.
+     Código repetido (+1, +7): na hora de reconhecer um número, vale o primeiro da lista. */
+  const PAISES = (() => {
+    const topo = 'BR|Brasil|55;AR|Argentina|54;UY|Uruguai|598;PY|Paraguai|595;CL|Chile|56;US|Estados Unidos|1;PT|Portugal|351;ES|Espanha|34;IT|Itália|39;DE|Alemanha|49;FR|França|33;GB|Reino Unido|44';
+    const resto = 'AF|Afeganistão|93;ZA|África do Sul|27;AL|Albânia|355;AD|Andorra|376;AO|Angola|244;AG|Antígua e Barbuda|1268;SA|Arábia Saudita|966;DZ|Argélia|213;AM|Armênia|374;AW|Aruba|297;AU|Austrália|61;AT|Áustria|43;AZ|Azerbaijão|994;BS|Bahamas|1242;BH|Bahrein|973;BD|Bangladesh|880;BB|Barbados|1246;BY|Belarus|375;BE|Bélgica|32;BZ|Belize|501;BJ|Benin|229;BM|Bermudas|1441;BO|Bolívia|591;BA|Bósnia e Herzegovina|387;BW|Botsuana|267;BN|Brunei|673;BG|Bulgária|359;BF|Burkina Faso|226;BI|Burundi|257;BT|Butão|975;CV|Cabo Verde|238;CM|Camarões|237;KH|Camboja|855;CA|Canadá|1;QA|Catar|974;KZ|Cazaquistão|7;TD|Chade|235;CN|China|86;CY|Chipre|357;CO|Colômbia|57;KM|Comores|269;CG|Congo|242;KP|Coreia do Norte|850;KR|Coreia do Sul|82;CI|Costa do Marfim|225;CR|Costa Rica|506;HR|Croácia|385;CU|Cuba|53;CW|Curaçao|599;DK|Dinamarca|45;DJ|Djibuti|253;DM|Dominica|1767;EG|Egito|20;SV|El Salvador|503;AE|Emirados Árabes Unidos|971;EC|Equador|593;ER|Eritreia|291;SK|Eslováquia|421;SI|Eslovênia|386;SZ|Essuatíni|268;EE|Estônia|372;ET|Etiópia|251;FJ|Fiji|679;PH|Filipinas|63;FI|Finlândia|358;GA|Gabão|241;GM|Gâmbia|220;GH|Gana|233;GE|Geórgia|995;GD|Granada|1473;GR|Grécia|30;GP|Guadalupe|590;GT|Guatemala|502;GY|Guiana|592;GF|Guiana Francesa|594;GN|Guiné|224;GQ|Guiné Equatorial|240;GW|Guiné-Bissau|245;HT|Haiti|509;HN|Honduras|504;HK|Hong Kong|852;HU|Hungria|36;YE|Iêmen|967;KY|Ilhas Cayman|1345;VG|Ilhas Virgens Britânicas|1284;VI|Ilhas Virgens Americanas|1340;IN|Índia|91;ID|Indonésia|62;IR|Irã|98;IQ|Iraque|964;IE|Irlanda|353;IS|Islândia|354;IL|Israel|972;JM|Jamaica|1876;JP|Japão|81;JO|Jordânia|962;KW|Kuwait|965;LA|Laos|856;LS|Lesoto|266;LV|Letônia|371;LB|Líbano|961;LR|Libéria|231;LY|Líbia|218;LI|Liechtenstein|423;LT|Lituânia|370;LU|Luxemburgo|352;MO|Macau|853;MK|Macedônia do Norte|389;MG|Madagascar|261;MY|Malásia|60;MW|Malawi|265;MV|Maldivas|960;ML|Mali|223;MT|Malta|356;MA|Marrocos|212;MQ|Martinica|596;MU|Maurício|230;MR|Mauritânia|222;MX|México|52;MM|Mianmar|95;MZ|Moçambique|258;MD|Moldávia|373;MC|Mônaco|377;MN|Mongólia|976;ME|Montenegro|382;NA|Namíbia|264;NP|Nepal|977;NI|Nicarágua|505;NE|Níger|227;NG|Nigéria|234;NO|Noruega|47;NZ|Nova Zelândia|64;OM|Omã|968;NL|Países Baixos (Holanda)|31;PS|Palestina|970;PA|Panamá|507;PG|Papua-Nova Guiné|675;PK|Paquistão|92;PE|Peru|51;PF|Polinésia Francesa|689;PL|Polônia|48;PR|Porto Rico|1787,1939;KE|Quênia|254;KG|Quirguistão|996;DO|República Dominicana|1809,1829,1849;CZ|República Tcheca|420;RO|Romênia|40;RW|Ruanda|250;RU|Rússia|7;LC|Santa Lúcia|1758;SM|San Marino|378;ST|São Tomé e Príncipe|239;SN|Senegal|221;SL|Serra Leoa|232;RS|Sérvia|381;SG|Singapura|65;SY|Síria|963;SO|Somália|252;LK|Sri Lanka|94;SD|Sudão|249;SE|Suécia|46;CH|Suíça|41;SR|Suriname|597;TH|Tailândia|66;TW|Taiwan|886;TJ|Tajiquistão|992;TZ|Tanzânia|255;TL|Timor-Leste|670;TG|Togo|228;TT|Trinidad e Tobago|1868;TN|Tunísia|216;TM|Turcomenistão|993;TR|Turquia|90;UA|Ucrânia|380;UG|Uganda|256;UZ|Uzbequistão|998;VE|Venezuela|58;VN|Vietnã|84;ZM|Zâmbia|260;ZW|Zimbábue|263';
+    const le = (s) => s.split(';').map((x) => { const [iso, nome, d] = x.split('|'); return { iso, nome, ddi: d.split(',') }; });
+    return le(topo).concat(le(resto).sort((a, b) => a.nome.localeCompare(b.nome, 'pt')));
+  })();
+  const N_TOPO = 12;
+  const paisIso = (iso) => PAISES.find((p) => p.iso === iso) || PAISES[0];
+  const tiraAcento = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  // "+5491122334455" -> [Argentina, "91122334455"]; sem país reconhecido: Brasil com os dígitos como vieram
+  function separaFone(valor) {
+    let d = String(valor || '').replace(/\D/g, '');
+    if (!d) return [PAISES[0], ''];
+    const comMais = /^\s*(\+|00)/.test(String(valor));
+    if (!comMais && (d.length === 10 || d.length === 11) && !d.startsWith('55')) return [PAISES[0], d];
+    if (String(valor).trim().startsWith('00')) d = d.slice(2);
+    let melhor = null, tam = 0;
+    for (const p of PAISES) for (const c of p.ddi) if (d.startsWith(c) && c.length > tam) { melhor = p; tam = c.length; }
+    if (!melhor) return [PAISES[0], d];
+    const c = melhor.ddi.find((x) => d.startsWith(x));
+    // +1 809: o código de área faz parte do número, então o campo continua com ele
+    return [melhor, c.length > 3 && c.startsWith('1') ? d.slice(1) : d.slice(c.length)];
+  }
+  const ddiBase = (p) => (p.ddi[0].length > 3 && p.ddi[0].startsWith('1') ? '1' : p.ddi[0]);
+  const mascaraBR = (d) => {
+    d = d.slice(0, 11);
+    if (d.length <= 2) return d;
+    const n = d.slice(2), corte = d.length === 11 ? 5 : 4;
+    return `(${d.slice(0, 2)}) ${n.length > corte ? n.slice(0, corte) + '-' + n.slice(corte) : n}`;
+  };
+  // fora do Brasil: dígitos em grupos de 3 ou 4, só para facilitar a leitura
+  const agrupa = (d) => {
+    if (d.length <= 4) return d;
+    const g = [d.slice(-4)]; let r = d.slice(0, -4);
+    while (r.length > 3) { g.unshift(r.slice(-3)); r = r.slice(0, -3); }
+    if (r) g.unshift(r);
+    return g.join(' ');
+  };
+  const numeroTela = (p, d) => (p.iso === 'BR' ? mascaraBR(d) : agrupa(d));
+  const PH_FONE = { BR: '(48) 99999-9999', US: '305 555 1234', AR: '9 11 2345 6789', PT: '912 345 678' };
+
+  function campoFone(rotulo, valor, chave, extra) {
+    const [p, d] = separaFone(valor);
+    return `<div class="campo campo-fone" data-fone-campo="${chave}" data-pais="${p.iso}">
+      <span>${rotulo}</span>
+      <div class="fone">
+        <button class="fone__pais" type="button" data-fone-pais aria-haspopup="listbox" aria-expanded="false" aria-label="País do telefone: ${esc(p.nome)}"><b>${p.iso}</b><span>+${ddiBase(p)}</span><svg aria-hidden="true"><use href="#p-seta"/></svg></button>
+        <input data-fone-num inputmode="tel" autocomplete="off" value="${esc(numeroTela(p, d))}" placeholder="${PH_FONE[p.iso] || 'Número com o código de área'}" aria-label="${rotulo}, número sem o código do país">
+      </div>
+      <div class="fone__caixa" data-fone-caixa hidden>
+        <input type="search" data-fone-busca autocomplete="off" placeholder="País ou código (ex.: +54)" aria-label="Procurar país">
+        <ul class="fone__lista" role="listbox" data-fone-lista></ul>
+      </div>
+      ${extra || ''}
+    </div>`;
+  }
+  // Lê o campo: [valor E.164 ou null, erro ou null]
+  function leFone(raiz, chave) {
+    const cx = raiz.querySelector(`[data-fone-campo="${chave}"]`);
+    const d = digitos(cx.querySelector('[data-fone-num]').value).replace(/^0+/, '');
+    if (!d) return [null, null];
+    const p = paisIso(cx.dataset.pais);
+    if (p.iso === 'BR') {
+      if (d.length < 10 || d.length > 11) return [null, 'O WhatsApp do Brasil precisa do DDD e do número. Ex.: (48) 99115-3172.'];
+      return ['+55' + d, null];
+    }
+    const total = ddiBase(p) + d;
+    if (d.length < 6 || total.length > 15) return [null, `Confira o WhatsApp: o número de ${p.nome} (+${ddiBase(p)}) parece ${d.length < 6 ? 'curto' : 'comprido'} demais.`];
+    return ['+' + total, null];
+  }
+  // Põe um número no campo (reconhece o país se vier com + ou 00)
+  const poeFone = (raiz, chave, bruto) => { const cx = raiz.querySelector(`[data-fone-campo="${chave}"]`); if (cx) poeFoneEm(cx, bruto); };
+  function poeFoneEm(cx, bruto) {
+    const atual = paisIso(cx.dataset.pais);
+    const [p, d] = /^\s*(\+|00)/.test(bruto) ? separaFone(bruto) : [atual, digitos(bruto)];
+    trocaPais(cx, p, false);
+    cx.querySelector('[data-fone-num]').value = numeroTela(p, d);
+  }
+  function trocaPais(cx, p, foca) {
+    cx.dataset.pais = p.iso;
+    const b = cx.querySelector('[data-fone-pais]');
+    b.querySelector('b').textContent = p.iso;
+    b.querySelector('span').textContent = '+' + ddiBase(p);
+    b.setAttribute('aria-label', 'País do telefone: ' + p.nome);
+    const num = cx.querySelector('[data-fone-num]');
+    num.placeholder = PH_FONE[p.iso] || 'Número com o código de área';
+    num.value = numeroTela(p, digitos(num.value));
+    if (foca) num.focus();
+  }
+  function listaPaises(cx, termo) {
+    const t = tiraAcento(termo).trim(), td = digitos(termo);
+    const achou = !t ? PAISES : PAISES.filter((p) => tiraAcento(p.nome).includes(t) || p.iso.toLowerCase() === t || (td && p.ddi.some((c) => c.startsWith(td))));
+    const ul = cx.querySelector('[data-fone-lista]'), atual = cx.dataset.pais;
+    ul.innerHTML = achou.length ? achou.map((p, i) => `${!t && i === N_TOPO ? '<li class="fone__sep" role="presentation">Todos os países</li>' : ''}<li role="option" aria-selected="${p.iso === atual}" data-iso="${p.iso}" tabindex="-1"><b>${p.iso}</b><span>${esc(p.nome)}</span><small>+${ddiBase(p)}${p.ddi[0].length > 3 && p.ddi[0].startsWith('1') ? ' ' + p.ddi[0].slice(1) : ''}</small></li>`).join('')
+      : '<li class="fone__nada" role="presentation">Nenhum país com esse nome ou código.</li>';
+  }
+  function abreFone(cx) {
+    document.querySelectorAll('[data-fone-caixa]:not([hidden])').forEach((c) => fechaFone(c.closest('[data-fone-campo]')));
+    const caixa = cx.querySelector('[data-fone-caixa]'), busca = cx.querySelector('[data-fone-busca]');
+    caixa.hidden = false; cx.querySelector('[data-fone-pais]').setAttribute('aria-expanded', 'true');
+    busca.value = ''; listaPaises(cx, '');
+    busca.focus();
+  }
+  function fechaFone(cx, foca) {
+    if (!cx) return;
+    cx.querySelector('[data-fone-caixa]').hidden = true;
+    const b = cx.querySelector('[data-fone-pais]');
+    b.setAttribute('aria-expanded', 'false');
+    if (foca) b.focus();
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-fone-pais]');
+    if (b) { const cx = b.closest('[data-fone-campo]'); if (cx.querySelector('[data-fone-caixa]').hidden) abreFone(cx); else fechaFone(cx, true); return; }
+    const op = e.target.closest('[data-fone-lista] [data-iso]');
+    if (op) { const cx = op.closest('[data-fone-campo]'); trocaPais(cx, paisIso(op.dataset.iso), true); fechaFone(cx); return; }
+    document.querySelectorAll('[data-fone-caixa]:not([hidden])').forEach((c) => { if (!c.contains(e.target)) fechaFone(c.closest('[data-fone-campo]')); });
+  });
+  document.addEventListener('input', (e) => {
+    const t = e.target;
+    if (t.matches('[data-fone-busca]')) { listaPaises(t.closest('[data-fone-campo]'), t.value); return; }
+    if (!t.matches('[data-fone-num]')) return;
+    const cx = t.closest('[data-fone-campo]'), v = t.value;
+    // colou ou digitou com + / 00: reconhece o país e tira o código do campo
+    if (/^\s*(\+|00)\d{4,}/.test(v.replace(/[\s().-]/g, ''))) { poeFoneEm(cx, v.replace(/[\s().-]/g, '')); return; }
+    const p = paisIso(cx.dataset.pais);
+    if (p.iso === 'BR') {
+      let d = digitos(v);
+      if (d.length > 11 && d.startsWith('55')) d = d.slice(2);
+      // mantém o cursor no fim só quando a pessoa digita no fim
+      if (t.selectionStart === v.length) t.value = mascaraBR(d);
+    }
+  });
+  // ao sair do campo, arruma o número no formato do país
+  document.addEventListener('focusout', (e) => {
+    if (!e.target.matches || !e.target.matches('[data-fone-num]')) return;
+    const cx = e.target.closest('[data-fone-campo]'), p = paisIso(cx.dataset.pais);
+    let d = digitos(e.target.value);
+    if (p.iso === 'BR' && d.length > 11 && d.startsWith('55')) d = d.slice(2);
+    if (d) e.target.value = numeroTela(p, p.iso === 'BR' ? d : d.replace(/^0+/, ''));
+  });
+  // Teclado na lista: setas andam, Enter escolhe, Esc fecha (sem fechar a gaveta)
+  document.addEventListener('keydown', (e) => {
+    const cx = e.target.closest && e.target.closest('[data-fone-caixa]:not([hidden])');
+    if (!cx) return;
+    const campo = cx.closest('[data-fone-campo]');
+    const ops = [...cx.querySelectorAll('[data-iso]')];
+    const i = ops.indexOf(document.activeElement);
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); fechaFone(campo, true); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); (ops[i + 1] || ops[0])?.focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); if (i <= 0) cx.querySelector('[data-fone-busca]').focus(); else ops[i - 1].focus(); }
+    else if (e.key === 'Enter') {
+      e.preventDefault();
+      const op = i >= 0 ? ops[i] : ops[0];
+      if (op) { trocaPais(campo, paisIso(op.dataset.iso), true); fechaFone(campo); }
+    } else if (e.key === 'Tab') fechaFone(campo);
+  }, true);
   const primeiroNome = (s) => String(s || '').trim().split(/\s+/)[0] || '';
   const quando = (ts) => {
     const min = Math.round((Date.now() - new Date(ts)) / 6e4);
@@ -971,7 +1132,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
           <ul class="busca-cliente__lista" data-achados hidden></ul>
           <div class="grade-2" data-novo>
             <label class="campo"><span>Nome do cliente novo</span><input data-nome autocomplete="off"></label>
-            <label class="campo"><span>WhatsApp</span><input data-fone inputmode="tel" placeholder="(48) 99999-9999" autocomplete="off"></label>
+            ${campoFone('WhatsApp', '', 'novo')}
           </div>
         </div>
       </div>
@@ -1026,7 +1187,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       f('busca').addEventListener('input', () => {
         const bruto = f('busca').value.trim(), q = semAcento(bruto), d = digitos(bruto);
         const ul = f('achados');
-        if (d.length >= 4) { if (!f('fone').value) f('fone').value = bruto; } else f('nome').value = bruto;
+        if (d.length >= 4) { if (!c.querySelector('[data-fone-campo="novo"] [data-fone-num]').value) poeFone(c, 'novo', bruto); } else f('nome').value = bruto;
         if (q.length < 2) { ul.hidden = true; return; }
         const achou = candidatos.filter((x) => semAcento(x.nome).includes(q) || (d.length >= 4 && digitos(x.wa_id).includes(d))).slice(0, 8);
         ul.innerHTML = achou.length ? achou.map((x) => `<li><button type="button" data-id="${x.id}">${esc(rotLead(x))}</button></li>`).join('')
@@ -1055,6 +1216,8 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         const lanchaId = f('lancha').value, dia = f('dia').value, pessoas = Number(f('pessoas').value) || null;
         if (quem === 'parceiro' && !f('vendedor').value) return erroCampo(c, 'Escolha o parceiro que vendeu o passeio.');
         if (quem === 'cliente' && !f('lead').value && !f('nome').value.trim()) return erroCampo(c, 'Escolha o cliente na busca ou escreva o nome do cliente novo.');
+        const [waNovo, erroWa] = quem === 'cliente' && !f('lead').value ? leFone(c, 'novo') : [null, null];
+        if (erroWa) return erroCampo(c, erroWa);
         if (!lanchaId || !dia) return erroCampo(c, 'Escolha a lancha e o dia.');
         const [extra, erro] = lePasseio(c);
         if (erro) return erroCampo(c, erro);
@@ -1064,7 +1227,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
           const vend = parceiro(f('vendedor').value);
           const dados = quem === 'parceiro'
             ? { nome: f('nome-p').value.trim() || `Cliente de ${vend.nome}`, parceiro_id: vend.id, etapa: 'conversando', origem: 'parceiro', pessoas }
-            : { nome: f('nome').value.trim(), wa_id: fone(f('fone').value), etapa: 'conversando', origem: 'direto' };
+            : { nome: f('nome').value.trim(), wa_id: waNovo, etapa: 'conversando', origem: 'direto' };
           const novo = await grava(sb.from('bb_leads').insert(dados).select('id').single());
           if (!novo) return;
           leadId = novo.id; criado = true;
@@ -1298,7 +1461,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         <div class="cartao">
           <div class="grade-2">
             <label class="campo"><span>Nome completo</span><input data-cad="nome" value="${esc(x.nome || '')}" autocomplete="off"></label>
-            <label class="campo"><span>WhatsApp</span><input data-cad="wa_id" inputmode="tel" value="${esc(foneTela(x.wa))}" autocomplete="off"></label>
+            ${campoFone('WhatsApp', x.wa, 'cad')}
             <label class="campo"><span>E-mail</span><input data-cad="email" type="email" value="${esc(x.email || '')}" autocomplete="off"></label>
             <label class="campo"><span>Idioma das mensagens</span><select data-cad="idioma">${IDIOMAS_CLI.map(([v, n]) => `<option value="${v}"${(x.idioma || 'pt') === v ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
           </div>
@@ -1343,9 +1506,9 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         cpf.addEventListener('blur', () => { if (digitos(cpf.value).length === 11) cpf.value = cpfTela(cpf.value); });
       }
       aoSalvar(g.querySelector('[data-salvar-cad]'), async () => {
-        const wa = fone(v('wa_id'));
+        const [wa, erroWa] = leFone(g, 'cad');
+        if (erroWa) return erroCampo(g, erroWa);
         if (!v('nome') && !wa) return erroCampo(g, 'Escreva o nome ou o WhatsApp.');
-        if (wa && wa.replace(/\D/g, '').length < 12) return erroCampo(g, 'O WhatsApp precisa ter DDD e número. Ex.: (48) 99115-3172. De fora do Brasil, comece com + e o código do país.');
         if (v('email') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('email'))) return erroCampo(g, 'Confira o e-mail.');
         const dados = { nome: v('nome') || null, wa_id: wa, email: v('email') || null, idioma: v('idioma') || 'pt' };
         if (docs) {
@@ -1369,7 +1532,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     abreGaveta('Cadastrar cliente', `
       <div class="grade-2">
         <label class="campo"><span>Nome</span><input data-nome autocomplete="off"></label>
-        <label class="campo"><span>WhatsApp</span><input data-fone inputmode="tel" placeholder="(48) 99999-9999" autocomplete="off"></label>
+        ${campoFone('WhatsApp', '', 'novo')}
       </div>
       <div class="grade-2">
         <label class="campo"><span>Data do passeio</span><input type="date" data-dia></label>
@@ -1384,9 +1547,9 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       chips(c, '[data-origem]', (b) => { origem = b.dataset.origem; });
       f('nome').focus();
       aoSalvar(f('salvar'), async () => {
-        const nome = f('nome').value.trim(), wa = fone(f('fone').value);
+        const nome = f('nome').value.trim(), [wa, erroWa] = leFone(c, 'novo');
+        if (erroWa) return erroCampo(c, erroWa);
         if (!nome && !wa) return erroCampo(c, 'Escreva o nome ou o WhatsApp.');
-        if (wa && wa.replace(/\D/g, '').length < 12) return erroCampo(c, 'O WhatsApp precisa ter DDD e número. Ex.: (48) 99115-3172.');
         const repetido = wa && S.leads.find((x) => x.wa_id === wa && !['fechados', 'perdidos'].includes(x.etapa));
         if (repetido) { erroCampo(c, ''); abreCliente(repetido.id); avisa('Esse cliente já está cadastrado. Abrimos a ficha dele.'); return; }
         erroCampo(c, '');
@@ -1438,7 +1601,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         <div class="cartao">
           <div class="grade-2">
             <label class="campo"><span>Nome</span><input data-f="nome" value="${esc(c.nome)}"></label>
-            <label class="campo"><span>WhatsApp</span><input data-f="wa_id" inputmode="tel" value="${esc(foneTela(c.wa_id))}"></label>
+            ${campoFone('WhatsApp', c.wa_id, 'pedido')}
             <label class="campo"><span>Data</span><input type="date" data-f="data_desejada" value="${c.data_desejada || ''}"${p ? ' disabled' : ''}></label>
             <label class="campo"><span>Pessoas</span><input data-f="pessoas" inputmode="numeric" value="${c.pessoas || ''}"></label>
             <label class="campo"><span>Roteiro</span><select data-f="roteiro_id">${opcoes(S.roteiros, c.roteiro_id, (x) => x.nome, 'A combinar')}</select></label>
@@ -1496,8 +1659,8 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       if (perdeu) perdeu.addEventListener('click', () => naoFechou(c));
       aoSalvar(g.querySelector('[data-salvar-pedido]'), async () => {
         const v = (k) => g.querySelector(`[data-f="${k}"]`).value;
-        const wa = fone(v('wa_id'));
-        if (wa && wa.replace(/\D/g, '').length < 12) { avisa('O WhatsApp precisa ter DDD e número.', true); return; }
+        const [wa, erroWa] = leFone(g, 'pedido');
+        if (erroWa) { avisa(erroWa, true); return; }
         const email = v('email').trim().toLowerCase();
         if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { avisa('Esse e-mail não parece certo. Confira.', true); return; }
         const muda = { nome: v('nome').trim() || null, wa_id: wa, email: email || null, pessoas: Number(v('pessoas')) || null, roteiro_id: v('roteiro_id') || null };
@@ -2683,7 +2846,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       ${exemplo(x) ? '<p class="selo selo--neutro" style="white-space:normal;margin:0 0 14px">Cadastro de exemplo: será apagado antes do lançamento. Cadastre os seus em vez de mudar este.</p>' : ''}
       <div class="grade-2">
         <label class="campo"><span>Nome</span><input data-nome value="${esc(x.nome || '')}"></label>
-        <label class="campo"><span>WhatsApp</span><input data-fone inputmode="tel" value="${esc(foneTela(x.telefone))}" placeholder="(48) 99999-9999"></label>
+        ${campoFone('WhatsApp', x.telefone, 'tel')}
       </div>
       ${parc ? `<div class="campo"><span>O que ele faz?</span><div class="chips">${[['dono', 'Dono de lancha'], ['revendedor', 'Vende passeios'], ['ambos', 'Os dois']].map(([v, n]) => `<button class="chip" type="button" aria-pressed="${v === papel}" data-papel="${v}">${n}</button>`).join('')}</div></div>
         <div class="campo" data-bloco-dele><span>Lanchas dele</span><small class="caixas__ajuda">Marque as lanchas que são dele ou que ele cuida. Na agenda, elas ficam com a cor dele.</small>${caixas('dele', dele)}</div>
@@ -2714,8 +2877,10 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       aoSalvar(g.querySelector('[data-salvar]'), async () => {
         const nome = g.querySelector('[data-nome]').value.trim();
         if (!nome) return erroCampo(g, 'Escreva o nome.');
+        const [tel, erroTel] = leFone(g, 'tel');
+        if (erroTel) return erroCampo(g, erroTel);
         erroCampo(g, '');
-        const dados = { nome, telefone: fone(g.querySelector('[data-fone]').value) };
+        const dados = { nome, telefone: tel };
         if (parc) { dados.tipo = papel; const cm = g.querySelector('[data-comissao]').value.trim(); dados.comissao_pct = cm ? num(cm) : null; }
         if (id) dados.ativo = g.querySelector('[data-ativo]').value === '1';
         const salvo = await grava(id ? sb.from(tabela).update(dados).eq('id', id).select('id').single() : sb.from(tabela).insert(dados).select('id').single());

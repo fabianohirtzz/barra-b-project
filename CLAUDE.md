@@ -344,6 +344,10 @@ x ano anterior, por passeio, peso no faturamento, contas fixas por mês), gráfi
 período anterior, por lancha, **Contas fixas** (`bb_despesas_fixas`: cadastrar, encerrar, apagar; "Anotar <mês>" cria a despesa
 com `fixa_id` e `mes_ref`; aviso das pendentes do mês) e filtro por categoria. Exemplos: `supabase/demo/relatorios.sql` (contas
 fixas, as despesas delas e deslocamentos em passeios de exemplo); o `apagar.sql` já tira.
+**WhatsApp com país (25/11):** todo campo de WhatsApp do painel (cliente, cadastro, pedido, marcar passeio, parceiro,
+marinheiro) usa `campoFone()` no `app.js`: botão com sigla e código (+55), lista de 192 países com busca por nome, sigla ou
+código (os 12 mais comuns no topo), número sem o código. Colar com + ou 00 reconhece o país. Grava em E.164 (`leFone`);
+Brasil exige DDD + número (máscara), fora do Brasil 6 a 15 dígitos no total.
 **Cartões dos roteiros:** editáveis no painel (até 4 pares título/valor em `bb_roteiros.fichas`); vazio = molde do site.
 
 **Popup de reserva (25/11, até o robô de atendimento):** todo botão de WhatsApp do site abre o popup de reserva (`[data-reserva]`,
