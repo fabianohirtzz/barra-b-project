@@ -67,8 +67,7 @@ Referência: `E:\Clientes\Pereira Oliveira Turismo\po-tu-project` (ler o CLAUDE.
   `.htaccess` e pela meta). `config.local.php` com a `service_role` já está em `novo/` (403 pela web).
 - **Deploy:** `python tools/publicar.py` (senha em `E:\Clientes\Barra Boat Floripa\Site\ferramentas\ftp-senha.txt`, fora do repo, ou `BB_FTP_SENHA`) (FTPS em `ftp.barraboatfloripa.com.br`;
   envia só o que mudou, guardado em `.publicado.json`; reconecta quando a ErêHost derruba a sessão).
-  **A raiz do FTP é o WordPress em produção:** o padrão é `/novo` e a raiz só com `--producao`,
-  no dia da troca. A senha nunca entra no repositório nem no servidor.
+  **A raiz do FTP é o site oficial desde 26/11/2026:** o padrão é a raiz; `--destino /novo` para o teste. A senha nunca entra no repositório nem no servidor.
 
 ## Escopo completo
 
@@ -384,6 +383,8 @@ Títulos de lancha e roteiro encurtados para caber no Google (até uns 62 caract
 lanchas ativas com pés, pessoas, região e itens, fichas, paradas e regras dos 2 roteiros e as perguntas, tudo do banco.
 IndexNow: chave em `6bf75e866e649d7e10f128b1517138df.txt` na raiz e `python tools/indexnow.py` (sitemap inteiro ou só os
 caminhos passados, nos 9 idiomas). Passo a passo do Search Console e do Bing em `docs/lancamento.md` > Indexação.
+
+**Site novo no ar em 26/11/2026** no domínio oficial (troca feita com o ok do Fabiano): WordPress em `/home/barraboa/wordpress-antigo/` + backup do banco em `/home/barraboa/`, crons apontando para `/public_html/cron/`, `python tools/publicar.py` publica na raiz por padrão (`--destino /novo` = servidor de teste). Detalhes em `docs/lancamento.md`. Termos de uso em `/termos-de-uso/` (rodapé).
 
 **Dados de exemplo apagados em 26/11** (`apagar.sql` rodado e conferido). Diária definida em 26/11: 7 horas, das 10h às 17h.
 

@@ -27,7 +27,17 @@ Revisão geral de 26/11 (QA): 216 páginas (24 x 9 idiomas) com 200, um H1, cano
 de console, sem rolagem lateral; formulários, popup, calendário e seletor de idioma testados; painel com as 15 telas abrindo
 no computador e no celular; arquivos sensíveis com 403; produção simulada (sem noindex, GTM uma vez, verificação na home).
 
-## No dia
+## Feito em 26/11/2026 (troca no ar)
+- Backup do banco do WordPress: `/home/barraboa/wordpress-antigo-banco-2026-11-26.sql.gz` (80 tabelas, dump completo).
+- Arquivos do WordPress movidos para `/home/barraboa/wordpress-antigo/` (fora da web; voltar = mover de volta).
+  Ficaram na raiz `.well-known`, `cgi-bin`, `.user.ini` e `php.ini` (limites do PHP do cPanel).
+- Site novo copiado no servidor de `novo/` para a raiz (com `config.local.php`, `fotos/`, `traducoes/`, `cron/bin/ffmpeg`),
+  segundos fora do ar. `tools/publicar.py` agora publica na raiz por padrão; `--destino /novo` para o teste.
+- Crons trocados para `/public_html/cron/` e testados. Conferido: 301 de http, www, /shop/, /novo/ e /privacy-policy/;
+  home sem noindex, com GTM e verificação; config e lib com 403; páginas, painel, sitemap (216), llms-full e disponibilidade com 200.
+- Falta: GTM em modo de visualização, Search Console e Bing (abaixo), IndexNow, trocar a senha do FTP.
+
+## No dia (roteiro original)
 1. cPanel: backup do WordPress (Backup > baixar a pasta `public_html` e o banco do WP).
 2. Mover os arquivos do WordPress da raiz para uma pasta fora da web (ex.: `/home/barraboa/wordpress-antigo/`).
    A pasta `novo/` fica onde está.

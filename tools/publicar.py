@@ -1,12 +1,13 @@
 """Publica o site na ErêHost por FTPS.
 
 Uso (a senha vem de BB_FTP_SENHA ou de Site/ferramentas/ftp-senha.txt, fora do repositório):
-    python tools/publicar.py                                 # envia o que mudou para /novo
+    python tools/publicar.py                                 # envia o que mudou para o site oficial (raiz)
+    python tools/publicar.py --destino /novo                 # envia para o servidor de teste (novo.)
     python tools/publicar.py --tudo                          # reenvia tudo
     python tools/publicar.py --listar                        # só mostra o que mudaria
 
-A raiz do FTP é o WordPress em produção. Por isso o destino padrão é /novo e a raiz
-só é aceita com --producao (usar apenas no dia da troca, com o ok do Fabiano).
+A raiz do FTP é o site oficial (barraboatfloripa.com.br) desde a troca de 26/11/2026; o WordPress
+antigo está em /home/barraboa/wordpress-antigo/, fora da web. /novo é o servidor de teste.
 O config.local.php do servidor nunca é enviado nem apagado.
 """
 import argparse
@@ -81,15 +82,13 @@ def garante_pasta(ftp, pasta, criadas):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--destino', default='/novo')
-    ap.add_argument('--producao', action='store_true', help='permite publicar na raiz (WordPress)')
+    ap.add_argument('--destino', default='/')
+    ap.add_argument('--producao', action='store_true', help='sem efeito (era a trava antes da troca)')
     ap.add_argument('--tudo', action='store_true')
     ap.add_argument('--listar', action='store_true')
     a = ap.parse_args()
 
     destino = '/' + a.destino.strip('/')
-    if destino == '/' and not a.producao:
-        sys.exit('Destino é a raiz do WordPress. Use --producao só no dia da troca.')
 
     chave = HOST + destino
     feito = json.loads(MANIFESTO.read_text()) if MANIFESTO.exists() else {}
@@ -102,7 +101,8 @@ def main():
             print('  ', p)
         return
 
-    ftp = conecta(senha_ftp())
+    senha = senha_ftp()
+    ftp = conecta(senha)
     criadas = set()
     registro = feito.setdefault(chave, {})
     try:
