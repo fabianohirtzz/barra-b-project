@@ -41,6 +41,23 @@ function bb_troca_entre($html, $ini, $fim, $novo)
     return $b === false ? $html : substr($html, 0, $a) . $novo . substr($html, $b);
 }
 
+/* Opções de lancha dos formulários de reserva (a capa da home e o popup, que está em todas as páginas). */
+function bb_opcoes_form($html, $lanchas)
+{
+    $ini = '<select name="lancha" data-lancha>' . "\n";
+    $fim = "\n            </select>";
+    $novo = bb_opcoes($lanchas);
+    $de = 0;
+    while (($a = strpos($html, $ini, $de)) !== false) {
+        $a += strlen($ini);
+        $b = strpos($html, $fim, $a);
+        if ($b === false) break;
+        $html = substr($html, 0, $a) . $novo . substr($html, $b);
+        $de = $a + strlen($novo);
+    }
+    return $html;
+}
+
 /* Números da frota nos textos fixos do molde (menu, capas, descrições). */
 function bb_textos_frota($html, $f)
 {
@@ -137,7 +154,7 @@ function bb_render($p, $lanchas, $fonte_api = 'api/disponibilidade.php', $conteu
         list($titulo, $desc, $og, $corpo, $ld) = bb_pagina_lancha($l, $lanchas, $pre, $pre . $fonte_api);
         $h = bb_cabeca($h, $titulo, $desc, BB_DOM . $p, $og, $ld);
         $h = bb_troca_entre($h, '<main id="conteudo">' . "\n", "\n  </main>", $corpo);
-        return [200, bb_textos_frota($h, bb_frota($lanchas))];
+        return [200, bb_textos_frota(bb_opcoes_form($h, $lanchas), bb_frota($lanchas))];
     }
 
     $h = bb_molde($p . 'index.html');
@@ -154,7 +171,6 @@ function bb_render($p, $lanchas, $fonte_api = 'api/disponibilidade.php', $conteu
 
     if ($p === '') {
         $h = bb_troca_ul($h, '<ul class="trilho__lista" data-trilho-lista>', "\n" . bb_cards($lanchas, $pre) . "\n        ");
-        $h = bb_troca_entre($h, '<select name="lancha" data-lancha>' . "\n", "\n            </select>", bb_opcoes($lanchas));
     } elseif ($p === 'lanchas/') {
         $h = bb_troca_ul($h, '<ul class="grade-lanchas" data-grade-lanchas>', "\n" . bb_cards($lanchas, $pre) . "\n          ");
         $h = bb_mexe_ld($h, function ($g) use ($lanchas) {
@@ -170,7 +186,7 @@ function bb_render($p, $lanchas, $fonte_api = 'api/disponibilidade.php', $conteu
             return $g;
         });
     }
-    return [200, bb_textos_frota($h, bb_frota($lanchas))];
+    return [200, bb_textos_frota(bb_opcoes_form($h, $lanchas), bb_frota($lanchas))];
 }
 
 /* Perguntas e avaliações (home) e paradas e regras (página do roteiro), quando o banco tem. */

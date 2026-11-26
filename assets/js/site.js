@@ -354,17 +354,129 @@
   }
 
   /* =========================================================
-     PLANEJADOR: monta a mensagem do WhatsApp já qualificada
+     SELETOR: a lista suspensa com o tema do site
+     O <select> de verdade continua no formulário (é ele que guarda o valor e que o PHP preenche);
+     por cima vai um botão e uma lista acessível. Mudou o select por código? Dispare "change".
      ========================================================= */
-  const plan = $('[data-planejar]');
-  if (plan) {
+  let seq = 0;
+  const escH = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function montaSeletor(sel) {
+    if (sel.dataset.seletor) return;
+    sel.dataset.seletor = '1';
+    const id = 'sel' + (++seq);
+    const rotulo = sel.closest('label');
+    const txtRotulo = rotulo && rotulo.querySelector(':scope > span:first-child');
+    if (txtRotulo && !txtRotulo.id) txtRotulo.id = id + '-rot';
+    const caixa = document.createElement('div');
+    caixa.className = 'seletor';
+    caixa.innerHTML = `<button type="button" class="seletor__botao" id="${id}-bt" aria-haspopup="listbox" aria-expanded="false"${txtRotulo ? ` aria-labelledby="${txtRotulo.id} ${id}-bt"` : ''}>
+        <span class="seletor__valor"></span><span class="seletor__seta" aria-hidden="true"></span></button>
+      <ul class="seletor__lista" id="${id}-lista" role="listbox" tabindex="-1" hidden${txtRotulo ? ` aria-labelledby="${txtRotulo.id}"` : ''}></ul>`;
+    sel.parentNode.insertBefore(caixa, sel);
+    sel.classList.add('seletor__nativo');
+    sel.parentNode.classList.add('com-seletor');
+    sel.tabIndex = -1;
+    sel.setAttribute('aria-hidden', 'true');
+    const bt = $('.seletor__botao', caixa), lista = $('.seletor__lista', caixa), valor = $('.seletor__valor', caixa);
+    // "Phantom 36, até 13 pessoas" vira nome + detalhe à direita
+    const partes = (op) => { const m = op.textContent.match(/^(.*?), (até \d+ pessoas?)$/); return m ? [m[1], m[2]] : [op.textContent, '']; };
+    let ativa = 0;
+    const ops = () => [...sel.options];
+    function desenha() {
+      lista.innerHTML = ops().map((op, i) => {
+        const [nome, det] = partes(op);
+        return `<li role="option" id="${id}-o${i}" class="seletor__op${op.value ? '' : ' seletor__op--ajuda'}" aria-selected="${op.selected}"${op.disabled ? ' aria-disabled="true"' : ''}>
+          <span>${escH(nome)}</span>${det ? `<small>${escH(det)}</small>` : ''}</li>`;
+      }).join('');
+      const op = sel.selectedOptions[0];
+      const [nome, det] = op ? partes(op) : ['', ''];
+      valor.innerHTML = `${escH(nome)}${det ? `<small>${escH(det)}</small>` : ''}`;
+      valor.classList.toggle('is-vazio', !op || !op.value);
+    }
+    const marca = (i) => {
+      ativa = Math.max(0, Math.min(ops().length - 1, i));
+      $$('.seletor__op', lista).forEach((li, k) => li.classList.toggle('is-ativa', k === ativa));
+      lista.setAttribute('aria-activedescendant', `${id}-o${ativa}`);
+      const li = $(`#${id}-o${ativa}`, lista);
+      if (li) li.scrollIntoView({ block: 'nearest' });
+    };
+    function abre() {
+      if (!lista.hidden) return;
+      desenha();
+      lista.hidden = false;
+      bt.setAttribute('aria-expanded', 'true');
+      caixa.classList.add('is-aberto');
+      // abre para cima quando não cabe embaixo; dentro do popup, mede pelo popup (que corta o que sai dele)
+      const r = bt.getBoundingClientRect();
+      const moldura = caixa.closest('.reserva__caixa');
+      const m = moldura ? moldura.getBoundingClientRect() : { top: 0, bottom: innerHeight };
+      const baixo = Math.min(m.bottom, innerHeight) - r.bottom - 12, cima = r.top - Math.max(m.top, 0) - 12;
+      const acima = baixo < 220 && cima > baixo;
+      caixa.classList.toggle('is-acima', acima);
+      lista.style.maxHeight = Math.max(150, Math.min(320, acima ? cima : baixo)) + 'px';
+      marca(Math.max(0, sel.selectedIndex));
+      lista.focus({ preventScroll: true });
+    }
+    function fecha(devolve = true) {
+      if (lista.hidden) return;
+      lista.hidden = true;
+      bt.setAttribute('aria-expanded', 'false');
+      caixa.classList.remove('is-aberto', 'is-acima');
+      if (devolve) bt.focus({ preventScroll: true });
+    }
+    function escolhe(i) {
+      const op = ops()[i];
+      if (!op || op.disabled) return;
+      if (sel.selectedIndex !== i) { sel.selectedIndex = i; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+      desenha(); fecha();
+    }
+    bt.addEventListener('click', () => (lista.hidden ? abre() : fecha()));
+    bt.addEventListener('keydown', (e) => {
+      if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) { e.preventDefault(); abre(); }
+    });
+    let busca = '', tBusca;
+    lista.addEventListener('keydown', (e) => {
+      const n = ops().length;
+      if (e.key === 'ArrowDown') { e.preventDefault(); marca(ativa + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); marca(ativa - 1); }
+      else if (e.key === 'Home') { e.preventDefault(); marca(0); }
+      else if (e.key === 'End') { e.preventDefault(); marca(n - 1); }
+      else if (e.key === 'PageDown') { e.preventDefault(); marca(ativa + 6); }
+      else if (e.key === 'PageUp') { e.preventDefault(); marca(ativa - 6); }
+      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); escolhe(ativa); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); fecha(); }
+      else if (e.key === 'Tab') { escolhe(ativa); }
+      else if (e.key.length === 1 && /\S/.test(e.key)) {
+        // digitar as primeiras letras pula para a opção
+        clearTimeout(tBusca); busca += e.key.toLowerCase(); tBusca = setTimeout(() => { busca = ''; }, 700);
+        const tira = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+        const k = ops().findIndex((op, j) => j !== 0 && tira(op.textContent).startsWith(tira(busca)));
+        if (k >= 0) marca(k);
+      }
+    });
+    // preventDefault: dentro de um <label>, o clique numa opção seria repassado ao botão e reabriria a lista
+    lista.addEventListener('click', (e) => { e.preventDefault(); const li = e.target.closest('.seletor__op'); if (li) escolhe($$('.seletor__op', lista).indexOf(li)); });
+    lista.addEventListener('mousemove', (e) => { const li = e.target.closest('.seletor__op'); if (li) { const k = $$('.seletor__op', lista).indexOf(li); if (k !== ativa) marca(k); } });
+    document.addEventListener('pointerdown', (e) => { if (!caixa.contains(e.target)) fecha(false); });
+    lista.addEventListener('focusout', (e) => { if (!caixa.contains(e.relatedTarget)) fecha(false); });
+    sel.addEventListener('change', desenha);
+    desenha();
+  }
+  $$('.planejar__select select, .campo select').forEach(montaSeletor);
+
+  /* =========================================================
+     PLANEJADOR: monta a mensagem do WhatsApp já qualificada.
+     O mesmo formulário está na capa da home e no popup de reserva (todas as páginas).
+     ========================================================= */
+  function montaPlanejador(plan) {
     const out = $('[data-pessoas]', plan);
     const data = $('[data-data]', plan);
     const hoje = new Date(); hoje.setMinutes(hoje.getMinutes() - hoje.getTimezoneOffset());
     data.min = hoje.toISOString().slice(0, 10);
-    let n = 6;
+    let n = Number(out.textContent) || 6;
     // Lancha escolhida: se o grupo passar do limite dela, avisa e oferece a orientação da equipe.
     const sel = $('[data-lancha]', plan);
+    const maxFrota = Math.max(1, ...[...sel.options].map((o) => Number(o.dataset.pax) || 0));
     const limite = $('[data-limite]', plan);
     const limiteTxt = $('[data-limite-txt]', plan);
     const confere = () => {
@@ -374,9 +486,9 @@
       limite.hidden = !passou;
       if (passou) limiteTxt.textContent = `A ${sel.value} leva até ${max} pessoas, e o seu grupo tem ${n}. Escolha outra lancha ou peça uma indicação para a nossa equipe.`;
     };
-    const muda = (d) => { n = Math.min(13, Math.max(1, n + d)); out.textContent = n; confere(); };
-    $('[data-menos]', plan).addEventListener('click', () => muda(-1));
-    $('[data-mais]', plan).addEventListener('click', () => muda(1));
+    const poe = (v) => { n = Math.min(maxFrota, Math.max(1, v)); out.textContent = n; confere(); };
+    $('[data-menos]', plan).addEventListener('click', () => poe(n - 1));
+    $('[data-mais]', plan).addEventListener('click', () => poe(n + 1));
     sel.addEventListener('change', confere);
     // Personalizado: pergunta se a lancha busca o grupo em outro lugar e abre espaço para o pedido
     const pers = $('[data-pers]', plan), local = $('[data-desloc-local]', plan);
@@ -386,7 +498,7 @@
     };
     $$('input[name="roteiro"], input[name="desloc"]', plan).forEach((r) => r.addEventListener('change', mostraPers));
     mostraPers();
-    $('[data-limite-ajuda]', plan).addEventListener('click', () => { sel.value = ''; confere(); sel.focus(); });
+    $('[data-limite-ajuda]', plan).addEventListener('click', () => { sel.value = ''; sel.dispatchEvent(new Event('change', { bubbles: true })); const b = $('.seletor__botao', plan); (b || sel).focus(); });
     plan.addEventListener('submit', (e) => {
       e.preventDefault();
       if (!limite.hidden) { limite.classList.remove('is-chamando'); void limite.offsetWidth; limite.classList.add('is-chamando'); return; }
@@ -403,9 +515,91 @@
       } else trecho = `Quero consultar um passeio para a ${roteiro === 'Costa da Lagoa' ? 'Costa da Lagoa' : 'Ilha do Campeche'}.`;
       const barco = sel.value ? `Lancha: ${sel.value}.` : 'Quero ajuda da equipe para escolher a lancha.';
       const texto = `Olá! Vim pelo site da Barra Boat. ${trecho} ${barco} Data: ${dia || 'ainda a definir'}. Somos ${pessoas}.`;
-      (window.dataLayer = window.dataLayer || []).push({ event: 'clique_whatsapp', origem, pagina: location.pathname, formulario: 'planejar' });
+      (window.dataLayer = window.dataLayer || []).push({ event: 'clique_whatsapp', origem, pagina: location.pathname, formulario: plan.classList.contains('planejar--popup') ? 'popup' : 'planejar' });
       window.open(linkWa(texto), '_blank', 'noopener');
     });
+    // preenchimento vindo de fora (popup aberto pela página de uma lancha ou de um roteiro)
+    plan.preenche = ({ lancha, roteiro, dia } = {}) => {
+      if (lancha) {
+        const tira = (t) => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+        const op = [...sel.options].find((o) => o.value && tira(o.value) === tira(lancha));
+        if (op && !op.selected) { sel.value = op.value; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+      }
+      if (roteiro) {
+        const r = $(`input[name="roteiro"][value="${roteiro}"]`, plan);
+        if (r) { r.checked = true; mostraPers(); }
+      }
+      if (dia && dia >= data.min) data.value = dia;
+      confere();
+    };
+  }
+  $$('[data-planejar]').forEach(montaPlanejador);
+
+  /* =========================================================
+     RESERVA: até o robô de atendimento existir, todo botão de WhatsApp abre o formulário
+     num popup; o formulário monta a mensagem e aí sim abre o WhatsApp.
+     Fica direto só o que tem data-wa-direto (o número no rodapé) e links no meio de texto.
+     ========================================================= */
+  const reserva = $('[data-reserva]');
+  if (reserva) {
+    const caixa = $('.reserva__caixa', reserva);
+    const form = $('[data-planejar]', reserva);
+    let voltaFoco = null, fechando;
+    const focaveis = () => $$('button, a[href], input, select:not([tabindex="-1"]), textarea, [tabindex]:not([tabindex="-1"])', caixa)
+      .filter((el) => !el.disabled && el.offsetParent !== null && !el.closest('[hidden]'));
+    // de onde veio o clique: lancha da página, roteiro da página ou do texto do botão
+    function contexto(a) {
+      const c = {};
+      const txt = (a.dataset.waTexto || a.dataset.waBase || '').toLowerCase();
+      if (a.dataset.reservaRoteiro) c.roteiro = a.dataset.reservaRoteiro;
+      else if (/personalizado/.test(txt)) c.roteiro = 'Personalizado';
+      else if (/costa da lagoa/.test(txt) || /\/costa-da-lagoa\//.test(location.pathname)) c.roteiro = 'Costa da Lagoa';
+      else if (/campeche/.test(txt) || /\/ilha-do-campeche\//.test(location.pathname)) c.roteiro = 'Ilha do Campeche';
+      const ag = $('[data-agenda][data-nome]');
+      if (a.dataset.reservaLancha) c.lancha = a.dataset.reservaLancha;
+      else if (ag) c.lancha = ag.dataset.nome;
+      if (a.dataset.dia) c.dia = a.dataset.dia;
+      return c;
+    }
+    function abreReserva(a) {
+      clearTimeout(fechando);
+      voltaFoco = a || document.activeElement;
+      if (a) form.preenche(contexto(a));
+      reserva.hidden = false;
+      document.documentElement.classList.add('reserva-aberta');
+      requestAnimationFrame(() => {
+        reserva.classList.add('is-aberta');
+        const primeiro = $('input[name="roteiro"]:checked', form) || focaveis()[0];
+        (primeiro || caixa).focus({ preventScroll: true });
+      });
+      (window.dataLayer = window.dataLayer || []).push({ event: 'abre_reserva', origem, pagina: location.pathname });
+    }
+    function fechaReserva() {
+      if (reserva.hidden) return;
+      reserva.classList.remove('is-aberta');
+      document.documentElement.classList.remove('reserva-aberta');
+      fechando = setTimeout(() => { reserva.hidden = true; }, reduz ? 0 : 260);
+      if (voltaFoco && document.contains(voltaFoco)) voltaFoco.focus({ preventScroll: true });
+    }
+    document.addEventListener('click', (e) => {
+      if (e.defaultPrevented || e.button > 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      const a = e.target.closest('[data-wa], [data-agenda-cta], a.botao[href*="wa.me/"], [data-reserva-abre]');
+      if (!a || a.hasAttribute('data-wa-direto') || a.closest('[data-reserva]')) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      abreReserva(a);
+    }, true);
+    $$('[data-reserva-fecha]', reserva).forEach((b) => b.addEventListener('click', fechaReserva));
+    reserva.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); fechaReserva(); return; }
+      if (e.key !== 'Tab') return;
+      const f = focaveis(); if (!f.length) return;
+      const prim = f[0], ult = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === prim) { e.preventDefault(); ult.focus(); }
+      else if (!e.shiftKey && document.activeElement === ult) { e.preventDefault(); prim.focus(); }
+    });
+    // enviou: o WhatsApp abre em outra aba e o popup fecha
+    form.addEventListener('submit', () => { setTimeout(() => { if ($('[data-limite]', form).hidden) fechaReserva(); }, 0); });
   }
 
   /* =========================================================

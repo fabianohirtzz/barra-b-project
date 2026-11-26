@@ -14,7 +14,7 @@ WA = '5548991153172'
 INDEX = open(os.path.join(PROJ, 'index.html'), encoding='utf-8').read()
 L_JSON = {l['slug']: l for l in json.load(open(os.path.join(PROJ, 'docs/conteudo-site-atual/lanchas.json'), encoding='utf-8'))}
 IMGS = json.load(open(os.path.join(PROJ, 'tools/imagens.json'), encoding='utf-8'))
-V_CSS, V_JS = '14', '10'
+V_CSS, V_JS = '15', '11'
 e = html.escape
 
 
@@ -415,7 +415,7 @@ for s in ORDEM:
     gerados.append(pagina(f'lanchas/{s}/', f'{nome}: lancha para {pax} pessoas em Florianópolis | Barra Boat Floripa',
                           f'Aluguel da lancha {nome}, {pes} pés, até {pax} pessoas, com marinheiro e combustível inclusos. Veja fotos, itens a bordo e as datas livres.',
                           corpo, [ld_m, ld_prod], og_img=f'assets/img/lanchas/{s}/01.webp',
-                          js_extra=f'\n  <script src="{{pre}}assets/js/lancha.js?v=3" defer></script>'))
+                          js_extra=f'\n  <script src="{{pre}}assets/js/lancha.js?v=4" defer></script>'))
 
 # Fichas de cada roteiro (os cartõezinhos de dados). Uma lista só por roteiro, até 4, editável no painel
 # (bb_roteiros.fichas): a capa da página do roteiro e a comparação em /roteiros/ mostram todas; o card da

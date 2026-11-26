@@ -346,5 +346,15 @@ com `fixa_id` e `mes_ref`; aviso das pendentes do mês) e filtro por categoria. 
 fixas, as despesas delas e deslocamentos em passeios de exemplo); o `apagar.sql` já tira.
 **Cartões dos roteiros:** editáveis no painel (até 4 pares título/valor em `bb_roteiros.fichas`); vazio = molde do site.
 
+**Popup de reserva (25/11, até o robô de atendimento):** todo botão de WhatsApp do site abre o popup de reserva (`[data-reserva]`,
+no fim do `index.html`, copiado pelo gerador): roteiro (com o bloco do Personalizado), lancha, data, pessoas; ao enviar abre o
+wa.me com a mensagem. Pega `[data-wa]`, `[data-agenda-cta]` e `a.botao` com wa.me; o href continua (sem JS ou Ctrl+clique vai
+direto). Link que deve ir direto ao WhatsApp: `data-wa-direto` (número do rodapé, links nas políticas). Pré-preenche pela página
+(lancha e dia do calendário, roteiro) ou por `data-reserva-lancha` / `data-reserva-roteiro`. Hero e popup usam `montaPlanejador()`
+no `site.js`; evento `abre_reserva` no GTM. O PHP troca as opções de todo `<select name="lancha" data-lancha>` (`bb_opcoes_form`);
+o select do popup mantém o recuo do da capa (opções com 14 espaços, `</select>` com 12). Seletor personalizado `montaSeletor()`
+(`.planejar__select select` e `.campo select`): o `<select>` nativo fica escondido como fonte do valor; mudar por código exige
+disparar `change`. Saiu o botão "Ver mais no Instagram"; a frase dos vídeos fica em uma linha a partir de 900 px.
+
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.

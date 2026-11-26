@@ -120,6 +120,17 @@ $confere($h === bb_render('roteiros/', $lanchas, 'api/disponibilidade.php', $con
 $sem = array_values(array_filter($lanchas, function ($l) { return $l['slug'] !== '1564'; }));
 list(, $h) = bb_render('costa-da-lagoa/', $sem, 'api/disponibilidade.php', $conteudo);
 $confere(preg_match('#data-grade-lanchas>.*?</section>#s', $h, $g) && strpos($g[0], 'lanchas/1564/') === false && substr_count($g[0], '<li class="lancha"') === 4, 'amostra do roteiro com lancha escondida ou sem 4 lanchas');
+// popup de reserva: as lanchas do banco nos dois formulários (capa da home e popup) e em todas as páginas
+foreach (['', 'sobre/', 'lanchas/3363/', 'ilha-do-campeche/'] as $pg) {
+    list(, $h) = bb_render($pg, $sem, 'api/disponibilidade.php', $conteudo);
+    $selects = substr_count($h, '<select name="lancha" data-lancha>');
+    $confere($selects === ($pg === '' ? 2 : 1) && substr_count($h, 'data-reserva hidden') === 1, "popup de reserva ausente em /$pg");
+    preg_match_all('#<select name="lancha" data-lancha>(.*?)</select>#s', $h, $ss);
+    $nomes = array_map(function ($l) { return $l['nome']; }, $sem);
+    $ok = true;
+    foreach ($ss[1] as $bloco) if (substr_count($bloco, '<option') !== count($sem) + 1) $ok = false;
+    $confere($ok && count($ss[1]) === $selects, "opções de lancha do popup não vieram do banco em /$pg");
+}
 echo "$testes testes de mudança\n";
 
 echo $falhas ? "$falhas problema(s)\n" : 'ok: ' . count($paginas) . " páginas iguais à prévia estática\n";

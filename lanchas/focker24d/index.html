@@ -21,8 +21,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,300..800;1,62..125,500..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../assets/css/site.css?v=14">
-  <link rel="stylesheet" href="../../assets/css/paginas.css?v=14">
+  <link rel="stylesheet" href="../../assets/css/site.css?v=15">
+  <link rel="stylesheet" href="../../assets/css/paginas.css?v=15">
   <script type="application/ld+json">
   {
    "@context": "https://schema.org",
@@ -465,7 +465,7 @@
 
       <address class="rodape__col rodape__contato">
         <h3>Fale com a gente</h3>
-        <a data-wa href="https://wa.me/5548991153172" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-wa"/></svg>(48) 99115-3172</a>
+        <a data-wa data-wa-direto href="https://wa.me/5548991153172" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-wa"/></svg>(48) 99115-3172</a>
         <a href="mailto:contato@barraboatfloripa.com.br"><svg aria-hidden="true"><use href="#i-mail"/></svg>contato@barraboatfloripa.com.br</a>
         <a href="https://maps.app.goo.gl/BpSAjwD4joPXAXKb7" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-pin"/></svg>Rod. Jorn. Manoel de Menezes, 3007<br>Barra da Lagoa, Florianópolis, SC</a>
         <p><svg aria-hidden="true"><use href="#i-relogio"/></svg>Atendimento 24 horas</p>
@@ -515,7 +515,86 @@
     <svg aria-hidden="true"><use href="#i-wa"/></svg><span>Reservar</span>
   </a>
 
-    <script src="../../assets/js/site.js?v=10" defer></script>
-  <script src="../../assets/js/lancha.js?v=3" defer></script>
+  <!-- ===================== RESERVA: popup com o formulário (todos os botões de WhatsApp abrem aqui) ===================== -->
+  <div class="reserva" data-reserva hidden>
+    <div class="reserva__fundo" data-reserva-fecha></div>
+    <div class="reserva__caixa" role="dialog" aria-modal="true" aria-labelledby="reserva-titulo" tabindex="-1">
+      <button class="reserva__fechar" type="button" data-reserva-fecha aria-label="Fechar"><svg aria-hidden="true"><use href="#i-fechar"/></svg></button>
+      <form class="planejar planejar--popup" data-planejar aria-labelledby="reserva-titulo">
+        <h2 id="reserva-titulo" class="planejar__titulo">Monte seu dia no mar</h2>
+        <fieldset class="planejar__roteiro">
+          <legend>Roteiro</legend>
+          <label><input type="radio" name="roteiro" value="Ilha do Campeche" checked><span>Ilha do Campeche</span></label>
+          <label><input type="radio" name="roteiro" value="Costa da Lagoa"><span>Costa da Lagoa</span></label>
+          <label><input type="radio" name="roteiro" value="Personalizado"><span>Personalizado</span></label>
+        </fieldset>
+        <div class="planejar__pers" data-pers hidden>
+          <fieldset class="planejar__roteiro">
+            <legend>A lancha precisa buscar o grupo em outro lugar?</legend>
+            <label><input type="radio" name="desloc" value="nao" checked><span>Não</span></label>
+            <label><input type="radio" name="desloc" value="sim"><span>Sim, tenho píer ou outro ponto</span></label>
+          </fieldset>
+          <label class="planejar__campo" data-desloc-local hidden>
+            <span>Onde buscar o grupo</span>
+            <input name="local" autocomplete="off" placeholder="Ex.: píer de casa em Jurerê">
+          </label>
+          <label class="planejar__campo">
+            <span>Conte como você quer o passeio</span>
+            <textarea name="pedido" rows="3" placeholder="Paradas, horário, ocasião especial..."></textarea>
+          </label>
+        </div>
+        <label class="planejar__campo planejar__campo--lancha">
+          <span>Lancha</span>
+          <span class="planejar__select">
+            <select name="lancha" data-lancha>
+              <option value="" data-pax="13">Quero ajuda da equipe para escolher</option>
+              <option value="Phantom 36" data-pax="13">Phantom 36, até 13 pessoas</option>
+              <option value="Phantom 30 BB" data-pax="12">Phantom 30 BB, até 12 pessoas</option>
+              <option value="Phantom 36 C" data-pax="11">Phantom 36 C, até 11 pessoas</option>
+              <option value="Phantom 30 C" data-pax="11">Phantom 30 C, até 11 pessoas</option>
+              <option value="Cabrasmar 37" data-pax="10">Cabrasmar 37, até 10 pessoas</option>
+              <option value="My Nega 30" data-pax="10">My Nega 30, até 10 pessoas</option>
+              <option value="Phantom 29 G" data-pax="9">Phantom 29 G, até 9 pessoas</option>
+              <option value="Phantom 29 My Girls" data-pax="9">Phantom 29 My Girls, até 9 pessoas</option>
+              <option value="Phantom 29 Bravo" data-pax="9">Phantom 29 Bravo, até 9 pessoas</option>
+              <option value="HD 26 Lulu" data-pax="9">HD 26 Lulu, até 9 pessoas</option>
+              <option value="HD 26 Lanai" data-pax="9">HD 26 Lanai, até 9 pessoas</option>
+              <option value="HD 26 Caluga" data-pax="9">HD 26 Caluga, até 9 pessoas</option>
+              <option value="Phantom 24 Horus" data-pax="7">Phantom 24 Horus, até 7 pessoas</option>
+              <option value="Focker 24" data-pax="7">Focker 24, até 7 pessoas</option>
+              <option value="Phantom 23.5 M" data-pax="7">Phantom 23.5 M, até 7 pessoas</option>
+              <option value="Phantom 23.5 G" data-pax="7">Phantom 23.5 G, até 7 pessoas</option>
+              <option value="FS 230" data-pax="7">FS 230, até 7 pessoas</option>
+            </select>
+          </span>
+        </label>
+        <div class="planejar__linha">
+          <label class="planejar__campo">
+            <span>Data</span>
+            <input type="date" name="data" data-data>
+          </label>
+          <div class="planejar__campo">
+            <span id="reserva-pessoas-rotulo">Pessoas</span>
+            <div class="contador" role="group" aria-labelledby="reserva-pessoas-rotulo">
+              <button type="button" data-menos aria-label="Menos uma pessoa"><svg><use href="#i-menos"/></svg></button>
+              <output name="pessoas" data-pessoas aria-live="polite">6</output>
+              <button type="button" data-mais aria-label="Mais uma pessoa"><svg><use href="#i-mais"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="planejar__aviso" data-limite hidden>
+          <p data-limite-txt></p>
+          <button type="button" class="planejar__ajuda" data-limite-ajuda>Quero orientação da equipe para escolher</button>
+        </div>
+        <button class="botao botao--mar botao--cheio planejar__enviar" type="submit">
+          <svg aria-hidden="true"><use href="#i-wa"/></svg><span>Consultar datas e valores</span>
+        </button>
+        <p class="planejar__nota">Você fala direto com a nossa equipe pelo WhatsApp. Sem cadastro.</p>
+      </form>
+    </div>
+  </div>
+
+    <script src="../../assets/js/site.js?v=11" defer></script>
+  <script src="../../assets/js/lancha.js?v=4" defer></script>
 </body>
 </html>
