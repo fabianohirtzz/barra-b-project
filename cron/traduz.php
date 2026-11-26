@@ -28,6 +28,28 @@ $arq_fila = BB_TRAD_DIR . '/faltam.json';
 $arq_tent = BB_TRAD_DIR . '/tentativas.json';
 $le = function ($arq) { return is_file($arq) ? (json_decode(file_get_contents($arq), true) ?: []) : []; };
 $fila = $le($arq_fila);
+
+// Varre o site com os dados de agora (o que a equipe mudou no painel) e põe na fila o que nenhum
+// dicionário tem, sem esperar alguém visitar a página no outro idioma.
+$lanchas = bb_lanchas();
+$conteudo = bb_conteudo();
+$paginas = [''];
+foreach (glob(BB_RAIZ . '/*/index.html') ?: [] as $f) $paginas[] = basename(dirname($f)) . '/';
+foreach ((array) $lanchas as $l) $paginas[] = 'lanchas/' . $l['slug'] . '/';
+$paginas = array_unique(array_filter($paginas, function ($p) { return !preg_match('#^(painel|docs|supabase|tools)/#', $p); }));
+$chaves = [];
+foreach ($paginas as $p) {
+    list($st, $h) = bb_render($p, $lanchas, 'api/disponibilidade.php', $conteudo);
+    if ($st === 200) foreach (bb_i18n_chaves_da_pagina($h, $p) as $c) $chaves[$c] = true;
+}
+foreach (bb_i18n_textos_js() as $c) $chaves[$c] = true;
+foreach (array_keys($chaves) as $c) {
+    foreach (array_keys(BB_IDIOMAS) as $idi) {
+        if ($idi === 'pt') continue;
+        $d = bb_i18n_dic($idi);
+        if (!isset($d[$c]) && !in_array($idi, isset($fila[$c]) ? $fila[$c] : [], true)) $fila[$c][] = $idi;
+    }
+}
 if (!$fila) { echo "Fila vazia.\n"; exit(0); }
 $tent = $le($arq_tent);
 
