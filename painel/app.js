@@ -1832,13 +1832,17 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     chegaram.forEach((l) => { const o = nomeOrigem(l.origem_manual || l.origem); porOrig[o] = (porOrig[o] || 0) + 1; });
     const origem = Object.entries(porOrig).sort((a, b) => b[1] - a[1]).map(([nome, q]) => [nome, Math.round(q / chegaram.length * 100), q]);
 
-    $('#dinheiro-corpo').innerHTML = `
+    const x = resumoExtra(dentro, noP, vendas, chegaram);
+    const c = $('#dinheiro-corpo');
+    c.innerHTML = `
+      ${atalhosRel([['geral', 'Visão geral'], ['vendas', 'Vendas'], ['caixa', 'Caixa'], ['clientes', 'Como chegam'], ['frota', 'Lanchas e roteiros'], ['grupos', 'Os grupos'], ['gastos', 'Despesas']])}
+      ${grupoRel('geral', 'Visão geral', `O que entrou e o que sobrou ${noP}, e quanto falta para a meta.`, `
       <div class="numeros">
         <div class="numero"><span>Entrou (bruto)</span><b>${R(bruto)}</b><small class="${dif == null ? '' : dif >= 0 ? 'sobe' : 'desce'}">${dif == null ? `passeios fechados ${noP}` : `${Math.abs(dif)}% ${dif >= 0 ? 'a mais' : 'a menos'} que ${umMes ? `${MESES_LONGOS[mesN - 1]} de ${ano - 1}` : nomePeriodo(`${ano - 1}${m.slice(4)}`).replace(/^\d+$/, (x) => 'em ' + x)}`}</small></div>
         <div class="numero"><span>Sobrou (líquido)</span><b>${R(liquido)}</b><small>depois dos custos dos passeios e das despesas</small></div>
         <div class="numero"><span>Passeios vendidos</span><b>${vendas.length}</b><small>${orcados.length} ${orcados.length === 1 ? 'orçamento enviado' : 'orçamentos enviados'} ${noP}</small></div>
       </div>
-      <div class="cartao bloco">${meta ? `<b style="color:var(--tinta)">${umMes ? `Meta de ${MESES_LONGOS[mesN - 1]}` : `Metas ${noP}, somadas`}: ${R(meta)}</b>
+      <div class="cartao">${meta ? `<b style="color:var(--tinta)">${umMes ? `Meta de ${MESES_LONGOS[mesN - 1]}` : `Metas ${noP}, somadas`}: ${R(meta)}</b>
         <div class="meta" role="img" aria-label="${Math.round(brutoMeta / meta * 100)}% da meta"><i style="width:${Math.min(brutoMeta / meta * 100, 100)}%"></i></div>
         <span style="color:var(--suave)">${Math.round(brutoMeta / meta * 100)}% da meta${!umMes && comMeta.length < ms.length ? ` (${comMeta.length} de ${ms.length} meses com meta)` : ''}.${brutoMeta < meta ? ` Faltam ${R(meta - brutoMeta)}${diasRestam ? ` em ${diasRestam} ${diasRestam === 1 ? 'dia' : 'dias'}` : ''}.` : ' Meta batida.'}</span>
         ${umMes ? '<button class="botao botao--leve botao--pequeno" type="button" data-meta style="margin-left:8px">Mudar a meta</button>' : ''}`
@@ -1846,15 +1850,16 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         <button class="botao botao--leve botao--pequeno" type="button" data-meta>Definir a meta do mês</button>`
         : `<b style="color:var(--tinta)">Nenhum mês ${noP === 'no ano' ? 'do ano' : 'do semestre'} tem meta</b><p style="margin:4px 0 0;color:var(--suave)">A meta é definida mês a mês. Volte para Mês para definir.</p>`}</div>
 
-      <section class="bloco"><h2>Ticket médio</h2>
+      `)}
+      ${grupoRel('vendas', 'Vendas', 'Quanto vale cada venda, como o ano está indo e o que já está vendido para frente.', `
+      <div><h3 class="rel-sub">Ticket médio</h3>
         <div class="numeros">
           <div class="numero"><span>Por venda, bruto</span><b>${R(tmBruto)}</b><small>o que o cliente pagou, em média</small></div>
           <div class="numero"><span>Por venda, líquido</span><b>${R(tmLiq)}</b><small>o que sobrou, em média</small></div>
           <div class="numero"><span>Por orçamento</span><b>${R(tmOrc)}</b><small>${tmOrc && tmBruto ? (tmBruto <= tmOrc ? `você fecha, em média, ${Math.round((1 - tmBruto / tmOrc) * 100)}% abaixo do orçado` : 'você fecha acima do orçado, em média') : 'valor médio dos orçamentos'}</small></div>
         </div>
-      </section>
-
-      <section class="bloco grafico" aria-labelledby="g1"><h3 id="g1">Quanto entrou, mês a mês</h3>
+      </div>
+      <section class="grafico" aria-labelledby="g1"><h3 id="g1">Quanto entrou, mês a mês</h3>
         <p class="grafico__frase">${fraseAno}</p>
         <ul class="legenda"><li><i style="background:var(--serie2)"></i>${ano - 1}</li><li><i style="background:var(--serie1)"></i>${ano}</li></ul>
         <div class="colunas">${colunas}</div>
@@ -1862,21 +1867,53 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         <details class="tabela"><summary>Ver os números em tabela</summary><table><thead><tr><th>Mês</th><th>${ano}</th><th>${ano - 1}</th></tr></thead><tbody>${tabela}</tbody></table></details>
       </section>
 
-      <div class="grade-2 bloco">
-        <section class="grafico" aria-labelledby="g2"><h3 id="g2">Para onde foi o dinheiro</h3>
-          ${cats.length ? `<p class="grafico__frase">O maior gasto ${umMes ? 'do mês' : periodo === 'semestre' ? 'do semestre' : 'do ano'} foi <b>${esc(cats[0][0].toLowerCase())}</b>: ${R(cats[0][1])} de ${R(desp)} em despesas.</p>${barras(cats.map(([n, v]) => [n, v, R(v)]))}`
-            : `<p class="grafico__frase">Nenhuma despesa anotada ${noP}.</p>`}</section>
+      ${x.vendido}
+      `)}
+      ${grupoRel('caixa', 'Caixa', 'O dinheiro que entrou de fato, quem ainda deve e o que falta pagar aos parceiros.', x.caixa)}
+      ${grupoRel('clientes', 'Como os clientes chegam', 'De onde vêm os pedidos, quantos viram venda e por que alguns não fecham.', `
+      <section class="grafico" aria-labelledby="g4"><h3 id="g4">De onde vieram os clientes</h3>
+        ${origem.length ? `<p class="grafico__frase">${chegaram.length} ${chegaram.length === 1 ? 'pessoa chegou' : 'pessoas chegaram'} ${noP}. <b>${esc(origem[0][0])}</b> trouxe ${origem[0][1]}%.</p>${barras(origem.map(([n, v, q]) => [n, v, `${v}% (${q})`]), 100)}`
+          : `<p class="grafico__frase">Ninguém chegou ${noP} ainda.</p>`}</section>
+      ${x.funil}
+      ${x.canal}
+      `)}
+      ${grupoRel('frota', 'Lanchas e roteiros', 'Quais lanchas saem mais, quanto cada uma vendeu e os roteiros preferidos.', `
+      <div class="grade-2">
         <section class="grafico" aria-labelledby="g3"><h3 id="g3">Lanchas mais ocupadas</h3>
           ${ocup.length ? `<p class="grafico__frase">A <b>${esc(ocup[0][0])}</b> saiu em ${ocup[0][1]}% dos dias ${umMes ? 'do mês' : periodo === 'semestre' ? 'do semestre' : 'do ano'}.</p>${barras(ocup.map(([n, v]) => [n, v, v + '% dos dias']), 100)}`
             : `<p class="grafico__frase">Nenhum passeio marcado ${noP}.</p>`}</section>
+        ${x.roteiro}
       </div>
-
-      <section class="bloco grafico" aria-labelledby="g4"><h3 id="g4">De onde vieram os clientes</h3>
-        ${origem.length ? `<p class="grafico__frase">${chegaram.length} ${chegaram.length === 1 ? 'pessoa chegou' : 'pessoas chegaram'} ${noP}. <b>${esc(origem[0][0])}</b> trouxe ${origem[0][1]}%.</p>${barras(origem.map(([n, v, q]) => [n, v, `${v}% (${q})`]), 100)}`
-          : `<p class="grafico__frase">Ninguém chegou ${noP} ainda.</p>`}</section>
-      ${resumoExtra(dentro, noP, vendas, chegaram)}`;
+      ${x.lancha}
+      `)}
+      ${grupoRel('grupos', 'Os grupos', 'Tamanho dos grupos, antecedência das reservas, quem volta e os dias mais pedidos.', x.grupos)}
+      ${grupoRel('gastos', 'Despesas', `Onde foi o dinheiro ${noP}. Os detalhes estão na aba Despesas.`, `
+        <section class="grafico" aria-labelledby="g2"><h3 id="g2">Para onde foi o dinheiro</h3>
+          ${cats.length ? `<p class="grafico__frase">O maior gasto ${umMes ? 'do mês' : periodo === 'semestre' ? 'do semestre' : 'do ano'} foi <b>${esc(cats[0][0].toLowerCase())}</b>: ${R(cats[0][1])} de ${R(desp)} em despesas.</p>${barras(cats.map(([n, v]) => [n, v, R(v)]))}`
+            : `<p class="grafico__frase">Nenhuma despesa anotada ${noP}.</p>`}</section>
+      `)}`;
+    ligaAtalhos(c);
     const bm = $('#dinheiro-corpo [data-meta]');
     if (bm) bm.addEventListener('click', () => definirMeta(m));
+  }
+
+  /* Relatórios em blocos por assunto: título, uma frase do que o bloco mostra, linha e respiro.
+     Os atalhos no topo levam a cada bloco. */
+  function grupoRel(id, titulo, frase, corpo) {
+    return `<section class="rel-grupo" id="rel-${id}" aria-labelledby="rel-${id}-t">
+      <header class="rel-grupo__cab"><h2 id="rel-${id}-t">${titulo}</h2>${frase ? `<p>${frase}</p>` : ''}</header>
+      <div class="rel-grupo__corpo">${corpo}</div>
+    </section>`;
+  }
+  function atalhosRel(lista) {
+    return `<nav class="rel-atalhos" aria-label="Ir para"><span>Ir para</span>${lista.map(([id, nome]) => `<a href="#rel-${id}" data-rel-ir="${id}">${nome}</a>`).join('')}</nav>`;
+  }
+  function ligaAtalhos(c) {
+    c.querySelectorAll('[data-rel-ir]').forEach((a) => a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const alvo = c.querySelector('#rel-' + a.dataset.relIr);
+      if (alvo) alvo.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    }));
   }
 
   function barras(itens, teto) {
@@ -1959,8 +1996,8 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     const maxSem = Math.max(...semana);
     const rotV = (v, n) => `${R(v)} (${n} ${n === 1 ? 'passeio' : 'passeios'})`;
 
-    return `
-      <section class="bloco"><h2>Caixa</h2>
+    return {
+      caixa: `
         <div class="numeros numeros--4">
           <div class="numero"><span>Recebido ${noP}</span><b>${R(recebidoP)}</b><small>pagamentos anotados nos clientes</small></div>
           <div class="numero${jaFoi.length ? ' numero--alerta' : ''}"><span>Passeios feitos sem pagar tudo</span><b>${R(soma(jaFoi, falta))}</b><small>${jaFoi.length ? `${jaFoi.length} ${jaFoi.length === 1 ? 'cliente' : 'clientes'}, confira na tabela abaixo` : 'nenhum cliente devendo'}</small></div>
@@ -1970,14 +2007,16 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         ${jaFoi.length ? `<details class="tabela" style="margin-top:12px"><summary>Ver quem ainda deve</summary><table><thead><tr><th>Cliente</th><th>Passeio</th><th>Falta</th></tr></thead><tbody>
           ${jaFoi.sort((a, b) => diaVenda(a).localeCompare(diaVenda(b))).map((l) => `<tr><td>${esc(l.nome || foneTela(l.wa_id) || 'Sem nome')}${seloExemplo(l)}</td><td>${ddIso(diaVenda(l))}/${diaVenda(l).slice(0, 4)}</td><td>${R(falta(l))}</td></tr>`).join('')}</tbody></table></details>` : ''}
         ${nDesloc ? `<p class="ajuda" style="margin-top:12px">Deslocamentos cobrados à parte ${noP}: <b>${R(desloc)}</b> em ${nDesloc} ${nDesloc === 1 ? 'passeio' : 'passeios'}. Esse valor não entra no bruto acima.</p>` : ''}
-      </section>
-
-      <section class="bloco grafico" aria-labelledby="g5"><h3 id="g5">Já vendido para os próximos meses</h3>
+`,
+      vendido: `
+      <section class="grafico" aria-labelledby="g5"><h3 id="g5">Já vendido para os próximos meses</h3>
         <p class="grafico__frase">${vendidoMes.some((x) => x[2]) ? `Passeios marcados daqui para frente: <b>${R(soma(vendidoMes, (x) => x[1]))}</b> em ${soma(vendidoMes, (x) => x[2])} passeios nos próximos 3 meses.` : 'Nenhum passeio marcado para os próximos 3 meses ainda.'}</p>
         ${vendidoMes.some((x) => x[2]) ? barras(vendidoMes.map(([n, v, q]) => [n, v, rotV(v, q)])) : ''}
       </section>
 
-      <div class="grade-2 bloco">
+`,
+      funil: `
+      <div class="grade-2">
         <section class="grafico" aria-labelledby="g6"><h3 id="g6">Funil ${frasePeriodo()}</h3>
           ${chegaram.length ? `<p class="grafico__frase">De ${chegaram.length} ${chegaram.length === 1 ? 'pedido' : 'pedidos'}, <b>${fecharam.length} ${fecharam.length === 1 ? 'fechou' : 'fecharam'}</b>${conv != null ? ` (${conv}%)` : ''}.</p>
           ${barras([['Chegaram', chegaram.length, String(chegaram.length)], ['Orçamento enviado', S.leads.filter((l) => l.orcamento_at && dentro(iso(new Date(l.orcamento_at)))).length, ''], ['Fecharam', fecharam.length, ''], ['Não fecharam', perderam.length, '']].map(([n, v, r]) => [n, v, r || String(v)]), Math.max(1, chegaram.length))}`
@@ -1989,33 +2028,37 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         </section>
       </div>
 
-      <section class="bloco grafico" aria-labelledby="g8"><h3 id="g8">Quanto cada lancha vendeu</h3>
+`,
+      lancha: `
+      <section class="grafico" aria-labelledby="g8"><h3 id="g8">Quanto cada lancha vendeu</h3>
         ${porLancha.length ? `<p class="grafico__frase">A <b>${esc(porLancha[0][0])}</b> vendeu mais: ${R(porLancha[0][1][0])}. ${totalV ? `As lanchas próprias trouxeram ${Math.round(propria / totalV * 100)}% e as de parceiros, ${100 - Math.round(propria / totalV * 100)}%.` : ''}</p>
           ${barras(porLancha.slice(0, 10).map(([n, [v, q]]) => [n, v, rotV(v, q)]))}` : `<p class="grafico__frase">Nenhuma venda ${noP}.</p>`}
       </section>
 
-      <div class="grade-2 bloco">
+`,
+      roteiro: `
         <section class="grafico" aria-labelledby="g9"><h3 id="g9">Por roteiro</h3>
           ${porRoteiro.length ? `<p class="grafico__frase"><b>${esc(porRoteiro[0][0])}</b> foi o roteiro que mais vendeu ${frasePeriodo()}.</p>${barras(porRoteiro.map(([n, [v, q]]) => [n, v, rotV(v, q)]))}`
             : `<p class="grafico__frase">Nenhuma venda ${noP}.</p>`}
         </section>
+`,
+      canal: `
         <section class="grafico" aria-labelledby="g10"><h3 id="g10">Quanto cada canal vendeu</h3>
           ${porCanal.length ? `<p class="grafico__frase">Quem chegou pelo <b>${esc(porCanal[0][0])}</b> comprou mais: ${R(porCanal[0][1][0])}.</p>${barras(porCanal.map(([n, [v, q]]) => [n, v, rotV(v, q)]))}`
             : `<p class="grafico__frase">Nenhuma venda ${noP}.</p>`}
         </section>
-      </div>
-
-      <section class="bloco"><h2>Os grupos</h2>
+`,
+      grupos: `
         <div class="numeros">
           <div class="numero"><span>Tamanho médio do grupo</span><b>${grupo ? String(Math.round(grupo * 10) / 10).replace('.', ',') : '-'}</b><small>pessoas por passeio vendido</small></div>
           <div class="numero"><span>Reservam com antecedência de</span><b>${antec != null ? antec + (antec === 1 ? ' dia' : ' dias') : '-'}</b><small>em média, do fechamento até o passeio</small></div>
           <div class="numero"><span>Clientes que voltaram</span><b>${chaves.length ? Math.round(voltaram / chaves.length * 100) + '%' : '-'}</b><small>${voltaram} de ${chaves.length} já tinham feito outro passeio</small></div>
         </div>
-      </section>
-      <section class="bloco grafico" aria-labelledby="g11"><h3 id="g11">Dias da semana com mais passeios</h3>
+      <section class="grafico" aria-labelledby="g11"><h3 id="g11">Dias da semana com mais passeios</h3>
         ${passP.length ? `<p class="grafico__frase"><b>${semanaL.filter((x) => x[1] === maxSem).map((x) => x[0]).join(' e ')}</b> ${semanaL.filter((x) => x[1] === maxSem).length > 1 ? 'são os dias' : 'é o dia'} com mais passeios ${frasePeriodo()}.</p>${barras(semanaL.map(([n, q]) => [n, q, String(q)]), Math.max(1, maxSem))}`
           : `<p class="grafico__frase">Nenhum passeio ${noP}.</p>`}
-      </section>`;
+      </section>`,
+    };
   }
 
   /* ---------- Despesas: cartões, gráfico, categorias, lanchas, contas fixas e a lista ---------- */
@@ -2067,6 +2110,8 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         <button class="botao-icone" type="button" data-despesa-ver="${d.id}" aria-label="Ver despesa"><svg><use href="#p-seta"/></svg></button></li>`).join('')}</ul>`).join('');
 
     $('#dinheiro-corpo').innerHTML = `
+      ${atalhosRel([['d-geral', 'Visão geral'], ['d-mes', 'Ao longo do ano'], ['d-onde', 'Onde foi o gasto'], ['d-fixas', 'Contas fixas'], ['d-todas', 'Todas as despesas']])}
+      ${grupoRel('d-geral', 'Visão geral', `Quanto saiu ${noP} e o peso das despesas no que entrou.`, `
       <div class="numeros numeros--4">
         <div class="numero"><span>Gasto ${noP}</span><b>${R(total)}</b><small class="${dif == null ? '' : dif > 0 ? 'desce' : 'sobe'}">${dif == null ? `${doP.length} ${doP.length === 1 ? 'anotação' : 'anotações'}` : `${Math.abs(dif)}% ${dif > 0 ? 'a mais' : 'a menos'} que ${umMes ? `${MESES_LONGOS[mesN - 1]} de ${ano - 1}` : 'no mesmo período de ' + (ano - 1)}`}</small></div>
         <div class="numero"><span>Gasto por passeio vendido</span><b>${vendas.length ? R(total / vendas.length) : '-'}</b><small>${vendas.length} ${vendas.length === 1 ? 'passeio vendido' : 'passeios vendidos'} ${noP}</small></div>
@@ -2074,15 +2119,19 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         <div class="numero"><span>Contas fixas por mês</span><b>${R(custoFixo)}</b><small>${fixas.length ? `${fixas.length} ${fixas.length === 1 ? 'conta cadastrada' : 'contas cadastradas'}` : 'nenhuma cadastrada ainda'}</small></div>
       </div>
 
-      ${pendentes.length ? `<div class="alerta bloco"><svg><use href="#p-relogio"/></svg><div><b>${pendentes.length === 1 ? '1 conta fixa' : pendentes.length + ' contas fixas'} de ${MESES_LONGOS[mesN - 1]} ainda sem anotar: ${R(soma(pendentes, (f) => f.valor))}</b>
+      ${pendentes.length ? `<div class="alerta"><svg><use href="#p-relogio"/></svg><div><b>${pendentes.length === 1 ? '1 conta fixa' : pendentes.length + ' contas fixas'} de ${MESES_LONGOS[mesN - 1]} ainda sem anotar: ${R(soma(pendentes, (f) => f.valor))}</b>
         <p style="margin:2px 0 0">${pendentes.map((f) => `${esc(f.categoria)} (dia ${f.dia_do_mes})`).join(', ')}. Anote em Contas fixas, logo abaixo, quando pagar.</p></div></div>` : ''}
 
-      <section class="bloco grafico" aria-labelledby="d1"><h3 id="d1">Despesas mês a mês</h3>
+      `)}
+      ${grupoRel('d-mes', 'Ao longo do ano', 'As despesas de cada mês do ano, contra o ano anterior.', `
+      <section class="grafico" aria-labelledby="d1"><h3 id="d1">Despesas mês a mês</h3>
         <p class="grafico__frase">${acum1 || acum0 ? `De janeiro a ${MESES_LONGOS[ate]}, <b>${ano} soma ${R(acum1)}</b> em despesas${acum0 ? `, contra ${R(acum0)} no mesmo período de ${ano - 1}` : ''}.` : 'Ainda não há despesas anotadas para mostrar.'}</p>
         ${g.html}
       </section>
 
-      <div class="grade-2 bloco">
+      `)}
+      ${grupoRel('d-onde', 'Onde foi o gasto', `Por categoria e por lancha, comparando com ${nomeAnt}.`, `
+      <div class="grade-2">
         <section class="grafico" aria-labelledby="d2"><h3 id="d2">Por categoria</h3>
           ${cats.length ? `<p class="grafico__frase">O maior gasto ${frasePeriodo()} foi <b>${esc(cats[0][0].toLowerCase())}</b>: ${Math.round(cats[0][1] / total * 100)}% das despesas.${subiu ? ` O que mais subiu contra ${nomeAnt}: <b>${esc(subiu[0].toLowerCase())}</b>, ${R(subiu[1])} a mais.` : ''}</p>
             ${barras(cats.map(([c, v]) => [c, v, `${R(v)} · ${variacao(c, v)}`]))}` : `<p class="grafico__frase">Nenhuma despesa anotada ${noP}.</p>`}
@@ -2093,7 +2142,8 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         </section>
       </div>
 
-      <section class="bloco"><h2>Contas fixas <small>as que se repetem todo mês</small></h2>
+      `)}
+      ${grupoRel('d-fixas', 'Contas fixas', 'As que se repetem todo mês: marina, seguro, contador, internet.', `
         <ul class="lista">${(S.fixas || []).map((f) => {
           const pg = umMes && paga(f), enc = f.ativo === false;
           return `<li class="linha linha--fixa"><span class="linha__icone"><svg><use href="#p-relogio"/></svg></span>
@@ -2104,14 +2154,14 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         }).join('') || vazio('Nenhuma conta fixa ainda. Cadastre as que se repetem todo mês: marina, seguro, contador, internet.')}</ul>
         ${!umMes && fixas.length ? '<p class="ajuda" style="margin-top:10px">Para anotar uma conta fixa como paga, veja por Mês.</p>' : ''}
         <button class="botao botao--leve" type="button" data-nova-fixa style="margin-top:12px"><svg><use href="#p-mais-um"/></svg>Cadastrar conta fixa</button>
-      </section>
-
-      <section class="bloco"><h2>Todas as despesas ${noP}</h2>
+      `)}
+      ${grupoRel('d-todas', `Todas as despesas ${noP}`, '', `
         ${cats.length > 1 ? `<div class="chips chips--periodo" role="group" aria-label="Filtrar por categoria" style="margin-bottom:12px">
           <button class="chip" type="button" aria-pressed="${!catDesp}" data-cat-desp="">Todas</button>
           ${cats.map(([c]) => `<button class="chip" type="button" aria-pressed="${c === catDesp}" data-cat-desp="${esc(c)}">${esc(c)}</button>`).join('')}</div>` : ''}
         ${listaHtml || `<p class="cartao vazio">Nenhuma despesa ${catDesp ? 'desta categoria ' : ''}anotada ${noP}.</p>`}
-      </section>`;
+      `)}`;
+    ligaAtalhos($('#dinheiro-corpo'));
     const c = $('#dinheiro-corpo');
     c.querySelectorAll('[data-despesa-ver]').forEach((b) => b.addEventListener('click', () => verDespesa(b.dataset.despesaVer)));
     c.querySelectorAll('[data-cat-desp]').forEach((b) => b.addEventListener('click', () => { catDesp = b.dataset.catDesp; despesas(); }));

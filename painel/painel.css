@@ -512,3 +512,24 @@ label.botao:focus-within{outline:3px solid var(--serie1);outline-offset:2px}
 .fone__lista [aria-selected="true"]{font-weight:700}
 .fone__sep{padding:10px 10px 4px;border-top:1px solid var(--linha);margin-top:4px;font-size:.85rem;color:var(--suave)}
 .fone__nada{padding:10px;color:var(--suave)}
+
+/* Relatórios em blocos por assunto (grupoRel no app.js): título, frase, linha e respiro */
+.rel-atalhos{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:4px 0 8px}
+.rel-atalhos span{font-size:.85rem;color:var(--suave);margin-right:2px;white-space:nowrap}
+.rel-atalhos a{padding:7px 13px;border-radius:999px;background:#fff;border:1.5px solid var(--linha);color:var(--tinta);font-size:.9rem;font-weight:600;text-decoration:none;white-space:nowrap}
+.rel-atalhos a:hover,.rel-atalhos a:focus-visible{border-color:var(--canal);color:var(--canal);outline:0}
+.rel-grupo{margin-top:44px;padding-top:30px;border-top:1px solid var(--linha);scroll-margin-top:16px}
+.rel-atalhos + .rel-grupo{margin-top:20px;padding-top:0;border-top:0}
+.rel-grupo__cab{margin-bottom:18px;max-width:62ch}
+.rel-grupo__cab h2{font-size:1.4rem;margin:0;color:var(--tinta)}
+.rel-grupo__cab p{margin:6px 0 0;color:var(--suave)}
+.rel-grupo__corpo{display:grid;gap:18px;min-width:0}
+.rel-grupo__corpo > *{margin:0}
+.rel-grupo__corpo .grade-2{margin:0;gap:18px}
+.rel-sub{font-size:1rem;font-weight:600;color:var(--suave);margin:0 0 10px}
+@media (max-width:640px){
+  .rel-grupo{margin-top:36px;padding-top:24px}
+  .rel-grupo__cab h2{font-size:1.25rem}
+  .rel-atalhos{flex-wrap:nowrap;overflow-x:auto;margin-left:-16px;margin-right:-16px;padding:2px 16px 6px;scrollbar-width:none}
+  .rel-atalhos::-webkit-scrollbar{display:none}
+}
