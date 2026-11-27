@@ -236,6 +236,7 @@ body.menu-aberto{overflow:hidden}
 /* planejador */
 .planejar{position:relative;background:rgba(255,255,255,.97);color:var(--tinta);border-radius:var(--r-grande);padding:24px;box-shadow:0 30px 60px -30px rgba(0,0,0,.6);display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
 .planejar__titulo{margin:0;font-size:1.25rem;font-weight:700;font-variation-settings:"wdth" 115;letter-spacing:-.01em}
+.planejar__campo--roteiro .seletor__valor{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .planejar__roteiro{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
 .planejar__roteiro legend{font-size:.82rem;color:var(--suave);margin-bottom:8px;padding:0}
 .planejar__roteiro label{position:relative}
@@ -335,6 +336,13 @@ main > section.secao:nth-of-type(even):not(:has(.chamada)) + .secao{padding-top:
 .roteiro__paradas li:last-child{text-align:right}
 .roteiro__paradas li:last-child::before{left:auto;right:0;margin-left:0;background:var(--abismo);border-color:var(--abismo);box-shadow:0 0 0 4px rgba(24,96,140,.18)}
 @media (max-width:860px){.roteiros__grade{grid-template-columns:1fr}}
+/* mais de 2 roteiros (o PHP monta): galeria que rola de lado, dois cards por vez no computador */
+.roteiros__galeria{position:relative}
+.roteiros__grade.roteiros__grade--galeria{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:calc((100% - clamp(18px,2.5vw,32px)) / 2);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:4px 4px 14px;margin:-4px -4px 0;-webkit-overflow-scrolling:touch}
+.roteiros__grade--galeria::-webkit-scrollbar{display:none}
+.roteiros__grade--galeria > .roteiro{scroll-snap-align:start}
+.roteiros__setas{display:flex;justify-content:flex-end;gap:10px;margin-top:10px}
+@media (max-width:860px){.roteiros__grade.roteiros__grade--galeria{grid-auto-columns:86%}}
 @media (max-width:480px){.roteiro__paradas{font-size:.7rem}.roteiro__dados{gap:4px 18px}}
 
 /* ---------- lanchas ---------- */

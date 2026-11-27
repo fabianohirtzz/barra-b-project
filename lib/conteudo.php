@@ -107,18 +107,18 @@ function bb_paradas_html($paradas, $pre)
         $out[] = '          <li class="rota-v__parada' . ($foto ? '' : ' rota-v__parada--sem-foto') . '">' . "\n" .
             '            <span class="rota-v__n">' . ($i + 1) . '</span>' . "\n" .
             '            <div class="rota-v__corpo">' . "\n" .
-            '              <div><h3>' . bb_e($p['nome']) . '</h3><p>' . bb_e($p['texto']) . '</p></div>' . $foto . "\n" .
+            '              <div><h3>' . bb_e(bb_sem_emoji($p['nome'])) . '</h3><p>' . bb_e(bb_sem_emoji($p['texto'])) . '</p></div>' . $foto . "\n" .
             '            </div>' . "\n" .
             '          </li>';
     }
     return implode("\n", $out);
 }
 
-function bb_regras_secao($nome, $regras)
+function bb_regras_secao($nome, $regras, $titulo = null)
 {
     return '    <section class="secao" aria-labelledby="regras-titulo">' . "\n" .
         '      <div class="aviso-regras">' . "\n" .
-        '        <h2 id="regras-titulo" class="titulo">Regras da ' . bb_e($nome) . '</h2>' . "\n" .
+        '        <h2 id="regras-titulo" class="titulo">' . bb_e($titulo !== null ? $titulo : 'Regras da ' . $nome) . '</h2>' . "\n" .
         '        <p class="secao__intro">Valem para todos os passeios deste roteiro.</p>' . "\n" .
         '        <ul>' . "\n" . bb_regras_lis($regras) . "\n" . '        </ul>' . "\n" .
         '      </div>' . "\n" .
@@ -127,14 +127,14 @@ function bb_regras_secao($nome, $regras)
 
 function bb_regras_lis($regras)
 {
-    return implode("\n", array_map(function ($r) { return '          <li>' . bb_e($r) . '</li>'; }, array_values($regras)));
+    return implode("\n", array_map(function ($r) { return '          <li>' . bb_e(bb_sem_emoji($r)) . '</li>'; }, array_values($regras)));
 }
 
 /* Troca paradas, regras e o itinerário do JSON-LD na página de um roteiro. */
-function bb_pagina_roteiro($h, $r, $pre)
+function bb_pagina_roteiro($h, $r, $pre, $titulo_regras = null)
 {
     $paradas = is_array($r['paradas']) ? $r['paradas'] : [];
-    $regras = array_values(array_filter(is_array($r['regras']) ? $r['regras'] : [], function ($x) { return trim((string) $x) !== ''; }));
+    $regras = array_values(array_filter(is_array($r['regras']) ? $r['regras'] : [], function ($x) { return trim(bb_sem_emoji((string) $x)) !== ''; }));
     if ($paradas) $h = bb_troca_entre($h, '<ol class="rota-v">' . "\n", "\n        </ol>", bb_paradas_html($paradas, $pre));
 
     $tem = strpos($h, '<div class="aviso-regras">') !== false;
@@ -145,7 +145,7 @@ function bb_pagina_roteiro($h, $r, $pre)
         $h = preg_replace('#    <section class="secao" aria-labelledby="regras-titulo">.*?</section>\n\n#s', '', $h, 1);
     } elseif ($regras) {
         $marca = '    <section class="secao" aria-labelledby="escolha-titulo">';
-        $h = str_replace($marca, bb_regras_secao($r['nome'], $regras) . $marca, $h);
+        $h = str_replace($marca, bb_regras_secao($r['nome'], $regras, $titulo_regras) . $marca, $h);
     }
 
     if ($paradas) {
@@ -153,7 +153,7 @@ function bb_pagina_roteiro($h, $r, $pre)
             foreach ($g as &$n) {
                 if (isset($n['@type']) && $n['@type'] === 'TouristTrip') {
                     $n['itinerary'] = ['@type' => 'ItemList', 'itemListElement' => array_map(function ($p, $i) {
-                        return ['@type' => 'ListItem', 'position' => $i + 1, 'item' => ['@type' => 'Place', 'name' => $p['nome']]];
+                        return ['@type' => 'ListItem', 'position' => $i + 1, 'item' => ['@type' => 'Place', 'name' => bb_sem_emoji($p['nome'])]];
                     }, array_values($paradas), array_keys(array_values($paradas)))];
                 }
             }

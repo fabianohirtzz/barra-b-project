@@ -39,10 +39,9 @@ foreach ($lanchas as $l) {
 
 $c = bb_conteudo();
 if (is_array($c)) {
-    foreach ((array) $c['roteiros'] as $r) {
-        // só os roteiros com página no site (os novos do painel podem estar em rascunho ou desativados)
-        if (empty($r['nome']) || !in_array($r['slug'], ['ilha-do-campeche', 'costa-da-lagoa'], true)) continue;
-        $out .= "\n## Roteiro: " . llms_limpa($r['nome']) . "\n";
+    foreach (bb_rot_ativos($c) as $r) {
+        // os roteiros ativos no painel (cada um tem página no site)
+        $out .= "\n## Roteiro: " . llms_limpa(bb_rot_nome($r)) . "\n";
         $out .= '- Página: ' . BB_DOM . $r['slug'] . "/\n";
         foreach ((array) (isset($r['fichas']) ? $r['fichas'] : []) as $f) {
             if (!empty($f['rotulo']) && !empty($f['valor'])) $out .= '- ' . llms_limpa($f['rotulo']) . ': ' . llms_limpa($f['valor']) . "\n";
@@ -50,9 +49,9 @@ if (is_array($c)) {
         $par = (array) (isset($r['paradas']) ? $r['paradas'] : []);
         if ($par) {
             $out .= "\nParadas:\n";
-            foreach ($par as $p) $out .= '- ' . llms_limpa($p['nome']) . (empty($p['texto']) ? '' : ': ' . llms_limpa($p['texto'])) . "\n";
+            foreach ($par as $p) $out .= '- ' . llms_limpa(bb_sem_emoji($p['nome'])) . (empty($p['texto']) ? '' : ': ' . llms_limpa(bb_sem_emoji($p['texto']))) . "\n";
         }
-        $reg = array_values(array_filter(array_map('llms_limpa', (array) (isset($r['regras']) ? $r['regras'] : []))));
+        $reg = array_values(array_filter(array_map(function ($x) { return llms_limpa(bb_sem_emoji($x)); }, (array) (isset($r['regras']) ? $r['regras'] : []))));
         if ($reg) {
             $out .= "\nRegras:\n";
             foreach ($reg as $x) $out .= '- ' . $x . "\n";

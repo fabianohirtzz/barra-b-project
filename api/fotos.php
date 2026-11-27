@@ -138,6 +138,52 @@ if ($acao === 'capa') {
     bb_responde(200, ['ok' => true, 'capa_url' => $web . "$nome.webp"]);
 }
 
+/* Gira a foto 90 graus (fotos que chegam deitadas). Grava com nome novo (o navegador e o cache do site
+   não seguram a versão antiga), gira também a miniatura e o original guardado para a IA, e apaga os
+   arquivos velhos. Foto do site antigo (assets/) ganha cópia girada na pasta nova; a de lá fica.
+   {"acao": "girar", "lancha_id", "url", "sentido": "direita"|"esquerda"} -> {"ok", "url", "url_p"} */
+if ($acao === 'girar') {
+    $url = (string) ($in['url'] ?? '');
+    $arq = caminho_nosso($url, $web, $pasta);
+    $antigo = false;
+    if ($arq === null && preg_match('#^/assets/img/lanchas/' . preg_quote($slug, '#') . '/[0-9a-z-]+\.webp$#', $url)) { $arq = BB_RAIZ . $url; $antigo = true; }
+    if ($arq === null || !is_file($arq)) bb_responde(400, ['ok' => false, 'erro' => 'Foto não encontrada.']);
+    // imagerotate gira no sentido anti-horário
+    $graus = ($in['sentido'] ?? 'direita') === 'esquerda' ? 90 : 270;
+    if (!is_dir($pasta) && !@mkdir($pasta, 0755, true)) bb_responde(500, ['ok' => false, 'erro' => 'Não consegui guardar a foto no servidor.']);
+    $base = substr($arq, 0, -5);
+    $ia = substr($base, -3) === '-ia';
+    $novo = date('ymd') . '-' . bin2hex(random_bytes(4));
+    $saida = $novo . ($ia ? '-ia' : '');
+    $img = @imagecreatefromwebp($arq);
+    if (!$img) bb_responde(400, ['ok' => false, 'erro' => 'Não consegui abrir essa foto.']);
+    $g = imagerotate($img, $graus, 0);
+    imagedestroy($img);
+    $ok = $g && imagewebp($g, "$pasta/$saida.webp", 82);
+    $mini = is_file($base . '-p.webp') ? @imagecreatefromwebp($base . '-p.webp') : null;
+    if ($ok) {
+        $mg = $mini ? imagerotate($mini, $graus, 0) : quadrado($g, min(imagesx($g), LADO_MINI));
+        $ok = $mg && imagewebp($mg, "$pasta/$saida-p.webp", 78);
+        if ($mg) imagedestroy($mg);
+    }
+    if ($mini) imagedestroy($mini);
+    if ($g) imagedestroy($g);
+    if (!$ok) bb_responde(500, ['ok' => false, 'erro' => 'Não consegui girar a foto.']);
+    if (!$antigo) {
+        // o original da fila da IA acompanha o nome novo (o lib/fotos_ia.php procura por ele)
+        $velho = basename($ia ? substr($base, 0, -3) : $base);
+        $o = "$pasta/orig/$velho.jpg";
+        if (is_file($o) && ($oi = @imagecreatefromjpeg($o))) {
+            $or = imagerotate($oi, $graus, 0);
+            if ($or && imagejpeg($or, "$pasta/orig/$novo.jpg", 95)) @unlink($o);
+            if ($or) imagedestroy($or);
+            imagedestroy($oi);
+        }
+        @unlink($arq); @unlink($base . '-p.webp');
+    }
+    bb_responde(200, ['ok' => true, 'url' => $web . "$saida.webp", 'url_p' => $web . "$saida-p.webp"]);
+}
+
 if ($acao === 'apagar') {
     // só apaga arquivo nosso; foto que veio do site antigo (assets/) só sai da lista
     $arq = caminho_nosso($in['url'] ?? '', $web, $pasta);

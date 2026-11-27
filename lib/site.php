@@ -8,6 +8,7 @@
 
 require_once __DIR__ . '/lanchas.php';
 require_once __DIR__ . '/conteudo.php';
+require_once __DIR__ . '/roteiros.php';
 
 function bb_molde($rel)
 {
@@ -170,7 +171,19 @@ function bb_render($p, $lanchas, $fonte_api = 'api/disponibilidade.php', $conteu
         return [200, bb_textos_frota(bb_opcoes_form($h, $lanchas), bb_frota($lanchas))];
     }
 
-    $h = bb_molde($p . 'index.html');
+    // roteiro: desativado no painel leva a /roteiros/; criado no painel (sem molde) monta a página
+    $novo_rot = null;
+    if (is_array($conteudo) && preg_match('#^([a-z0-9-]+)/$#', $p, $m) && $m[1] !== 'roteiros') {
+        $todos = bb_rot_por_slug($conteudo, $m[1], false);
+        if ($todos !== null && bb_rot_por_slug($conteudo, $m[1]) === null) return [301, 'roteiros/'];
+        if ($todos !== null && !is_file(BB_RAIZ . '/' . $p . 'index.html')) $novo_rot = $todos;
+    }
+    if ($novo_rot !== null) {
+        $h = bb_molde('costa-da-lagoa/index.html');
+        $h = $h === null ? null : bb_rot_pagina_nova($h, $novo_rot, $pre, $p);
+    } else {
+        $h = bb_molde($p . 'index.html');
+    }
     if ($h === null) return bb_404();
     $h = bb_conteudo_na_pagina($h, $p, $pre, $conteudo);
     if ($lanchas === null) return [200, $h];
@@ -210,6 +223,7 @@ function bb_render($p, $lanchas, $fonte_api = 'api/disponibilidade.php', $conteu
 function bb_conteudo_na_pagina($h, $p, $pre, $c)
 {
     if (!is_array($c)) return $h;
+    $h = bb_rot_no_site($h, $p, $pre, $c);
     if ($p === '') {
         if (!empty($c['faq'])) {
             $h = bb_troca_entre($h, '<div class="faq__lista">' . "

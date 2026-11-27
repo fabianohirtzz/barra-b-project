@@ -507,7 +507,7 @@
       pers.hidden = plan.roteiro.value !== 'Personalizado';
       local.hidden = pers.hidden || plan.desloc.value !== 'sim';
     };
-    $$('input[name="roteiro"], input[name="desloc"]', plan).forEach((r) => r.addEventListener('change', mostraPers));
+    $$('[name="roteiro"], input[name="desloc"]', plan).forEach((r) => r.addEventListener('change', mostraPers));
     mostraPers();
     plan.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -524,7 +524,7 @@
         trecho = T('Quero um passeio personalizado.')
           + ' ' + (ondeBuscar ? T('Preciso que a lancha busque o grupo em outro lugar: {local}.', { local: ondeBuscar }) : T('Podemos embarcar no ponto de vocês.'))
           + (pedido ? ' ' + T('Como quero o passeio: {pedido}', { pedido }) + (/[.!?。！？]$/.test(pedido) ? '' : '.') : '');
-      } else trecho = T('Quero consultar um passeio para a {roteiro}.', { roteiro: roteiro === 'Costa da Lagoa' ? 'Costa da Lagoa' : 'Ilha do Campeche' });
+      } else trecho = T('Quero consultar um passeio para a {roteiro}.', { roteiro });
       const barco = T('Lancha: {lancha}.', { lancha: sel.value });
       let texto = [T('Olá! Vim pelo site da Barra Boat.'), trecho, barco, T('Data: {data}.', { data: dia || T('ainda a definir') }), T('Somos {pessoas}.', { pessoas })].join(' ');
       // site em outro idioma: a equipe recebe também um resumo em português
@@ -540,8 +540,11 @@
         if (op && !op.selected) { sel.value = op.value; sel.dispatchEvent(new Event('change', { bubbles: true })); }
       }
       if (roteiro) {
-        const r = $(`input[name="roteiro"][value="${roteiro}"]`, plan);
-        if (r) { r.checked = true; mostraPers(); }
+        // pelo nome ou pelo endereço (slug) do roteiro; a lista suspensa é o <select name="roteiro">
+        const rs = plan.roteiro, tira = (t) => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+        const op = rs && [...rs.options].find((o) => tira(o.value) === tira(roteiro) || o.dataset.slug === roteiro);
+        if (op && !op.selected) { rs.value = op.value; rs.dispatchEvent(new Event('change', { bubbles: true })); }
+        mostraPers();
       }
       if (dia && dia >= data.min) data.value = dia;
       confere();
@@ -569,6 +572,11 @@
       else if (/personalizado/.test(txt)) c.roteiro = 'Personalizado';
       else if (/costa da lagoa/.test(txt) || /\/costa-da-lagoa\//.test(location.pathname)) c.roteiro = 'Costa da Lagoa';
       else if (/campeche/.test(txt) || /\/ilha-do-campeche\//.test(location.pathname)) c.roteiro = 'Ilha do Campeche';
+      else {
+        // página de um roteiro cadastrado no painel: o endereço é o slug da opção
+        const slug = location.pathname.split('/').filter(Boolean).pop();
+        if (slug && $(`[name="roteiro"] option[data-slug="${CSS.escape(slug)}"]`, form)) c.roteiro = slug;
+      }
       const ag = $('[data-agenda][data-nome]');
       if (a.dataset.reservaLancha) c.lancha = a.dataset.reservaLancha;
       else if (ag) c.lancha = ag.dataset.nome;
@@ -583,7 +591,7 @@
       document.documentElement.classList.add('reserva-aberta');
       requestAnimationFrame(() => {
         reserva.classList.add('is-aberta');
-        const primeiro = $('input[name="roteiro"]:checked', form) || focaveis()[0];
+        const primeiro = focaveis()[0];
         (primeiro || caixa).focus({ preventScroll: true });
       });
       (window.dataLayer = window.dataLayer || []).push({ event: 'abre_reserva', origem, pagina: location.pathname });
@@ -615,6 +623,24 @@
     // enviou: o WhatsApp abre em outra aba e o popup fecha
     form.addEventListener('submit', () => { setTimeout(() => { if ($('[data-limite]', form).hidden) fechaReserva(); }, 0); });
   }
+
+  /* =========================================================
+     ROTEIROS: com mais de 2, a home mostra uma galeria (o PHP monta); as setas andam um card
+     ========================================================= */
+  $$('[data-rot-galeria]').forEach((gal) => {
+    const tr = $('[data-rot-trilho]', gal), volta = $('[data-rot-volta]', gal), vai = $('[data-rot-vai]', gal);
+    if (!tr || !volta || !vai) return;
+    const passo = () => { const c = tr.querySelector('.roteiro'); return c ? c.getBoundingClientRect().width + parseFloat(getComputedStyle(tr).columnGap || 0) : tr.clientWidth; };
+    const setas = () => {
+      volta.disabled = tr.scrollLeft < 8;
+      vai.disabled = tr.scrollLeft + tr.clientWidth > tr.scrollWidth - 8;
+    };
+    volta.addEventListener('click', () => tr.scrollBy({ left: -passo(), behavior: reduz ? 'auto' : 'smooth' }));
+    vai.addEventListener('click', () => tr.scrollBy({ left: passo(), behavior: reduz ? 'auto' : 'smooth' }));
+    tr.addEventListener('scroll', setas, { passive: true });
+    addEventListener('resize', setas);
+    setas();
+  });
 
   /* =========================================================
      LANCHAS: filtro por grupo + setas do trilho

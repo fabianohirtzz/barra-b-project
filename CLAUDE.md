@@ -319,8 +319,9 @@ em outro lugar?" e o pedido indo na mensagem do WhatsApp.
   outro parceiro vendeu, "Mandar ao parceiro que vendeu".
 - Roteiros: "Cadastrar roteiro" abre a página inteira como rascunho (`#roteiro/novo`, só no navegador: nome, resumo,
   paradas com foto guardada no navegador, regras); nada grava até "Cadastrar roteiro" no fim, que cria o roteiro e sobe as fotos.
-  Rascunho abandonado continua ao voltar; "Descartar" apaga. Roteiro sem página no site edita nome e resumo. Também desativar (`ativo`) e apagar (só se nenhum passeio/cliente usou; o banco faria set null). Roteiro novo existe só
-  no painel: **ainda não ganha página no site** (só Ilha do Campeche e Costa da Lagoa têm página, `ROTEIRO_COM_PAGINA`).
+  Rascunho abandonado continua ao voltar; "Descartar" apaga. Roteiro fora do molde (`ROTEIRO_COM_PAGINA` = Campeche e Costa)
+  edita nome e resumo. Também desativar (`ativo`) e apagar (só se nenhum passeio/cliente usou; o banco faria set null). Desde
+  27/11 todo roteiro ativo ganha página no site sozinho (ver "Roteiros do painel no site").
 - Botões de apagar em vermelho claro (`botao--perigo-leve`). Fotos: arraste não deixa mais o fantasma na tela (pointerup na janela,
   `buttons === 0`) e a grade trava enquanto grava.
 - Leitor das agendas: nome aproximado também vale (`bb_agenda_acha_perto`: sem espaços, 1 erro de digitação a cada 8 letras, no
@@ -447,6 +448,23 @@ com quebra de linha literal do `lib/site.php`/`lib/conteudo.php`); a `/link/` co
   e a equipe cadastrava de novo: a Lígia ficou 3 vezes, a Clarice 2). Uma linha por pessoa (WhatsApp/e-mail; sem os dois,
   nome), sem acento, sem maiúscula e com erro de digitação (`nomeCombina()`: 1 erro a partir de 4 letras, 2 a partir de 7).
   Pessoa sem pedido livre ganha pedido novo com nome, contato, idioma e documentos copiados.
+- Parceiro: a agenda (conectar, link pelo WhatsApp, ler) aparece em qualquer papel, inclusive "Vende passeios"; vale para as
+  lanchas dele e as que ele vende (`lanchasDaAgenda()`). Papel novo **"Outros"** (`tipo = 'outro'`, migração
+  `2026-11-27-18-parceiro-outros.sql`, **o Fabiano roda no SQL Editor**; antes disso, salvar "Outros" dá erro). Parceiro novo:
+  ao salvar, a gaveta reabre com a agenda.
+- Fotos das lanchas: botão de girar em cada foto (90 graus para a direita) e, na foto aberta, girar para a esquerda ou a direita.
+  `api/fotos.php` acao `girar`: grava com nome novo (cache), gira a miniatura e o original da fila da IA (`orig/`, mesmo nome
+  novo), apaga os velhos; foto do site antigo (`assets/`) ganha cópia girada. Se for a primeira, refaz a capa.
+
+**Roteiros do painel no site (27/11, pedido do Fabiano):** `lib/roteiros.php`. Todo roteiro **ativo** aparece sozinho: página
+`/<slug>/` (Campeche e Costa têm molde do gerador; roteiro novo usa o molde da Costa como casca e troca capa, paradas, regras com
+o título "Dicas e regras do roteiro", "Sobre o roteiro" com o resto do resumo, chamada e JSON-LD), card na home (**mais de 2:
+galeria com setas**, `data-rot-galeria` no `site.js`; o título vira "Três roteiros...") e em /roteiros/ (cards), links do menu
+(`rota__sub`) e do rodapé, opções da lista **"Roteiro"** (agora `<select name="roteiro" data-roteiro>` com o seletor do site, na
+capa, no popup e no contato; o PHP troca as opções, com `data-slug`), sitemap e llms-full.txt. Desativado: sai de tudo e a página
+dá 301 para /roteiros/. O site tira emojis e converte nome todo em maiúsculas ("ILHA DO XAVIER..." vira "Ilha do Xavier...");
+o texto da capa é o primeiro parágrafo do resumo que não é título. Sem banco, vale o molde (só Campeche e Costa). Teste local:
+roteador em `rot-teste/` no scratchpad, com os roteiros do banco em JSON.
 
 **Quando o Google aprovar o app (verificação enviada em 26/11):** regravar a cena 4 do vídeo dos donos sem o aviso de "app não
 verificado", tirar a frase do aviso da narração (cena 4), trocar `assets/video/conectar-agenda.mp4`, tirar o passo 2 (aviso) do

@@ -442,6 +442,13 @@ label.botao:focus-within{outline:3px solid var(--serie1);outline-offset:2px}
 .fotos-grade__fantasma .fotos-grade__marca{display:none}
 .fotos-grade__n,.fotos-grade__capa,.fotos-grade__selo{pointer-events:none}
 .fotos-grade__capa{position:absolute;left:42px;top:8px;height:28px;padding:0 10px;border-radius:999px;background:#fff;color:var(--abismo);font-weight:700;font-size:.8rem;display:grid;place-items:center}
+.fotos-grade .fotos-grade__girar{position:absolute;right:6px;bottom:6px;width:40px;height:40px;border:0;border-radius:999px;background:rgba(255,255,255,.92);color:var(--abismo);display:grid;place-items:center;cursor:pointer;box-shadow:0 1px 4px rgba(8,51,89,.25)}
+.fotos-grade__girar svg{width:20px;height:20px}
+.fotos-grade .fotos-grade__girar:hover{background:#fff;color:var(--canal)}
+.fotos-grade__item.is-girando img{opacity:.45;transition:opacity .2s}
+.fotos-grade__item.is-girando .fotos-grade__girar svg{animation:gira-foto .8s linear infinite}
+@keyframes gira-foto{to{transform:rotate(360deg)}}
+.fotos-grade__fantasma .fotos-grade__girar{display:none}
 .fotos-grade__marca{position:absolute;right:4px;top:4px;width:44px;height:44px;display:grid;place-items:center;cursor:pointer}
 .fotos-grade__marca input{width:24px;height:24px;margin:0;accent-color:var(--canal);cursor:pointer;box-shadow:0 0 0 2px #fff;border-radius:6px}
 .fotos-barra{position:sticky;top:8px;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 14px;margin-bottom:12px;border-radius:14px;background:#fff;box-shadow:var(--sombra)}

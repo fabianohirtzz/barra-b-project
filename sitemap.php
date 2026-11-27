@@ -14,7 +14,11 @@ header('Cache-Control: public, max-age=3600');
 $lanchas = bb_lanchas();
 if ($lanchas === null) { readfile(__DIR__ . '/sitemap.xml'); exit; }
 
-$fixas = ['', 'lanchas/', 'roteiros/', 'ilha-do-campeche/', 'costa-da-lagoa/', 'sobre/', 'contato/', 'politica-de-cancelamento/', 'politica-de-privacidade/', 'termos-de-uso/'];
+// roteiros: os ativos no painel (os criados lá também têm página); sem banco, os dois de sempre
+$c = bb_conteudo();
+$rots = $c ? array_map(function ($r) { return $r['slug'] . '/'; }, bb_rot_ativos($c)) : [];
+if (!$rots) $rots = ['ilha-do-campeche/', 'costa-da-lagoa/'];
+$fixas = array_merge(['', 'lanchas/', 'roteiros/'], $rots, ['sobre/', 'contato/', 'politica-de-cancelamento/', 'politica-de-privacidade/', 'termos-de-uso/']);
 $urls = array_merge(array_slice($fixas, 0, 2), array_map(function ($l) { return 'lanchas/' . $l['slug'] . '/'; }, $lanchas), array_slice($fixas, 2));
 $hoje = date('Y-m-d');
 

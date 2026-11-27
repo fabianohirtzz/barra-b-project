@@ -14,7 +14,7 @@ WA = '5548991153172'
 INDEX = open(os.path.join(PROJ, 'index.html'), encoding='utf-8').read()
 L_JSON = {l['slug']: l for l in json.load(open(os.path.join(PROJ, 'docs/conteudo-site-atual/lanchas.json'), encoding='utf-8'))}
 IMGS = json.load(open(os.path.join(PROJ, 'tools/imagens.json'), encoding='utf-8'))
-V_CSS, V_JS = '20', '14'
+V_CSS, V_JS = '21', '15'
 e = html.escape
 
 
@@ -780,10 +780,10 @@ corpo = capa_faixa('Fale com a Barra Boat', 'Atendimento 24 horas pelo WhatsApp.
             <label class="campo">Pessoas<input name="pessoas" type="number" min="1" max="13" inputmode="numeric" placeholder="Ex.: 8"></label>
           </div>
           <label class="campo">Roteiro
-            <select name="roteiro">
-              <option value="Ilha do Campeche">Ilha do Campeche</option>
-              <option value="Costa da Lagoa">Costa da Lagoa</option>
-              <option value="Personalizado">Personalizado</option>
+            <select name="roteiro" data-roteiro>
+              <option value="Ilha do Campeche" data-slug="ilha-do-campeche" selected>Ilha do Campeche</option>
+              <option value="Costa da Lagoa" data-slug="costa-da-lagoa">Costa da Lagoa</option>
+              <option value="Personalizado" data-slug="personalizado">Personalizado</option>
             </select>
           </label>
           <div class="campo-pers" data-pers hidden>

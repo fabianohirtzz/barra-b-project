@@ -173,6 +173,9 @@ main > .secao:last-child{padding-bottom:clamp(72px,10vw,120px)}
 .comparar__dados div{padding:10px 12px;border-radius:12px;background:var(--espuma)}
 .comparar__dados dt{font-size:.74rem;color:var(--suave)}
 .comparar__dados dd{margin:0;font-weight:700;color:var(--tinta);font-size:.95rem;line-height:1.25}
+@media (min-width:861px){.comparar:has(> :nth-child(3)){grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}}
+.texto-roteiro{max-width:72ch}
+.texto-roteiro p{margin:0 0 14px;line-height:1.65}
 .comparar__ideal{padding:12px 14px;border-left:3px solid var(--canal);background:rgba(24,96,140,.05);border-radius:0 10px 10px 0;font-size:.95rem}
 .comparar__ideal b{color:var(--tinta)}
 .comparar__corpo .botao--contorno{margin-top:auto;align-self:flex-start}
