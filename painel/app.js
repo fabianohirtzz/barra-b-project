@@ -885,6 +885,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
 
   /* ================= AGENDA ================= */
   let agIni = 0; // deslocamento em dias a partir de hoje
+  let agN = 14; // dias na grade (refeito pelo que cabe na tela)
 
   function estadoDia(l, s) {
     const p = S.passeios.find((x) => x.lancha_id === l.id && x.dia === s);
@@ -912,13 +913,30 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     return q ? primeiroNome(q.nome) || 'parceiro' : null;
   }
 
-  function telaAgenda() {
+  // Lanchas próprias (sem parceiro) primeiro na agenda; depois a ordem do cadastro.
+  const lanchasAgenda = () => lanchasAtivas().map((l, i) => [l, i]).sort((a, b) => (!!a[0].parceiro_id - !!b[0].parceiro_id) || a[1] - b[1]).map((x) => x[0]);
+
+  /* Quantos dias cabem na tela sem rolar de lado: mede a coluna dos nomes e a de um dia com a tabela
+     no tamanho natural. Antes/Depois andam exatamente essa quantidade, então nenhum dia fica de fora. */
+  function cabemDias() {
+    const g = tela.querySelector('.agenda-grade'); if (!g) return agN;
+    // celular: a coluna dos nomes come metade da tela; mostra a semana e rola de lado
+    if (g.clientWidth < 600) return 7;
+    const t = g.querySelector('table'), nome = g.querySelector('th[scope="row"]'), dia = g.querySelector('thead th:nth-child(2)');
+    if (!t || !nome || !dia) return agN;
+    t.style.minWidth = '0';
+    const n = Math.floor((g.clientWidth - nome.getBoundingClientRect().width) / dia.getBoundingClientRect().width);
+    t.style.minWidth = '';
+    return Math.max(2, Math.min(21, n || 2));
+  }
+
+  function telaAgenda(medido) {
     const base = somaDias(hoje(), agIni);
-    const dias = Array.from({ length: 14 }, (_, i) => somaDias(base, i));
+    const dias = Array.from({ length: agN }, (_, i) => somaDias(base, i));
     const hs = iso(hoje());
     // o mês em cada coluna: a grade de 14 dias quase sempre atravessa a virada do mês
     const cab = dias.map((d) => `<th scope="col" class="${iso(d) === hs ? 'is-hoje' : ''} ${d.getDay() % 6 === 0 ? 'is-fds' : ''} ${d.getDate() === 1 ? 'is-mes' : ''}">${DIAS[d.getDay()]}<b>${d.getDate()}</b><small>${MESES[d.getMonth()]}</small></th>`).join('');
-    const linhas = lanchasAtivas().map((l) => {
+    const linhas = lanchasAgenda().map((l) => {
       const cel = dias.map((d) => {
         const s = iso(d), e = estadoDia(l, s);
         const q = `${esc(l.nome)}, ${DIAS[d.getDay()]} ${dd(d)}`;
@@ -934,15 +952,15 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     }).join('');
     const periodos = S.bloqueios.filter((b) => b.tipo === 'fechado' && b.fim >= hs);
     tela.innerHTML = `
-      <header class="cab"><div><h1>Agenda</h1><p>De ${dd(dias[0])} a ${dd(dias[13])}, lancha por lancha. Toque num dia para ver ou marcar.</p></div>
+      <header class="cab"><div><h1>Agenda</h1><p>De ${dd(dias[0])} a ${dd(dias[dias.length - 1])}, lancha por lancha. Toque num dia para ver ou marcar.</p></div>
         <button class="botao botao--principal" type="button" data-fechar-periodo><svg aria-hidden="true"><use href="#p-agenda"/></svg>Fechar a agenda por um período</button></header>
       ${periodos.length ? `<section class="cartao periodos"><h2>Dias em que a agenda está fechada</h2>
         <ul>${periodos.map((p) => `<li><span><b>${faixa(p.inicio, p.fim)}</b><small>${esc(p.motivo || 'Sem motivo')}, ${p.lancha_id ? esc((lancha(p.lancha_id) || {}).nome || 'uma lancha') : 'todas as lanchas'}</small></span>
           <button class="botao botao--leve botao--pequeno" type="button" data-reabrir="${p.id}">Reabrir</button></li>`).join('')}</ul></section>` : ''}
       <div class="ag-nav">
-        <button class="botao botao--leve botao--pequeno" type="button" data-ag="-14"${agIni <= -56 ? ' disabled' : ''}><svg><use href="#p-volta"/></svg>Antes</button>
+        <button class="botao botao--leve botao--pequeno" type="button" data-ag="-1"${agIni <= -56 ? ' disabled' : ''}><svg><use href="#p-volta"/></svg>Antes</button>
         ${agIni !== 0 ? '<button class="botao botao--leve botao--pequeno" type="button" data-ag="0">Voltar para hoje</button>' : ''}
-        <button class="botao botao--leve botao--pequeno" type="button" data-ag="14">Depois<svg><use href="#p-seta"/></svg></button>
+        <button class="botao botao--leve botao--pequeno" type="button" data-ag="1">Depois<svg><use href="#p-seta"/></svg></button>
       </div>
       <ul class="agenda-legenda">
         <li><i class="amostra amostra--reservada"></i>Reservada por você</li>
@@ -956,7 +974,14 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       <p class="ajuda" style="margin-top:14px">O que está aqui aparece no calendário do site como livre ou ocupado. O cliente nunca vê nomes nem valores.</p>`;
     tela.querySelector('[data-fechar-periodo]').addEventListener('click', () => fecharPeriodo());
     tela.querySelectorAll('[data-reabrir]').forEach((b) => b.addEventListener('click', () => reabrir(b.dataset.reabrir)));
+    if (!medido) { const n = cabemDias(); if (n !== agN) { agN = n; telaAgenda(true); } }
   }
+  // girou o celular ou mudou o tamanho da janela: refaz a grade com os dias que cabem
+  let agResize = 0;
+  window.addEventListener('resize', () => {
+    clearTimeout(agResize);
+    agResize = setTimeout(() => { if (tela.querySelector('.agenda-grade') && tela.querySelector('[data-fechar-periodo]')) telaAgenda(); }, 200);
+  });
 
   async function reabrir(id) {
     const p = S.bloqueios.find((x) => x.id === id);
@@ -1177,10 +1202,59 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
      Quem reservou: um cliente nosso (busca pelo nome ou cadastra na hora) ou um parceiro que
      vendeu para um cliente dele (o contato do cliente fica com o parceiro; aqui vai só o nome). */
   const semAcento = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  // Distância de edição (troca de duas letras vizinhas conta 1): "lgiia" ~ "ligia".
+  function distancia(a, b) {
+    const m = a.length, n = b.length, d = Array.from({ length: m + 1 }, (_, i) => [i].concat(Array(n).fill(0)));
+    for (let j = 1; j <= n; j++) d[0][j] = j;
+    for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) {
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+    }
+    return d[m][n];
+  }
+  /* Quanto um nome combina com o que foi digitado (menor é melhor; null = não combina). Sem acento e
+     sem maiúscula; cada palavra digitada precisa achar uma palavra do nome: começo da palavra (vale
+     enquanto digita), pedaço dela ou com erro de digitação (1 erro a partir de 4 letras, 2 a partir de 7). */
+  function nomeCombina(nome, busca) {
+    const ps = semAcento(nome).split(/[^a-z0-9]+/).filter(Boolean), qs = semAcento(busca).split(/[^a-z0-9]+/).filter(Boolean);
+    if (!qs.length || !ps.length) return null;
+    let total = 0;
+    for (const q of qs) {
+      let melhor = null;
+      for (const p of ps) {
+        let s = p.startsWith(q) ? 0 : p.includes(q) ? 1 : null;
+        const lim = q.length >= 7 ? 2 : q.length >= 4 ? 1 : 0;
+        if (s === null && lim) {
+          const e = Math.min(distancia(q, p), ...[-1, 0, 1].map((k) => q.length + k).filter((k) => k > 0 && k < p.length).map((k) => distancia(q, p.slice(0, k))));
+          if (e <= lim) s = 1 + e;
+        }
+        if (s !== null && (melhor === null || s < melhor)) melhor = s;
+      }
+      if (melhor === null) return null;
+      total += melhor;
+    }
+    return total;
+  }
+  /* Uma entrada por pessoa (mesmo WhatsApp ou e-mail; sem nenhum dos dois, mesmo nome). "livre" é um
+     pedido dela ainda sem passeio, que recebe o passeio; sem pedido livre, o passeio cria um pedido novo
+     com os dados dela (cliente que volta). */
+  function pessoasParaBusca(preId) {
+    const grupos = new Map();
+    nossos().slice().sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at))).forEach((x) => {
+      const c = chavePessoa(x), k = c[0] === 'i' ? 'n' + semAcento(x.nome).replace(/\s+/g, ' ').trim() : c;
+      if (k === 'n') return;
+      if (!grupos.has(k)) grupos.set(k, []);
+      grupos.get(k).push(x);
+    });
+    return [...grupos.values()].map((ls) => {
+      const livre = ls.find((x) => x.id === preId) || ls.find((x) => !passeioDoLead(x.id) && x.etapa !== 'perdidos') || null;
+      const feitos = ls.filter((x) => passeioDoLead(x.id)).length;
+      return { base: livre || ls[0], livre, feitos, todos: ls };
+    });
+  }
   function marcarPasseio(pre) {
     const l0 = pre.lead_id ? lead(pre.lead_id) : null;
-    const candidatos = nossos().filter((x) => x.etapa !== 'perdidos' && (!passeioDoLead(x.id) || x.id === pre.lead_id))
-      .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+    const candidatos = pessoasParaBusca(pre.lead_id);
     const rotLead = (x) => [x.nome || foneTela(x.wa_id) || 'Sem nome', x.pessoas ? x.pessoas + ' pessoas' : '', x.data_desejada ? ddIso(x.data_desejada) : ''].filter(Boolean).join(' · ');
     const lIni = lancha(pre.lancha_id || (l0 && l0.lancha_id)) || {};
     const vendedores = S.parceiros.filter((x) => x.ativo !== false);
@@ -1240,28 +1314,36 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         f('bloco-parceiro').hidden = quem !== 'parceiro';
       });
       // busca do cliente: mostra até 8 nomes enquanto digita; sem escolher, vira cliente novo com o nome digitado
-      const escolhe = (x) => {
-        f('lead').value = x.id;
-        f('escolhido-txt').textContent = rotLead(x);
+      const rotPessoa = (g) => [g.base.nome || foneTela(g.base.wa_id) || 'Sem nome', g.base.nome && g.base.wa_id ? foneTela(g.base.wa_id) : '',
+        g.feitos ? (g.feitos === 1 ? 'já tem 1 passeio' : `já tem ${g.feitos} passeios`) : ''].filter(Boolean).join(' · ');
+      const escolhe = (g) => {
+        const x = g.livre;
+        f('lead').value = x ? x.id : '';
+        f('lead').dataset.base = g.base.id;
+        f('escolhido-txt').textContent = x ? rotLead(x) : rotPessoa(g);
         f('escolhido').hidden = false; f('busca-bloco').hidden = true;
+        if (!x) { confere(); return; }
         if (x.pessoas) f('pessoas').value = x.pessoas;
         if (x.roteiro_id) { f('roteiro').value = x.roteiro_id; f('roteiro').dispatchEvent(new Event('change')); }
         if (!f('dia').value && x.data_desejada) { f('dia').value = x.data_desejada; f('dia').dispatchEvent(new Event('change')); }
         confere();
       };
       f('trocar').addEventListener('click', () => {
-        f('lead').value = ''; f('escolhido').hidden = true; f('busca-bloco').hidden = false; f('busca').value = ''; f('busca').focus();
+        f('lead').value = ''; f('lead').dataset.base = ''; f('escolhido').hidden = true; f('busca-bloco').hidden = false; f('busca').value = ''; f('busca').focus();
       });
       f('busca').addEventListener('input', () => {
         const bruto = f('busca').value.trim(), q = semAcento(bruto), d = digitos(bruto);
         const ul = f('achados');
         if (d.length >= 4) { if (!c.querySelector('[data-fone-campo="novo"] [data-fone-num]').value) poeFone(c, 'novo', bruto); } else f('nome').value = bruto;
-        if (q.length < 2) { ul.hidden = true; return; }
-        const achou = candidatos.filter((x) => semAcento(x.nome).includes(q) || (d.length >= 4 && digitos(x.wa_id).includes(d))).slice(0, 8);
-        ul.innerHTML = achou.length ? achou.map((x) => `<li><button type="button" data-id="${x.id}">${esc(rotLead(x))}</button></li>`).join('')
+        if (q.replace(/\s/g, '').length < 2) { ul.hidden = true; return; }
+        const achou = candidatos.map((g, i) => {
+          const s = d.length >= 4 && g.todos.some((x) => digitos(x.wa_id).includes(d)) ? 0 : (d.length >= 4 ? null : nomeCombina(g.base.nome, bruto));
+          return s === null ? null : [g, s, i];
+        }).filter(Boolean).sort((a, b) => a[1] - b[1] || a[2] - b[2]).slice(0, 8).map((x) => x[0]);
+        ul.innerHTML = achou.length ? achou.map((g, i) => `<li><button type="button" data-i="${i}">${esc(g.livre ? rotLead(g.livre) : rotPessoa(g))}</button></li>`).join('')
           : '<li class="busca-cliente__nada">Nenhum cliente com esse nome. Preencha abaixo para cadastrar.</li>';
         ul.hidden = false;
-        ul.querySelectorAll('[data-id]').forEach((b) => b.addEventListener('click', () => { ul.hidden = true; escolhe(lead(b.dataset.id)); }));
+        ul.querySelectorAll('[data-i]').forEach((b) => b.addEventListener('click', () => { ul.hidden = true; escolhe(achou[Number(b.dataset.i)]); }));
       });
       // trocou a lancha: traz o horário, o marinheiro e o embarque de sempre dela (se ainda for a sugestão)
       f('lancha').addEventListener('change', () => {
@@ -1283,8 +1365,9 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       aoSalvar(f('salvar'), async () => {
         const lanchaId = f('lancha').value, dia = f('dia').value, pessoas = Number(f('pessoas').value) || null;
         if (quem === 'parceiro' && !f('vendedor').value) return erroCampo(c, 'Escolha o parceiro que vendeu o passeio.');
-        if (quem === 'cliente' && !f('lead').value && !f('nome').value.trim()) return erroCampo(c, 'Escolha o cliente na busca ou escreva o nome do cliente novo.');
-        const [waNovo, erroWa] = quem === 'cliente' && !f('lead').value ? leFone(c, 'novo') : [null, null];
+        const baseCli = quem === 'cliente' && !f('lead').value && f('lead').dataset.base ? lead(f('lead').dataset.base) : null;
+        if (quem === 'cliente' && !f('lead').value && !baseCli && !f('nome').value.trim()) return erroCampo(c, 'Escolha o cliente na busca ou escreva o nome do cliente novo.');
+        const [waNovo, erroWa] = quem === 'cliente' && !f('lead').value && !baseCli ? leFone(c, 'novo') : [null, null];
         if (erroWa) return erroCampo(c, erroWa);
         if (!lanchaId || !dia) return erroCampo(c, 'Escolha a lancha e o dia.');
         const [extra, erro] = lePasseio(c);
@@ -1293,8 +1376,13 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         let leadId = quem === 'cliente' ? f('lead').value : '', criado = false;
         if (!leadId) {
           const vend = parceiro(f('vendedor').value);
+          // cliente que volta: pedido novo com o cadastro dele (nome, contato, idioma e documentos)
+          const copia = (b) => { const o = { etapa: 'conversando', origem: b.origem || 'direto' };
+            ['nome', 'wa_id', 'email', 'idioma', 'cpf', 'nascimento', 'doc_tipo', 'doc_numero', 'doc_pais'].forEach((k) => { if (b[k] != null && b[k] !== '') o[k] = b[k]; });
+            return o; };
           const dados = quem === 'parceiro'
             ? { nome: f('nome-p').value.trim() || `Cliente de ${vend.nome}`, parceiro_id: vend.id, etapa: 'conversando', origem: 'parceiro', pessoas }
+            : baseCli ? copia(baseCli)
             : { nome: f('nome').value.trim(), wa_id: waNovo, etapa: 'conversando', origem: 'direto' };
           const novo = await grava(sb.from('bb_leads').insert(dados).select('id').single());
           if (!novo) return;
@@ -3877,7 +3965,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       });
     }
     else if (d.receber) anotarRecebimento(d.receber, 'restante');
-    else if (d.ag != null) { agIni = d.ag === '0' ? 0 : Math.max(agIni + Number(d.ag), -56); telaAgenda(); }
+    else if (d.ag != null) { agIni = d.ag === '0' ? 0 : Math.max(agIni + Number(d.ag) * agN, -56); telaAgenda(); }
     else if (d.mes) { mesSel = somaMes(mesSel, Number(d.mes) * PASSO[periodo]); if (mesSel > iso(hoje()).slice(0, 7)) mesSel = iso(hoje()).slice(0, 7); telaDinheiro(); }
     else if (d.periodo) { periodo = d.periodo; telaDinheiro(); }
     else if ('novoCliente' in d) novoCliente();

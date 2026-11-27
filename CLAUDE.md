@@ -439,6 +439,15 @@ com quebra de linha literal do `lib/site.php`/`lib/conteudo.php`); a `/link/` co
   link de conexão"). A página e a mensagem recomendam uma agenda só das lanchas (todo evento nela fecha o dia no site).
 - IndexNow: chave no ar, primeiro envio recusado com "SiteVerificationNotCompleted" (normal no primeiro uso); reenviar.
 
+**Ajustes do painel (27/11, pedidos do Fabiano):**
+- Agenda: a grade mostra só os dias que cabem na tela (`cabemDias()`, sem rolar de lado; no celular, abaixo de 600 px,
+  7 dias com rolagem) e Antes/Depois andam essa mesma quantidade (`agN`); refaz ao girar o celular. Lanchas próprias
+  (sem parceiro: Phantom 30 BBF e HD 260 Caluga) primeiro (`lanchasAgenda()`).
+- Marcar passeio: a busca do cliente procura em **todos** os clientes nossos, inclusive quem já tem passeio (antes escondia,
+  e a equipe cadastrava de novo: a Lígia ficou 3 vezes, a Clarice 2). Uma linha por pessoa (WhatsApp/e-mail; sem os dois,
+  nome), sem acento, sem maiúscula e com erro de digitação (`nomeCombina()`: 1 erro a partir de 4 letras, 2 a partir de 7).
+  Pessoa sem pedido livre ganha pedido novo com nome, contato, idioma e documentos copiados.
+
 **Quando o Google aprovar o app (verificação enviada em 26/11):** regravar a cena 4 do vídeo dos donos sem o aviso de "app não
 verificado", tirar a frase do aviso da narração (cena 4), trocar `assets/video/conectar-agenda.mp4`, tirar o passo 2 (aviso) do
 `conectar.php` e apagar a agenda de teste "Boat bookings" (e o evento de 7/12) da conta freelainhome, com o ok do Fabiano.
