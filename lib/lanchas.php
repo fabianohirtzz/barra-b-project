@@ -105,6 +105,23 @@ function bb_cards($lanchas, $pre = '')
     return implode("\n", $out);
 }
 
+/* Faixa da frota da página /link/ (bio do Instagram): igual ao link_barco do gerador. */
+const BB_UTM_LINK = '?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio';
+function bb_link_barco($l, $pre = '')
+{
+    $capa = $l['capa_url'] ? bb_url($l['capa_url'], $pre) : $pre . 'assets/img/marca/apple-touch-icon.png';
+    return '<li class="lk-barco"><a href="' . $pre . 'lanchas/' . bb_e($l['slug']) . '/' . BB_UTM_LINK . '"><img src="' . bb_e($capa) . '" '
+        . 'alt="Lancha ' . bb_e($l['nome']) . '" width="800" height="800" loading="lazy"><b>' . bb_e($l['nome']) . '</b><span>'
+        . (int) $l['passageiros'] . ' pessoas, ' . bb_pes($l['pes']) . ' pés</span></a></li>';
+}
+
+function bb_link_frota($lanchas, $pre = '')
+{
+    $out = [];
+    foreach (array_slice(array_values($lanchas), 0, 6) as $l) $out[] = '          ' . bb_link_barco($l, $pre);
+    return implode("\n", $out);
+}
+
 function bb_opcoes($lanchas)
 {
     $max = 0;

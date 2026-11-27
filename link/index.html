@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Barra Boat Floripa | Lanchas privativas na Barra da Lagoa</title>
+  <meta name="description" content="Consulte uma data pelo WhatsApp, veja as lanchas, os roteiros para a Ilha do Campeche e a Costa da Lagoa e o embarque no Canal da Barra.">
+  <!-- noindex de propósito (não é o da prévia): página de atalhos da bio, conteúdo repetido do site -->
+  <meta name="robots" content="noindex, follow">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:site_name" content="Barra Boat Floripa">
+  <meta property="og:title" content="Barra Boat Floripa | Lanchas privativas na Barra da Lagoa">
+  <meta property="og:description" content="Consulte uma data pelo WhatsApp, veja as lanchas, os roteiros para a Ilha do Campeche e a Costa da Lagoa e o embarque no Canal da Barra.">
+  <meta property="og:url" content="https://barraboatfloripa.com.br/link/">
+  <meta property="og:image" content="https://barraboatfloripa.com.br/og/assets/img/fotos/hero.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#F3F7FA">
+  <link rel="icon" href="../favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="../assets/img/marca/favicon.png">
+  <link rel="apple-touch-icon" href="../assets/img/marca/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,300..800;1,62..125,500..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/link.css?v=2">
+</head>
+<body class="lk-corpo">
+  <!-- Fundo náutico do site: ondas em traço fino + a lancha que cruza de vez em quando (link.js) -->
+  <canvas class="mar" aria-hidden="true"></canvas>
+
+  <svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-wa" viewBox="0 0 24 24"><path fill="currentColor" d="M12.04 2a9.9 9.9 0 0 0-8.5 14.98L2 22l5.17-1.5A9.93 9.93 0 1 0 12.04 2Zm0 18.1a8.2 8.2 0 0 1-4.18-1.15l-.3-.18-3.07.89.9-3-.2-.31a8.2 8.2 0 1 1 6.85 3.75Zm4.5-6.14c-.25-.12-1.46-.72-1.69-.8-.23-.08-.39-.12-.56.12-.16.25-.64.8-.78.97-.14.16-.29.18-.54.06a6.7 6.7 0 0 1-3.32-2.9c-.25-.43.25-.4.72-1.33.08-.16.04-.31-.02-.43l-.76-1.83c-.2-.48-.4-.41-.56-.42h-.47a.9.9 0 0 0-.66.31 2.77 2.77 0 0 0-.86 2.06 4.8 4.8 0 0 0 1 2.55 11 11 0 0 0 4.2 3.72c1.57.68 2.18.73 2.96.62.48-.07 1.46-.6 1.67-1.18.2-.58.2-1.07.14-1.18-.06-.1-.22-.16-.47-.28Z"/></symbol>
+<symbol id="i-google" viewBox="0 0 24 24"><path fill="#4285F4" d="M21.6 12.2c0-.7-.06-1.36-.18-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.24c1.9-1.74 2.96-4.3 2.96-7.3Z"/><path fill="#34A853" d="M12 22c2.7 0 4.98-.9 6.64-2.44l-3.24-2.5c-.9.6-2.04.96-3.4.96-2.6 0-4.82-1.76-5.6-4.13H3.06v2.6A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.4 13.9a6 6 0 0 1 0-3.8V7.5H3.06a10 10 0 0 0 0 9Z"/><path fill="#EA4335" d="M12 5.98c1.47 0 2.8.5 3.84 1.5l2.88-2.88A10 10 0 0 0 3.06 7.5l3.34 2.6C7.18 7.74 9.4 5.98 12 5.98Z"/></symbol>
+<symbol id="i-estrela" viewBox="0 0 24 24"><path fill="currentColor" d="m12 2.8 2.8 5.8 6.3.8-4.6 4.4 1.2 6.2L12 17l-5.7 3 1.2-6.2L2.9 9.4l6.3-.8Z"/></symbol>
+<symbol id="i-lancha" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 14.5h17.8l-2.4 4H5.4Z"/><path d="M6 14.5 8 10h7.5l2.8 4.5"/><path d="M10 10V7.5h4"/><path d="M2 21c1.4 0 1.4-.8 2.8-.8s1.4.8 2.8.8 1.4-.8 2.8-.8 1.4.8 2.8.8 1.4-.8 2.8-.8 1.4.8 2.8.8 1.4-.8 2.8-.8"/></g></symbol>
+<symbol id="i-leme" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.6"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4M5.3 5.3l2.8 2.8M15.9 15.9l2.8 2.8M18.7 5.3l-2.8 2.8M8.1 15.9l-2.8 2.8"/></g></symbol>
+<symbol id="i-boia" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.8"/><path d="m6 6 3.3 3.3M18 6l-3.3 3.3M6 18l3.3-3.3M18 18l-3.3-3.3"/></g></symbol>
+<symbol id="i-tel" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M5 3.5h3.2l1.6 4.2-2.1 1.4a10.6 10.6 0 0 0 5.2 5.2l1.4-2.1 4.2 1.6V17a2.5 2.5 0 0 1-2.7 2.5A15.5 15.5 0 0 1 2.5 6.2 2.5 2.5 0 0 1 5 3.5Z"/></symbol>
+<symbol id="i-seta" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+<symbol id="i-ig" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r=".6" fill="currentColor"/></g></symbol>
+<symbol id="i-tt" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M14 3v11.2a3.6 3.6 0 1 1-3.6-3.6M14 3c.4 2.6 2.2 4.4 5 4.6"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.3"/></g></symbol>
+  </svg>
+
+  <p class="lk-trilho" aria-hidden="true"><span>27°34′28″S</span><i></i><span>48°25′30″W</span></p>
+
+  <main class="lk" id="conteudo">
+    <header class="lk-topo" style="--i:0">
+      <a class="lk-topo__marca" href="../?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio"><img src="../assets/img/marca/logo.png" alt="Barra Boat Floripa, ir para o site" width="600" height="282"></a>
+      <div class="idioma" data-idioma translate="no">
+        <button class="topo__idioma" type="button" aria-label="Idioma do site: Português" aria-expanded="false" aria-controls="idiomas" data-idioma-botao>
+          <svg class="idioma__globo" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.8 3.8 5.8 3.8 9s-1.2 6.2-3.8 9c-2.6-2.8-3.8-5.8-3.8-9S9.4 5.8 12 3Z"/></svg><span data-idioma-atual>PT</span>
+        </button>
+        <ul class="idioma__lista" id="idiomas" hidden>
+          <li><a href="/link/" hreflang="pt-BR" lang="pt-BR" data-idioma-cod="pt" aria-current="true"><b>PT</b>Português</a></li>
+          <li><a href="/es/link/" hreflang="es" lang="es" data-idioma-cod="es"><b>ES</b>Español</a></li>
+          <li><a href="/en/link/" hreflang="en" lang="en" data-idioma-cod="en"><b>EN</b>English</a></li>
+          <li><a href="/fr/link/" hreflang="fr" lang="fr" data-idioma-cod="fr"><b>FR</b>Français</a></li>
+          <li><a href="/de/link/" hreflang="de" lang="de" data-idioma-cod="de"><b>DE</b>Deutsch</a></li>
+          <li><a href="/it/link/" hreflang="it" lang="it" data-idioma-cod="it"><b>IT</b>Italiano</a></li>
+          <li><a href="/nl/link/" hreflang="nl" lang="nl" data-idioma-cod="nl"><b>NL</b>Nederlands</a></li>
+          <li><a href="/ja/link/" hreflang="ja" lang="ja" data-idioma-cod="ja"><b>JA</b>日本語</a></li>
+          <li><a href="/zh/link/" hreflang="zh-Hans" lang="zh-Hans" data-idioma-cod="zh"><b>ZH</b>简体中文</a></li>
+        </ul>
+      </div>
+    </header>
+
+    <section class="lk-abre" style="--i:1" aria-labelledby="lk-titulo">
+      <h1 class="lk-abre__titulo" id="lk-titulo">A lancha é só do seu grupo.</h1>
+      <p class="lk-abre__texto">Marinheiro e combustível inclusos, saindo do Canal da Barra da Lagoa desde 2010.</p>
+      <a class="lk-google" href="https://search.google.com/local/reviews?placeid=ChIJweQXY-8_J5URa4sYsQVDMTc" target="_blank" rel="noopener">
+        <svg aria-hidden="true"><use href="#i-google"/></svg><b>4,8</b><span class="lk-google__estrelas" aria-hidden="true">★★★★★</span><span>no Google</span>
+      </a>
+    </section>
+
+    <a class="lk-wa" style="--i:2" href="https://wa.me/5548991153172?text=Ol%C3%A1%21%20Vim%20pelo%20Instagram%20da%20Barra%20Boat%20e%20quero%20consultar%20uma%20data%20para%20um%20passeio%20de%20lancha." target="_blank" rel="noopener" data-link-wa>
+      <span class="lk-wa__icone" aria-hidden="true"><svg><use href="#i-wa"/></svg></span>
+      <span class="lk-wa__txt"><b>Consultar uma data</b><small>Pelo WhatsApp, com a nossa equipe, 24 horas</small></span>
+      <svg class="lk-wa__seta" aria-hidden="true"><use href="#i-seta"/></svg>
+    </a>
+
+    <section class="lk-bloco" style="--i:3" aria-labelledby="lk-roteiros">
+      <h2 class="lk-h2" id="lk-roteiros">Roteiros</h2>
+      <div class="lk-roteiros">
+        <a class="lk-postal" href="../ilha-do-campeche/?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio">
+          <img src="../assets/img/capas/ilha-do-campeche-mobile.webp" alt="Água azul e areia branca na Ilha do Campeche" width="1200" height="900" loading="lazy">
+          <span class="lk-postal__selo">O mais pedido</span>
+          <span class="lk-postal__txt"><b>Ilha do Campeche</b><span>10,4 milhas, diária de 7 horas</span></span>
+        </a>
+        <a class="lk-postal" href="../costa-da-lagoa/?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio">
+          <img src="../assets/img/fotos/costa-da-lagoa.webp" alt="Lancha na Lagoa da Conceição, a caminho da Costa da Lagoa" width="1400" height="775" loading="lazy">
+          <span class="lk-postal__txt"><b>Costa da Lagoa</b><span>Águas calmas, 5 paradas</span></span>
+        </a>
+      </div>
+    </section>
+
+    <section class="lk-bloco lk-frota" style="--i:4" aria-labelledby="lk-frota">
+      <div class="lk-bloco__cab">
+        <h2 class="lk-h2" id="lk-frota">A frota</h2>
+        <a class="lk-mais" href="../lanchas/?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio">Ver as 17 lanchas<svg aria-hidden="true"><use href="#i-seta"/></svg></a>
+      </div>
+      <ul class="lk-frota__lista" data-link-frota>
+          <li class="lk-barco"><a href="../lanchas/1564/?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio"><img src="../assets/img/lanchas/1564.webp" alt="Lancha Phantom 36" width="800" height="800" loading="lazy"><b>Phantom 36</b><span>13 pessoas, 36 pés</span></a></li>
+          <li class="lk-barco"><a href="../lanchas/phantom30bb/?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio"><img src="../assets/img/lanchas/phantom30bb.webp" alt="Lancha Phantom 30 BB" width="800" height="800" loading="lazy"><b>Phantom 30 BB</b><span>12 pessoas, 29 pés</span></a></li>
+          <li class="lk-barco"><a href="../lanchas/phantom-36c/?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio"><img src="../assets/img/lanchas/phantom-36c.webp" alt="Lancha Phantom 36 C" width="800" height="800" loading="lazy"><b>Phantom 36 C</b><span>11 pessoas, 36 pés</span></a></li>
+          <li class="lk-barco"><a href="../lanchas/phantom-30/?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio"><img src="../assets/img/lanchas/phantom-30.webp" alt="Lancha Phantom 30 C" width="800" height="800" loading="lazy"><b>Phantom 30 C</b><span>11 pessoas, 30 pés</span></a></li>
+          <li class="lk-barco"><a href="../lanchas/3373/?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio"><img src="../assets/img/lanchas/3373.webp" alt="Lancha Cabrasmar 37" width="800" height="800" loading="lazy"><b>Cabrasmar 37</b><span>10 pessoas, 37 pés</span></a></li>
+          <li class="lk-barco"><a href="../lanchas/3363/?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio"><img src="../assets/img/lanchas/3363.webp" alt="Lancha My Nega 30" width="800" height="800" loading="lazy"><b>My Nega 30</b><span>10 pessoas, 30 pés</span></a></li>
+        </ul>
+    </section>
+
+    <nav class="lk-bloco lk-rota" style="--i:5" aria-labelledby="lk-atalhos" data-rota>
+      <h2 class="lk-h2" id="lk-atalhos">Atalhos do site</h2>
+      <span class="lk-rota__barco" aria-hidden="true" data-rota-barco><svg viewBox="0 0 24 40"><path class="lk-rota__esteira" d="M12 0v14"/><path class="lk-rota__casco" d="M12 39c-4-3.4-6.2-8.6-6.2-15.2V12.6c0-1.6 1.2-2.8 2.8-2.8h6.8c1.6 0 2.8 1.2 2.8 2.8v11.2c0 6.6-2.2 11.8-6.2 15.2Z"/><path class="lk-rota__cabine" d="M8.6 15.2h6.8v6.4c0 1-.8 1.8-1.8 1.8h-3.2c-1 0-1.8-.8-1.8-1.8Z"/><path class="lk-rota__vidro" d="M8.4 25.4c2.3 1.6 4.9 1.6 7.2 0"/></svg></span>
+      <ul class="lk-rota__lista">
+        <li><a href="../lanchas/?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio"><span class="lk-rota__boia" aria-hidden="true"><svg><use href="#i-lancha"/></svg></span><span class="lk-rota__txt"><b>Lanchas</b><span>17 lanchas de 23 a 37 pés</span></span><svg class="lk-rota__seta" aria-hidden="true"><use href="#i-seta"/></svg></a></li>
+        <li><a href="../?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio#avaliacoes"><span class="lk-rota__boia" aria-hidden="true"><svg><use href="#i-estrela"/></svg></span><span class="lk-rota__txt"><b>Avaliações</b><span>Nota 4,8 no Google, de turistas do Brasil e de fora</span></span><svg class="lk-rota__seta" aria-hidden="true"><use href="#i-seta"/></svg></a></li>
+        <li><a href="../sobre/?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio"><span class="lk-rota__boia" aria-hidden="true"><svg><use href="#i-leme"/></svg></span><span class="lk-rota__txt"><b>Sobre a Barra Boat</b><span>Desde 2010 no Canal da Barra</span></span><svg class="lk-rota__seta" aria-hidden="true"><use href="#i-seta"/></svg></a></li>
+        <li><a href="../?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio#duvidas"><span class="lk-rota__boia" aria-hidden="true"><svg><use href="#i-boia"/></svg></span><span class="lk-rota__txt"><b>Dúvidas frequentes</b><span>Pagamento, horário e o que levar</span></span><svg class="lk-rota__seta" aria-hidden="true"><use href="#i-seta"/></svg></a></li>
+        <li><a href="../contato/?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio"><span class="lk-rota__boia" aria-hidden="true"><svg><use href="#i-tel"/></svg></span><span class="lk-rota__txt"><b>Contato</b><span>WhatsApp, e-mail e endereço</span></span><svg class="lk-rota__seta" aria-hidden="true"><use href="#i-seta"/></svg></a></li>
+      </ul>
+    </nav>
+
+    <section class="lk-bloco lk-embarque" style="--i:6" aria-labelledby="lk-embarque">
+      <div class="lk-carta" data-mapa>
+        <svg class="lk-carta__desenho" viewBox="0 0 400 210" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <g class="lk-carta__curvas">
+            <path d="M-10 40C60 20 110 70 180 52S300 10 410 34"/>
+            <path d="M-10 78C70 58 120 104 196 88S310 50 410 70"/>
+            <path d="M-10 118C80 100 130 140 210 126S320 92 410 108"/>
+            <path d="M-10 160C90 142 150 178 226 166S330 136 410 150"/>
+            <path d="M-10 198C100 184 160 214 240 204S340 178 410 190"/>
+          </g>
+          <path class="lk-carta__rota" d="M150 118C210 104 250 70 330 58S400 40 420 30"/>
+          <g class="lk-carta__pino" transform="translate(150 118)"><circle class="lk-carta__onda" r="9"/><circle r="5"/></g>
+          <text class="lk-carta__nome" x="136" y="146" text-anchor="end">Canal da Barra</text>
+          <text class="lk-carta__nome lk-carta__nome--mar" x="384" y="104" text-anchor="end">Oceano Atlântico</text>
+        </svg>
+        <button class="lk-carta__abrir" type="button" data-mapa-abrir><svg aria-hidden="true"><use href="#i-pin"/></svg>Mostrar o mapa</button>
+      </div>
+      <div class="lk-embarque__txt">
+        <h2 class="lk-h2" id="lk-embarque">Embarque no Canal da Barra</h2>
+        <p>Rod. Jorn. Manoel de Menezes, 3007<br>Barra da Lagoa, Florianópolis, SC</p>
+        <div class="lk-embarque__acoes">
+          <a class="lk-botao lk-botao--claro" href="https://www.google.com/maps/dir/?api=1&amp;destination=Barra%20Boat%20Floripa&amp;destination_place_id=ChIJweQXY-8_J5URa4sYsQVDMTc" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-pin"/></svg>Traçar rota</a>
+          <a class="lk-botao lk-botao--linha" href="https://www.waze.com/ul?ll=-27.5745%2C-48.4251&amp;navigate=yes" target="_blank" rel="noopener">Abrir no Waze</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="lk-bloco" style="--i:7" aria-labelledby="lk-redes">
+      <h2 class="lk-h2" id="lk-redes">Acompanhe os passeios</h2>
+      <div class="lk-redes">
+        <a href="https://www.instagram.com/barraboatfloripa/" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-ig"/></svg><span><b>Instagram</b><span>@barraboatfloripa</span></span></a>
+        <a href="https://www.tiktok.com/@barra.boat.florip" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-tt"/></svg><span><b>TikTok</b><span>@barra.boat.florip</span></span></a>
+      </div>
+    </section>
+
+    <footer class="lk-fim" style="--i:8">
+      <a class="lk-cadastur" href="https://cadastur.turismo.gov.br/cadastur/#!/public/qrcode/12443869000190" target="_blank" rel="noopener"><img src="../assets/img/marca/cadastur.png" alt="Cadastur" width="200" height="40" loading="lazy"><span>Empresa cadastrada no Ministério do Turismo</span></a>
+      <a class="lk-botao lk-botao--claro lk-fim__site" href="../?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio">Ver o site completo<svg aria-hidden="true"><use href="#i-seta"/></svg></a>
+      <p class="lk-fim__copy">© <span data-ano>2026</span> Barra Boat Floripa</p>
+      <a class="assinatura" href="https://www.freelainhome.com.br/" target="_blank" rel="noopener" aria-label="Site desenvolvido pela Freela In Home">
+        <span class="assinatura__mar" aria-hidden="true">
+          <span class="assinatura__lancha">
+            <svg viewBox="0 0 34 17"><path class="assinatura__casco" d="M1 10.5h23.5l8.5-3.6-4.6 7.6c-.5.8-1.3 1.3-2.2 1.3H4.6c-1 0-1.9-.6-2.3-1.5Z"/><path class="assinatura__cabine" d="M8 10.5 11.6 5h7.6l4.3 5.5Z"/><path class="assinatura__vidro" d="M17.2 6.2h1.6l3 3.6h-4.6Z"/></svg>
+          </span>
+        </span>
+        <span class="assinatura__txt"><i>Feito para navegar sem enjoo,</i><span>desenvolvido pela <b>Freela In Home</b></span></span>
+      </a>
+    </footer>
+  </main>
+
+  <script src="../assets/js/link.js?v=2" defer></script>
+</body>
+</html>

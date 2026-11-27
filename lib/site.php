@@ -182,6 +182,10 @@ function bb_render($p, $lanchas, $fonte_api = 'api/disponibilidade.php', $conteu
           ");
     }
 
+    if ($p === 'link/') {
+        // página da bio do Instagram: os 6 primeiros barcos da frota
+        $h = bb_troca_ul($h, '<ul class="lk-frota__lista" data-link-frota>', "\n" . bb_link_frota($lanchas, $pre) . "\n        ");
+    }
     if ($p === '') {
         $h = bb_troca_ul($h, '<ul class="trilho__lista" data-trilho-lista>', "\n" . bb_cards($lanchas, $pre) . "\n        ");
     } elseif ($p === 'lanchas/') {

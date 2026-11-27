@@ -80,6 +80,7 @@ if (!bb_google_pronto()) {
         }
         $corpo = '<p class="selo">Passo 2 de 2</p><h1>Onde você anota as lanchas?</h1>'
             . '<p>Conta conectada: <b>' . cx($conta['email']) . '</b>. Escolha a agenda onde você anota as reservas das lanchas.</p>'
+            . '<p>O ideal é uma agenda só para as lanchas, separada da pessoal: todo evento nela fecha um dia no site. Ao criar uma reserva no Google Agenda, confira se ela está nessa agenda.</p>'
             . '<form method="post" action="?etapa=salvar"><input type="hidden" name="c" value="' . cx($c) . '">' . $op
             . '<button class="botao" type="submit">Usar esta agenda</button></form>'
             . '<p class="ajuda">Não é esta conta? <a href="?c=' . cx($c) . '">Conectar com outra conta Google</a>.</p>';
