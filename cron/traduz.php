@@ -5,7 +5,7 @@
 // traducoes/faltam.json, preenchida pelo site.php; o resultado vai para traducoes/<idioma>.json,
 // que o site lê junto com o i18n/<idioma>.json do Git. Só roda pela linha de comando:
 //
-//   */15 * * * *   php -q $HOME/public_html/novo/cron/traduz.php > /dev/null 2>&1
+//   */15 * * * *   php -q $HOME/public_html/cron/traduz.php > /dev/null 2>&1
 //
 // Precisa de ANTHROPIC_API_KEY no config.local.php. Sem a chave, a fila só espera.
 

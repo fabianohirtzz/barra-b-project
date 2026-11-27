@@ -6,7 +6,7 @@ renderizar estas mesmas páginas com dados do Supabase; este script serve a pré
 
 Rodar:  python tools/gerar_paginas.py
 """
-import os, re, json, html, unicodedata, random, datetime
+import os, re, json, html, unicodedata, random, datetime, urllib.parse
 
 PROJ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOM = 'https://barraboatfloripa.com.br/'
@@ -14,7 +14,7 @@ WA = '5548991153172'
 INDEX = open(os.path.join(PROJ, 'index.html'), encoding='utf-8').read()
 L_JSON = {l['slug']: l for l in json.load(open(os.path.join(PROJ, 'docs/conteudo-site-atual/lanchas.json'), encoding='utf-8'))}
 IMGS = json.load(open(os.path.join(PROJ, 'tools/imagens.json'), encoding='utf-8'))
-V_CSS, V_JS = '18', '13'
+V_CSS, V_JS = '19', '13'
 e = html.escape
 
 
@@ -741,7 +741,7 @@ corpo = capa_foto('sobre', 'Lancha navegando entre as casas coloridas e os barco
           <h2 id="cadastur-titulo">Empresa cadastrada no Ministério do Turismo</h2>
           <p>A Barra Boat Floripa tem cadastro ativo no Cadastur, o sistema oficial de prestadores de serviços turísticos do Governo Federal.</p>
         </div>
-        <a class="botao botao--contorno" href="https://cadastur.turismo.gov.br/" target="_blank" rel="noopener"><span>Consultar no Cadastur</span><svg aria-hidden="true"><use href="#i-seta"/></svg></a>
+        <a class="botao botao--contorno" href="https://cadastur.turismo.gov.br/cadastur/#!/public/qrcode/12443869000190" target="_blank" rel="noopener"><span>Consultar no Cadastur</span><svg aria-hidden="true"><use href="#i-seta"/></svg></a>
       </div>
     </section>
 ''' + chamada('Vamos para o mar?', 'Conte a data e quantas pessoas vão. A nossa equipe responde pelo WhatsApp com as lanchas livres.', 'Falar com a equipe',
@@ -899,8 +899,201 @@ corpo = capa_faixa('Esta página saiu da rota', 'O endereço pode ter mudado. Vo
         </div>''')
 gerados.append(pagina('404.html', 'Página não encontrada | Barra Boat Floripa', 'Página não encontrada.', corpo))
 
+# ---------------------------------------------------------------- /link/ (bio do Instagram)
+# Página avulsa, sem o cabeçalho, o menu e o rodapé do site: quem chega da bio veio de um link único e
+# precisa de destinos, não de menu. noindex e fora do sitemap (lista de atalhos competiria no Google com as
+# páginas de verdade), mas passa pelo site.php como as outras: GTM no domínio oficial, números da frota do
+# banco, os 6 primeiros barcos do banco (bb_link_frota em lib/lanchas.php, mesmo HTML de link_barco) e os
+# 9 idiomas (/es/link/...). Rastreamento: todo link interno leva utm_source=instagram&utm_medium=link, que o
+# site.js grava como origem "instagram/link"; o link.js grava a mesma origem antes de o visitante sair daqui.
+UTM_LINK = '?utm_source=instagram&amp;utm_medium=link&amp;utm_campaign=bio'
+WA_LINK = 'Olá! Vim pelo Instagram da Barra Boat e quero consultar uma data para um passeio de lancha.'
+
+
+def simbolos(ids):
+    return '\n'.join(re.search(rf'<symbol id="{i}".*?</symbol>', SPRITE, re.S).group(0) for i in ids)
+
+
+def link_barco(c):
+    """Um barco da faixa da frota. Igual ao bb_link_barco do lib/lanchas.php (o conferidor compara)."""
+    s = c['slug']
+    return (f'<li class="lk-barco"><a href="../lanchas/{s}/{UTM_LINK}"><img src="../assets/img/lanchas/{s}.webp" '
+            f'alt="Lancha {c["nome"]}" width="800" height="800" loading="lazy"><b>{c["nome"]}</b><span>{c["pax"]} pessoas, {c["pes"]} pés</span></a></li>')
+
+
+def pagina_link():
+    frota = '\n'.join('          ' + link_barco(CARDS[s]) for s in ORDEM[:6])
+    idiomas = ''.join(f'\n          <li><a href="/{"" if c == "pt" else c + "/"}link/" hreflang="{h}" lang="{h}" data-idioma-cod="{c}"{" aria-current=\"true\"" if c == "pt" else ""}><b>{c.upper()}</b>{n}</a></li>'
+                      for c, h, n in [('pt', 'pt-BR', 'Português'), ('es', 'es', 'Español'), ('en', 'en', 'English'), ('fr', 'fr', 'Français'), ('de', 'de', 'Deutsch'),
+                                      ('it', 'it', 'Italiano'), ('nl', 'nl', 'Nederlands'), ('ja', 'ja', '日本語'), ('zh', 'zh-Hans', '简体中文')])
+    wa = f'https://wa.me/{WA}?text=' + urllib.parse.quote(WA_LINK, safe='')
+    titulo = 'Barra Boat Floripa | Lanchas privativas na Barra da Lagoa'
+    desc = 'Consulte uma data pelo WhatsApp, veja as lanchas, os roteiros para a Ilha do Campeche e a Costa da Lagoa e o embarque no Canal da Barra.'
+    doc = f'''<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{e(titulo)}</title>
+  <meta name="description" content="{e(desc)}">
+  <!-- noindex de propósito (não é o da prévia): página de atalhos da bio, conteúdo repetido do site -->
+  <meta name="robots" content="noindex, follow">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:site_name" content="Barra Boat Floripa">
+  <meta property="og:title" content="{e(titulo)}">
+  <meta property="og:description" content="{e(desc)}">
+  <meta property="og:url" content="{DOM}link/">
+  <meta property="og:image" content="{og_url('assets/img/fotos/hero.webp')}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#F3F7FA">
+  <link rel="icon" href="../favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="../assets/img/marca/favicon.png">
+  <link rel="apple-touch-icon" href="../assets/img/marca/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,300..800;1,62..125,500..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/link.css?v=3">
+</head>
+<body class="lk-corpo">
+  <!-- Fundo náutico do site: ondas em traço fino + a lancha que cruza de vez em quando (link.js) -->
+  <canvas class="mar" aria-hidden="true"></canvas>
+
+  <svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    {simbolos(['i-wa', 'i-google', 'i-estrela', 'i-lancha', 'i-leme', 'i-boia', 'i-tel', 'i-seta', 'i-ig', 'i-tt', 'i-pin'])}
+  </svg>
+
+  <p class="lk-trilho" aria-hidden="true"><span>27°35′11″S</span><i></i><span>48°26′11″W</span></p>
+
+  <main class="lk" id="conteudo">
+    <header class="lk-topo" style="--i:0">
+      <a class="lk-topo__marca" href="../{UTM_LINK}"><img src="../assets/img/marca/logo.png" alt="Barra Boat Floripa, ir para o site" width="600" height="282"></a>
+      <div class="idioma" data-idioma translate="no">
+        <button class="topo__idioma" type="button" aria-label="Idioma do site: Português" aria-expanded="false" aria-controls="idiomas" data-idioma-botao>
+          <svg class="idioma__globo" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.8 3.8 5.8 3.8 9s-1.2 6.2-3.8 9c-2.6-2.8-3.8-5.8-3.8-9S9.4 5.8 12 3Z"/></svg><span data-idioma-atual>PT</span>
+        </button>
+        <ul class="idioma__lista" id="idiomas" hidden>{idiomas}
+        </ul>
+      </div>
+    </header>
+
+    <section class="lk-abre" style="--i:1" aria-labelledby="lk-titulo">
+      <h1 class="lk-abre__titulo" id="lk-titulo">A lancha é só do seu grupo.</h1>
+      <p class="lk-abre__texto">Marinheiro e combustível inclusos, saindo do Canal da Barra da Lagoa desde 2010.</p>
+      <a class="lk-google" href="https://search.google.com/local/reviews?placeid=ChIJweQXY-8_J5URa4sYsQVDMTc" target="_blank" rel="noopener">
+        <svg aria-hidden="true"><use href="#i-google"/></svg><b>4,8</b><span class="lk-google__estrelas" aria-hidden="true">★★★★★</span><span>no Google</span>
+      </a>
+    </section>
+
+    <a class="lk-wa" style="--i:2" href="{wa}" target="_blank" rel="noopener" data-link-wa>
+      <span class="lk-wa__icone" aria-hidden="true"><svg><use href="#i-wa"/></svg></span>
+      <span class="lk-wa__txt"><b>Consultar uma data</b><small>Pelo WhatsApp, com a nossa equipe, 24 horas</small></span>
+      <svg class="lk-wa__seta" aria-hidden="true"><use href="#i-seta"/></svg>
+    </a>
+
+    <section class="lk-bloco" style="--i:3" aria-labelledby="lk-roteiros">
+      <h2 class="lk-h2" id="lk-roteiros">Roteiros</h2>
+      <div class="lk-roteiros">
+        <a class="lk-postal" href="../ilha-do-campeche/{UTM_LINK}">
+          <img src="../assets/img/capas/ilha-do-campeche-mobile.webp" alt="Água azul e areia branca na Ilha do Campeche" width="1200" height="900" loading="lazy">
+          <span class="lk-postal__selo">O mais pedido</span>
+          <span class="lk-postal__txt"><b>Ilha do Campeche</b><span>10,4 milhas, diária de 7 horas</span></span>
+        </a>
+        <a class="lk-postal" href="../costa-da-lagoa/{UTM_LINK}">
+          <img src="../assets/img/fotos/costa-da-lagoa.webp" alt="Lancha na Lagoa da Conceição, a caminho da Costa da Lagoa" width="1400" height="775" loading="lazy">
+          <span class="lk-postal__txt"><b>Costa da Lagoa</b><span>Águas calmas, 5 paradas</span></span>
+        </a>
+      </div>
+    </section>
+
+    <section class="lk-bloco lk-frota" style="--i:4" aria-labelledby="lk-frota">
+      <div class="lk-bloco__cab">
+        <h2 class="lk-h2" id="lk-frota">A frota</h2>
+        <a class="lk-mais" href="../lanchas/{UTM_LINK}">Ver as 17 lanchas<svg aria-hidden="true"><use href="#i-seta"/></svg></a>
+      </div>
+      <ul class="lk-frota__lista" data-link-frota>
+{frota}
+        </ul>
+    </section>
+
+    <nav class="lk-bloco lk-rota" style="--i:5" aria-labelledby="lk-atalhos" data-rota>
+      <h2 class="lk-h2" id="lk-atalhos">Atalhos do site</h2>
+      <span class="lk-rota__barco" aria-hidden="true" data-rota-barco><svg viewBox="0 0 24 40"><path class="lk-rota__esteira" d="M12 0v14"/><path class="lk-rota__casco" d="M12 39c-4-3.4-6.2-8.6-6.2-15.2V12.6c0-1.6 1.2-2.8 2.8-2.8h6.8c1.6 0 2.8 1.2 2.8 2.8v11.2c0 6.6-2.2 11.8-6.2 15.2Z"/><path class="lk-rota__cabine" d="M8.6 15.2h6.8v6.4c0 1-.8 1.8-1.8 1.8h-3.2c-1 0-1.8-.8-1.8-1.8Z"/><path class="lk-rota__vidro" d="M8.4 25.4c2.3 1.6 4.9 1.6 7.2 0"/></svg></span>
+      <ul class="lk-rota__lista">
+        <li><a href="../lanchas/{UTM_LINK}"><span class="lk-rota__boia" aria-hidden="true"><svg><use href="#i-lancha"/></svg></span><span class="lk-rota__txt"><b>Lanchas</b><span>17 lanchas de 23 a 37 pés</span></span><svg class="lk-rota__seta" aria-hidden="true"><use href="#i-seta"/></svg></a></li>
+        <li><a href="../{UTM_LINK}#avaliacoes"><span class="lk-rota__boia" aria-hidden="true"><svg><use href="#i-estrela"/></svg></span><span class="lk-rota__txt"><b>Avaliações</b><span>Nota 4,8 no Google, de turistas do Brasil e de fora</span></span><svg class="lk-rota__seta" aria-hidden="true"><use href="#i-seta"/></svg></a></li>
+        <li><a href="../sobre/{UTM_LINK}"><span class="lk-rota__boia" aria-hidden="true"><svg><use href="#i-leme"/></svg></span><span class="lk-rota__txt"><b>Sobre a Barra Boat</b><span>Desde 2010 no Canal da Barra</span></span><svg class="lk-rota__seta" aria-hidden="true"><use href="#i-seta"/></svg></a></li>
+        <li><a href="../{UTM_LINK}#duvidas"><span class="lk-rota__boia" aria-hidden="true"><svg><use href="#i-boia"/></svg></span><span class="lk-rota__txt"><b>Dúvidas frequentes</b><span>Pagamento, horário e o que levar</span></span><svg class="lk-rota__seta" aria-hidden="true"><use href="#i-seta"/></svg></a></li>
+        <li><a href="../contato/{UTM_LINK}"><span class="lk-rota__boia" aria-hidden="true"><svg><use href="#i-tel"/></svg></span><span class="lk-rota__txt"><b>Contato</b><span>WhatsApp, e-mail e endereço</span></span><svg class="lk-rota__seta" aria-hidden="true"><use href="#i-seta"/></svg></a></li>
+      </ul>
+    </nav>
+
+    <section class="lk-bloco lk-embarque" style="--i:6" aria-labelledby="lk-embarque">
+      <div class="lk-carta" data-mapa>
+        <svg class="lk-carta__desenho" viewBox="0 0 400 210" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <g class="lk-carta__curvas">
+            <path d="M-10 40C60 20 110 70 180 52S300 10 410 34"/>
+            <path d="M-10 78C70 58 120 104 196 88S310 50 410 70"/>
+            <path d="M-10 118C80 100 130 140 210 126S320 92 410 108"/>
+            <path d="M-10 160C90 142 150 178 226 166S330 136 410 150"/>
+            <path d="M-10 198C100 184 160 214 240 204S340 178 410 190"/>
+          </g>
+          <path class="lk-carta__rota" d="M150 118C210 104 250 70 330 58S400 40 420 30"/>
+          <g class="lk-carta__pino" transform="translate(150 118)"><circle class="lk-carta__onda" r="9"/><circle r="5"/></g>
+          <text class="lk-carta__nome" x="136" y="146" text-anchor="end">Canal da Barra</text>
+          <text class="lk-carta__nome lk-carta__nome--mar" x="384" y="104" text-anchor="end">Oceano Atlântico</text>
+        </svg>
+        <button class="lk-carta__abrir" type="button" data-mapa-abrir><svg aria-hidden="true"><use href="#i-pin"/></svg>Mostrar o mapa</button>
+      </div>
+      <div class="lk-embarque__txt">
+        <h2 class="lk-h2" id="lk-embarque">Embarque no Canal da Barra</h2>
+        <p>Rod. Jorn. Manoel de Menezes, 3007<br>Barra da Lagoa, Florianópolis, SC</p>
+        <div class="lk-embarque__acoes">
+          <a class="lk-botao lk-botao--claro" href="https://www.google.com/maps/dir/?api=1&amp;destination=Barra%20Boat%20Floripa&amp;destination_place_id=ChIJweQXY-8_J5URa4sYsQVDMTc" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-pin"/></svg>Traçar rota</a>
+          <a class="lk-botao lk-botao--linha" href="https://www.waze.com/ul?ll=-27.5863938%2C-48.4363769&amp;navigate=yes" target="_blank" rel="noopener">Abrir no Waze</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="lk-bloco" style="--i:7" aria-labelledby="lk-redes">
+      <h2 class="lk-h2" id="lk-redes">Acompanhe os passeios</h2>
+      <div class="lk-redes">
+        <a href="https://www.instagram.com/barraboatfloripa/" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-ig"/></svg><span><b>Instagram</b><span>@barraboatfloripa</span></span></a>
+        <a href="https://www.tiktok.com/@barra.boat.florip" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-tt"/></svg><span><b>TikTok</b><span>@barra.boat.florip</span></span></a>
+      </div>
+    </section>
+
+    <footer class="lk-fim" style="--i:8">
+      <a class="lk-cadastur" href="https://cadastur.turismo.gov.br/cadastur/#!/public/qrcode/12443869000190" target="_blank" rel="noopener"><img src="../assets/img/marca/cadastur.png" alt="Cadastur" width="200" height="40" loading="lazy"><span>Empresa cadastrada no Ministério do Turismo</span></a>
+      <a class="lk-botao lk-botao--claro lk-fim__site" href="../{UTM_LINK}">Ver o site completo<svg aria-hidden="true"><use href="#i-seta"/></svg></a>
+      <p class="lk-fim__copy">© <span data-ano>2026</span> Barra Boat Floripa</p>
+      <a class="assinatura" href="https://www.freelainhome.com.br/" target="_blank" rel="noopener" aria-label="Site desenvolvido pela Freela In Home">
+        <span class="assinatura__mar" aria-hidden="true">
+          <span class="assinatura__lancha">
+            <svg viewBox="0 0 34 17"><path class="assinatura__casco" d="M1 10.5h23.5l8.5-3.6-4.6 7.6c-.5.8-1.3 1.3-2.2 1.3H4.6c-1 0-1.9-.6-2.3-1.5Z"/><path class="assinatura__cabine" d="M8 10.5 11.6 5h7.6l4.3 5.5Z"/><path class="assinatura__vidro" d="M17.2 6.2h1.6l3 3.6h-4.6Z"/></svg>
+          </span>
+        </span>
+        <span class="assinatura__txt"><i>Feito para navegar sem enjoo,</i><span>desenvolvido pela <b>Freela In Home</b></span></span>
+      </a>
+    </footer>
+  </main>
+
+  <script src="../assets/js/link.js?v=3" defer></script>
+</body>
+</html>
+'''
+    destino = os.path.join(PROJ, 'link', 'index.html')
+    os.makedirs(os.path.dirname(destino), exist_ok=True)
+    open(destino, 'w', encoding='utf-8').write(doc)
+    return destino
+
+
+gerados.append(pagina_link())
+
 # ---------------------------------------------------------------- sitemap
-urls = ['', 'lanchas/'] + [f'lanchas/{s}/' for s in ORDEM] + ['roteiros/', 'ilha-do-campeche/', 'costa-da-lagoa/', 'sobre/', 'contato/', 'politica-de-cancelamento/', 'politica-de-privacidade/', 'termos-de-uso/']
+urls =['', 'lanchas/'] + [f'lanchas/{s}/' for s in ORDEM] + ['roteiros/', 'ilha-do-campeche/', 'costa-da-lagoa/', 'sobre/', 'contato/', 'politica-de-cancelamento/', 'politica-de-privacidade/', 'termos-de-uso/']
 hoje = datetime.date.today().isoformat()
 # cada página em todos os idiomas (as traduções são servidas pelo site.php em /es/, /en/...),
 # com as alternativas de idioma de cada uma, como o Google pede

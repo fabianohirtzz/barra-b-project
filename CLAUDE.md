@@ -63,11 +63,12 @@ Referência: `E:\Clientes\Pereira Oliveira Turismo\po-tu-project` (ler o CLAUDE.
 - **Produção:** ErêHost, domínio barraboatfloripa.com.br (mantido). DNS saiu do Cloudflare em
   18/11: servidores `ns1/ns2.cpbr-sp4.erehost.com.br`, IP `200.11.120.126`, zona no cPanel
   (MX, SPF, DKIM e DMARC conferidos). SSL pelo AutoSSL.
-- **Servidor de teste:** https://novo.barraboatfloripa.com.br (pasta `novo/`, `noindex` pelo
-  `.htaccess` e pela meta). `config.local.php` com a `service_role` já está em `novo/` (403 pela web).
+- **Servidor de teste:** desligado em 26/11/2026 (pedido do Fabiano). A pasta `novo/` foi comparada com a raiz (só 23 fotos
+  da Runner 290 e uma capa existiam lá, copiadas para a raiz) e movida para `/home/barraboa/novo-backup-2026-11-26/`, fora da
+  web. O Fabiano apaga o subdomínio no cPanel. Testar agora é local (`php -S` com o roteador do scratchpad) antes de publicar.
 - **Deploy:** `python tools/publicar.py` (senha em `E:\Clientes\Barra Boat Floripa\Site\ferramentas\ftp-senha.txt`, fora do repo, ou `BB_FTP_SENHA`) (FTPS em `ftp.barraboatfloripa.com.br`;
   envia só o que mudou, guardado em `.publicado.json`; reconecta quando a ErêHost derruba a sessão).
-  **A raiz do FTP é o site oficial desde 26/11/2026:** o padrão é a raiz; `--destino /novo` para o teste. A senha nunca entra no repositório nem no servidor.
+  **A raiz do FTP é o site oficial desde 26/11/2026:** o padrão é a raiz (o `--destino` ainda existe, mas não há mais servidor de teste). A senha nunca entra no repositório nem no servidor.
 
 ## Escopo completo
 
@@ -405,6 +406,42 @@ já está na agenda do dono. Migração `2026-11-26-17-google-agenda.sql`. Confi
 verificado" (a página explica Avançado > Acessar). Política de privacidade ganhou a seção "Agenda Google dos donos das lanchas"
 (uso limitado). Testes: `gteste/t.php` no scratchpad (18 casos). **Testado de ponta a ponta em 26/11 no site oficial** (conta freelainhome, agenda de teste): leitura pelo aviso do Google em segundos, reserva gravada 10h às 17h, o próprio evento não volta como "dono", cancelar apaga o evento, apagar o evento do dono libera o dia, desconectar limpa tudo. Chaves no `config.local.php` da raiz (fora do Git). Na tela do Google as caixas de permissão vêm **desmarcadas**: a página de conexão manda marcar "Selecionar tudo". Verificação do app no Google ainda não enviada (precisa de vídeo de demonstração). **Na troca para a raiz:** o URI de volta da raiz já precisa estar
 no cliente OAuth; os canais apontam para o endereço onde foram abertos (reconectar ou esperar a renovação).
+
+**Página de links da bio `/link/` (26/11, pedido do Fabiano; aprovada e no ar, já na bio do Instagram):** `link/index.html`
+(gerado por `pagina_link()` no `tools/gerar_paginas.py`, não editar à mão) + `assets/css/link.css` + `assets/js/link.js`. Avulsa,
+sem cabeçalho/menu/rodapé do site e sem o `site.css`/`site.js` (o mar do fundo e o seletor de idioma foram **copiados** do
+`site.js` para o `link.js`: mudou lá, copie para cá). Conteúdo: logo, seletor de idioma, "A lancha é só do seu grupo.", selo 4,8 do
+Google (avaliações no Google), botão principal do WhatsApp com mensagem pronta, postais da Ilha do Campeche e da Costa da Lagoa,
+faixa com os 6 primeiros barcos da frota (o PHP troca pelos do banco: `bb_link_frota` em `lib/lanchas.php`, mesmo HTML do
+`link_barco` do gerador; `php tools/conferir_php.php` já compara `/link/`), **rota dos atalhos** (Lanchas, Avaliações, Sobre,
+Dúvidas, Contato numa linha tracejada; a lancha desce até a parada em foco), embarque (carta náutica desenhada, "Mostrar o mapa"
+só carrega o Google Maps no clique, Traçar rota pelo Place ID, Waze), Instagram e TikTok, Cadastur, "Ver o site completo" e a
+assinatura Freela. **noindex, follow e fora do sitemap** (como as /link da PO, Vocical, HD360, Anita e Encanto: lista de atalhos
+competiria com as páginas de verdade); sem canonical, então sem hreflang. Passa pelo `site.php` como as outras: GTM no domínio
+oficial, números da frota do banco e os 9 idiomas (`/es/link/`...; os textos novos entram na fila do `cron/traduz.php` na primeira
+visita, ou rodar `tools/i18n.php`). **Rastreamento:** links internos com `utm_source=instagram&utm_medium=link&utm_campaign=bio`
+(o `site.js` grava a origem `instagram/link`); o `link.js` grava `bb_origem = instagram/link` na chegada e manda `clique_whatsapp`
+(origem, `formulario: 'link'`), `clique_link_bio` e `abre_mapa` ao dataLayer. Para a bio do TikTok: `/link/?utm_source=tiktok`
+(vira `tiktok/link`). Fora do português a mensagem do WhatsApp leva o `[Resumo em português]`. Prints: `.playwright-mcp/link/`.
+Obs.: no Windows o `conferir_php.php` acusa 26 diferenças que já existiam antes da /link (ao que parece, CRLF da cópia de trabalho nas strings
+com quebra de linha literal do `lib/site.php`/`lib/conteudo.php`); a `/link/` confere.
+
+**Ajustes de 26/11 (noite):**
+- Coordenadas da base trocadas pelas da ficha do Google (-27.5863938, -48.4363769; 27°35′ S 48°26′ W): Waze, mapa da /link, rodapé e
+  JSON-LD. As antigas (-27.5745, -48.4251) caíam no canal perto da praia, a 1,6 km.
+- Rodapé não vaza mais no celular (navegador do Instagram no iPhone): colunas `minmax(0,1fr)`, texto do contato quebra
+  (`overflow-wrap:anywhere`), `html{overflow-x:clip}`. /link: cartões das redes em uma coluna até 420 px.
+- Painel: **cliente de parceiro** (`bb_leads.origem = 'parceiro'`, criado ao marcar passeio como "Cliente de parceiro") fica fora de
+  Clientes, Funil, Hoje, da escolha de cliente e do "chegaram" do relatório (`nossos()` no `app.js`); os relatórios de vendas continuam
+  contando o passeio. Testes "TESTE Claude" e "Maria Teste": `supabase/demo/apagar-testes-2026-11-26.sql` (para o Fabiano rodar).
+- Vídeo de conexão da agenda para os donos (2 min 35 s, voz do Fabiano, `videos-project/videos/barra-boat-agenda`): em
+  `assets/video/conectar-agenda.mp4` (+ `.jpg`), no passo 1 da página `/conectar-agenda/` e com link na mensagem do painel ("Mandar o
+  link de conexão"). A página e a mensagem recomendam uma agenda só das lanchas (todo evento nela fecha o dia no site).
+- IndexNow: chave no ar, primeiro envio recusado com "SiteVerificationNotCompleted" (normal no primeiro uso); reenviar.
+
+**Quando o Google aprovar o app (verificação enviada em 26/11):** regravar a cena 4 do vídeo dos donos sem o aviso de "app não
+verificado", tirar a frase do aviso da narração (cena 4), trocar `assets/video/conectar-agenda.mp4`, tirar o passo 2 (aviso) do
+`conectar.php` e apagar a agenda de teste "Boat bookings" (e o evento de 7/12) da conta freelainhome, com o ok do Fabiano.
 
 **Pendências com a cliente:** CNPJ (Cadastur), tempos de trajeto do Campeche (30–40 / 45–60 min?),
 duração da Costa da Lagoa (6 h ou 8 h?), My Nega 10 ou 11 passageiros, Phantom 30 BB 29 ou 30 pés.

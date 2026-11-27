@@ -24,7 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from publicar import conecta, senha_ftp  # noqa: E402
 
-BASE = '/novo/fotos/lanchas'
+BASE = '/fotos/lanchas'
 ENTRADA_MAX, LADO, LADO_MINI = 560, 1400, 480
 
 

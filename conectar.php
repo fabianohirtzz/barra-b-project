@@ -94,6 +94,7 @@ if (!bb_google_pronto()) {
     $corpo = '<p class="selo">Passo 1 de 2</p><h1>Oi, ' . cx(primeiro_nome($parceiro['nome'])) . '! Vamos ligar a sua agenda à Barra Boat</h1>'
         . ($msg ? '<p class="erro">' . cx($msg) . '</p>' : '')
         . '<p>Com a agenda conectada, os dias ocupados ' . (count($dele_n) > 1 ? 'das suas lanchas' : 'da sua lancha') . ' aparecem sozinhos no site, na hora, e as reservas que a nossa equipe marcar entram direto na sua agenda Google. Você faz isso uma vez só.</p>'
+        . '<h2>Veja como é, em 2 minutos</h2><video class="video" src="/assets/video/conectar-agenda.mp4" poster="/assets/video/conectar-agenda.jpg" controls playsinline preload="none"></video>'
         . '<h2>O que a Barra Boat vê e faz</h2><ul class="lista">'
         . '<li>Lê os eventos <b>só da agenda que você escolher</b>, para saber quais dias estão ocupados e de qual lancha. Guardamos apenas o dia.</li>'
         . '<li>Cria, muda e apaga <b>só os eventos das reservas</b> que a nossa equipe marcar nas suas lanchas.</li>'
@@ -128,6 +129,7 @@ if (!bb_google_pronto()) {
   h2 { font-stretch: 108%; font-size: 1.1rem; color: var(--marinho); margin: 26px 0 8px; }
   .selo { display: inline-block; margin: 0; font-size: .85rem; font-weight: 650; color: var(--azul); background: #e6f0f7; padding: 3px 10px; border-radius: 99px; }
   .lista { padding-left: 1.2em; margin: 0; } .lista li { margin: 6px 0; }
+  .video { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; background: var(--marinho); }
   .botao { display: block; width: 100%; margin-top: 26px; padding: 15px 18px; border: 0; border-radius: 12px; background: linear-gradient(120deg, var(--marinho), var(--azul));
     color: #fff; font: 650 1.05rem Archivo, sans-serif; text-align: center; text-decoration: none; cursor: pointer; }
   .botao:focus-visible, .opcao input:focus-visible { outline: 3px solid #f2b53a; outline-offset: 2px; }

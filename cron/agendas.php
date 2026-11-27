@@ -1,7 +1,7 @@
 <?php
 // Barra Boat Floripa | cron/agendas.php
 // A cada minuto (cron do cPanel):
-//   * * * * *   php -q $HOME/public_html/novo/cron/agendas.php > /dev/null 2>&1
+//   * * * * *   php -q $HOME/public_html/cron/agendas.php > /dev/null 2>&1
 //
 // 1. Leva às agendas Google dos donos os passeios marcados, mudados ou cancelados (bb_google_fila).
 // 2. Renova o aviso de mudança (canal) das contas Google que vencem em menos de 1 dia.

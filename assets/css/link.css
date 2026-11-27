@@ -174,9 +174,9 @@ svg{width:1em;height:1em;flex-shrink:0}
 .lk-botao:hover{transform:translateY(-2px)}
 
 /* ---------- redes ---------- */
-.lk-redes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.lk-redes a{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 14px;border-radius:18px;background:#fff;box-shadow:0 0 0 1px var(--linha);transition:transform .4s var(--mola),box-shadow .3s}
-.lk-redes a > svg{font-size:1.5rem;color:var(--canal)}
+.lk-redes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.lk-redes a{min-width:0;display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 14px;border-radius:18px;background:#fff;box-shadow:0 0 0 1px var(--linha);transition:transform .4s var(--mola),box-shadow .3s}
+.lk-redes a > svg{flex:none;font-size:1.5rem;color:var(--canal)}
 .lk-redes a > span{display:flex;flex-direction:column;min-width:0}
 .lk-redes b{color:var(--tinta);font-weight:650;font-size:1rem}
 .lk-redes span span{font-size:.84rem;color:var(--suave);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -216,6 +216,9 @@ svg{width:1em;height:1em;flex-shrink:0}
 @media (min-width:900px){
   .lk-abre{padding-top:48px}
   .lk-barco{flex-basis:40%}
+}
+@media (max-width:420px){
+  .lk-redes{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:359px){
   .lk-roteiros,.lk-redes{grid-template-columns:1fr}

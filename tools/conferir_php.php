@@ -35,7 +35,7 @@ function normaliza($h)
     return [$h, $lds];
 }
 
-$paginas = ['', 'lanchas/', 'roteiros/', 'ilha-do-campeche/', 'costa-da-lagoa/'];
+$paginas = ['', 'lanchas/', 'roteiros/', 'ilha-do-campeche/', 'costa-da-lagoa/', 'link/'];
 foreach ($lanchas as $l) $paginas[] = 'lanchas/' . $l['slug'] . '/';
 $falhas = 0;
 foreach ($paginas as $p) {

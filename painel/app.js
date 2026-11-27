@@ -250,6 +250,8 @@
   const porId = (lista, id) => (id ? lista.find((x) => x.id === id) : null);
   const lancha = (id) => porId(S.lanchas, id);
   const lead = (id) => porId(S.leads, id);
+  // Cliente de parceiro (lançado ao marcar o passeio: só o nome) é do parceiro: fica fora de Clientes, Funil e Hoje.
+  const nossos = () => S.leads.filter((l) => l.origem !== 'parceiro');
   const roteiro = (id) => porId(S.roteiros, id);
   const marinheiro = (id) => porId(S.marinheiros, id);
   const parceiro = (id) => porId(S.parceiros, id);
@@ -800,7 +802,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
   function telaHoje() {
     const h = hoje(), hs = iso(h), em7 = iso(somaDias(h, 7));
     const ps = S.passeios.filter((p) => p.dia === hs).sort((a, b) => (a.hora_saida || '99').localeCompare(b.hora_saida || '99'));
-    const novos = S.leads.filter((l) => l.etapa === 'novos').sort((a, b) => a.created_at.localeCompare(b.created_at));
+    const novos = nossos().filter((l) => l.etapa === 'novos').sort((a, b) => a.created_at.localeCompare(b.created_at));
     const prox = S.passeios.filter((p) => p.dia >= hs && p.dia <= em7 && p.lead_id);
     const fut = S.passeios.filter((p) => p.dia >= hs && p.lead_id);
     const aReceber = prox.reduce((s, p) => { const l = lead(p.lead_id); return s + (l ? falta(l) : 0); }, 0);
@@ -1177,7 +1179,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
   const semAcento = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   function marcarPasseio(pre) {
     const l0 = pre.lead_id ? lead(pre.lead_id) : null;
-    const candidatos = S.leads.filter((x) => x.etapa !== 'perdidos' && (!passeioDoLead(x.id) || x.id === pre.lead_id))
+    const candidatos = nossos().filter((x) => x.etapa !== 'perdidos' && (!passeioDoLead(x.id) || x.id === pre.lead_id))
       .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
     const rotLead = (x) => [x.nome || foneTela(x.wa_id) || 'Sem nome', x.pessoas ? x.pessoas + ' pessoas' : '', x.data_desejada ? ddIso(x.data_desejada) : ''].filter(Boolean).join(' · ');
     const lIni = lancha(pre.lancha_id || (l0 && l0.lancha_id)) || {};
@@ -1376,7 +1378,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
   const diaDoPedido = (c) => { const p = passeioDoLead(c.id); return p ? p.dia : c.data_desejada; };
   function pessoas() {
     const grupos = new Map();
-    S.leads.forEach((c) => { const k = chavePessoa(c); if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(c); });
+    nossos().forEach((c) => { const k = chavePessoa(c); if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(c); });
     const hj = iso(hoje());
     return [...grupos.entries()].map(([k, ls]) => {
       ls.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
@@ -1398,7 +1400,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
   // Funil de vendas: os pedidos por etapa, do primeiro oi até o passeio.
   function telaFunil() {
     const termo = busca.trim().toLowerCase();
-    const conta = (id) => S.leads.filter((c) => c.etapa === id).length;
+    const conta = (id) => nossos().filter((c) => c.etapa === id).length;
     const abas = ETAPAS.map((e) => `<button class="aba" type="button" role="tab" aria-selected="${!termo && e.id === etapaAtual}" data-etapa="${e.id}">${e.nome}<b>${conta(e.id)}</b></button>`).join('');
     const et = ETAPAS.find((e) => e.id === etapaAtual);
     tela.innerHTML = `
@@ -1410,7 +1412,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
       <ul class="lista" data-lista></ul>`;
     const pinta = () => {
       const t = busca.trim().toLowerCase();
-      let lista = t ? S.leads.filter((c) => textoBusca(c).includes(t)) : S.leads.filter((c) => c.etapa === etapaAtual);
+      let lista = t ? nossos().filter((c) => textoBusca(c).includes(t)) : nossos().filter((c) => c.etapa === etapaAtual);
       if (!t && etapaAtual === 'fechados') lista = lista.slice().sort((a, b) => (diaVenda(a) || '9').localeCompare(diaVenda(b) || '9'));
       tela.querySelector('[data-lista]').innerHTML = lista.slice(0, 300).map((c) => {
         const l = lancha(c.lancha_id), r = roteiro(c.roteiro_id);
@@ -1435,7 +1437,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
   // Clientes: cada pessoa uma vez só, em tabela, com filtros e exportação.
   function telaClientes() {
     const FILTROS = [['todos', 'Todos'], ['marcado', 'Com passeio marcado'], ['clientes', 'Já reservaram'], ['voltaram', 'Voltaram mais de uma vez'], ['nunca', 'Nunca reservaram']];
-    const origens = [...new Set(S.leads.map((c) => c.origem_manual || c.origem).filter(Boolean))];
+    const origens = [...new Set(nossos().map((c) => c.origem_manual || c.origem).filter(Boolean))];
     tela.innerHTML = `
       <header class="cab"><div><h1>Clientes</h1><p>Cada pessoa uma vez só, com todos os pedidos e passeios dela. As etapas da venda ficam no Funil de vendas.</p></div>
         <div class="acoes"><button class="botao botao--leve" type="button" data-csv><svg><use href="#p-baixar"/></svg>Exportar clientes</button>
@@ -1895,7 +1897,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     const ocup = lanchasAtivas().map((l) => [l.nome, Math.round(new Set(S.passeios.filter((p) => p.lancha_id === l.id && dentro(p.dia)).map((p) => p.dia)).size / diasNoPeriodo * 100)])
       .filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 8);
 
-    const chegaram = S.leads.filter((l) => dentro(iso(new Date(l.created_at))));
+    const chegaram = nossos().filter((l) => dentro(iso(new Date(l.created_at))));
     const porOrig = {};
     chegaram.forEach((l) => { const o = nomeOrigem(l.origem_manual || l.origem); porOrig[o] = (porOrig[o] || 0) + 1; });
     const origem = Object.entries(porOrig).sort((a, b) => b[1] - a[1]).map(([nome, q]) => [nome, Math.round(q / chegaram.length * 100), q]);
@@ -2924,6 +2926,7 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
     const nomes = dele.length > 1 ? dele.slice(0, -1).join(', ') + ' ou ' + dele[dele.length - 1] : dele[0];
     let txt = `Oi, ${quem === 'dono' ? 'tudo bem' : quem}! Para os dias ocupados ${dele.length > 1 ? 'das suas lanchas' : 'da sua lancha'} aparecerem na hora no site da Barra Boat, e as reservas que a gente marcar entrarem direto na sua agenda Google, toque neste link e depois em "Conectar com Google". Leva 1 minuto e é uma vez só: ${r.url}`;
     if (dele.length) txt += ` No dia a dia, escreva o nome da lancha no título de cada reserva (${nomes}).`;
+    txt += ` O ideal é uma agenda só das lanchas, separada da pessoal: todo evento nela fecha o dia no site. Vídeo de 2 minutos com o passo a passo: ${r.url.replace(/conectar-agenda\/.*$/, 'assets/video/conectar-agenda.mp4')}`;
     const num2 = String((dono && dono.telefone) || '').replace(/\D/g, '');
     abreGaveta('Link de conexão', `
       <p style="margin-top:0">Esta mensagem vai pronta no WhatsApp. O link vale por 14 dias e só serve para o ${esc(quem)}.</p>

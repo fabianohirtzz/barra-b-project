@@ -2,12 +2,12 @@
 
 Uso (a senha vem de BB_FTP_SENHA ou de Site/ferramentas/ftp-senha.txt, fora do repositório):
     python tools/publicar.py                                 # envia o que mudou para o site oficial (raiz)
-    python tools/publicar.py --destino /novo                 # envia para o servidor de teste (novo.)
     python tools/publicar.py --tudo                          # reenvia tudo
     python tools/publicar.py --listar                        # só mostra o que mudaria
 
 A raiz do FTP é o site oficial (barraboatfloripa.com.br) desde a troca de 26/11/2026; o WordPress
-antigo está em /home/barraboa/wordpress-antigo/, fora da web. /novo é o servidor de teste.
+antigo está em /home/barraboa/wordpress-antigo/, fora da web. O servidor de teste (novo.) foi desligado em 26/11/2026;
+a cópia dele está em /home/barraboa/novo-backup-2026-11-26/, fora da web.
 O config.local.php do servidor nunca é enviado nem apagado.
 """
 import argparse

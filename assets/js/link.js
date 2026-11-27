@@ -245,7 +245,7 @@
   if (mapa) {
     $('[data-mapa-abrir]', mapa).addEventListener('click', () => {
       const f = document.createElement('iframe');
-      f.src = 'https://maps.google.com/maps?q=-27.5745,-48.4251&z=15&output=embed&hl=' + encodeURIComponent(IDIOMA);
+      f.src = 'https://maps.google.com/maps?q=-27.5863938,-48.4363769&z=15&output=embed&hl=' + encodeURIComponent(IDIOMA);
       f.title = T('Mapa do embarque no Canal da Barra da Lagoa');
       f.setAttribute('allowfullscreen', '');
       mapa.appendChild(f);

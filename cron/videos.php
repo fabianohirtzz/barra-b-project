@@ -5,7 +5,7 @@
 // lib/videos.php e marca cada um como pronto no banco. Só roda pela linha de comando
 // (cron do cPanel, a cada 5 min):
 //
-//   */5 * * * *   /usr/local/bin/php -q /home/barraboa/public_html/novo/cron/videos.php > /dev/null 2>&1
+//   */5 * * * *   /usr/local/bin/php -q /home/barraboa/public_html/cron/videos.php > /dev/null 2>&1
 
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 
