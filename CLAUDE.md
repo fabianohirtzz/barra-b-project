@@ -136,7 +136,7 @@ abre o WhatsApp), `politica-de-cancelamento/`, `politica-de-privacidade/`, `404.
 - Ícones dos itens a bordo: regras `ICONE` em `tools/gerar_paginas.py` (a primeira que casar vence); os
   desenhos ficam no sprite do `index.html`. Item novo sem ícone cai em `i-lancha`: criar um ícone próprio.
 - Paradas dos roteiros levam uma foto cada (nome, texto, foto, alt) em `pagina_roteiro`.
-- Formulário da home: lista das lanchas com o limite de pessoas; se o grupo passar, avisa e oferece a orientação da equipe.
+- Formulário da home e popup: escolher a lancha é obrigatório (27/11, pedido do Fabiano: todos marcavam "ajuda da equipe"). Abre em "Escolha a lancha" (opção escondida), sem opção de ajuda em lugar nenhum do site; enviar sem lancha mostra aviso; grupo acima do limite pede uma lancha maior.
 - CSS das páginas internas em `assets/css/paginas.css`; JS da lancha em `assets/js/lancha.js`,
   do contato em `assets/js/contato.js`, reels da home em `assets/js/reels.js`.
 

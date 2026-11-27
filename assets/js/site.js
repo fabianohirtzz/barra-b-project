@@ -390,10 +390,13 @@
     const partes = (op) => { const m = op.textContent.match(/^(.*?), (até \d+ pessoas?)$/); return m ? [m[1], m[2]] : [op.textContent, '']; };
     let ativa = 0;
     const ops = () => [...sel.options];
+    // opção escondida (o "Escolha a lancha" do começo) não entra na lista
+    const prim = () => Math.max(0, ops().findIndex((op) => !op.hidden));
     function desenha() {
       lista.innerHTML = ops().map((op, i) => {
+        if (op.hidden) return '';
         const [nome, det] = partes(op);
-        return `<li role="option" id="${id}-o${i}" class="seletor__op${op.value ? '' : ' seletor__op--ajuda'}" aria-selected="${op.selected}"${op.disabled ? ' aria-disabled="true"' : ''}>
+        return `<li role="option" id="${id}-o${i}" data-i="${i}" class="seletor__op" aria-selected="${op.selected}"${op.disabled ? ' aria-disabled="true"' : ''}>
           <span>${escH(nome)}</span>${det ? `<small>${escH(det)}</small>` : ''}</li>`;
       }).join('');
       const op = sel.selectedOptions[0];
@@ -402,8 +405,8 @@
       valor.classList.toggle('is-vazio', !op || !op.value);
     }
     const marca = (i) => {
-      ativa = Math.max(0, Math.min(ops().length - 1, i));
-      $$('.seletor__op', lista).forEach((li, k) => li.classList.toggle('is-ativa', k === ativa));
+      ativa = Math.max(prim(), Math.min(ops().length - 1, i));
+      $$('.seletor__op', lista).forEach((li) => li.classList.toggle('is-ativa', Number(li.dataset.i) === ativa));
       lista.setAttribute('aria-activedescendant', `${id}-o${ativa}`);
       const li = $(`#${id}-o${ativa}`, lista);
       if (li) li.scrollIntoView({ block: 'nearest' });
@@ -422,7 +425,7 @@
       const acima = baixo < 220 && cima > baixo;
       caixa.classList.toggle('is-acima', acima);
       lista.style.maxHeight = Math.max(150, Math.min(320, acima ? cima : baixo)) + 'px';
-      marca(Math.max(0, sel.selectedIndex));
+      marca(Math.max(prim(), sel.selectedIndex));
       lista.focus({ preventScroll: true });
     }
     function fecha(devolve = true) {
@@ -447,7 +450,7 @@
       const n = ops().length;
       if (e.key === 'ArrowDown') { e.preventDefault(); marca(ativa + 1); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); marca(ativa - 1); }
-      else if (e.key === 'Home') { e.preventDefault(); marca(0); }
+      else if (e.key === 'Home') { e.preventDefault(); marca(prim()); }
       else if (e.key === 'End') { e.preventDefault(); marca(n - 1); }
       else if (e.key === 'PageDown') { e.preventDefault(); marca(ativa + 6); }
       else if (e.key === 'PageUp') { e.preventDefault(); marca(ativa - 6); }
@@ -458,13 +461,13 @@
         // digitar as primeiras letras pula para a opção
         clearTimeout(tBusca); busca += e.key.toLowerCase(); tBusca = setTimeout(() => { busca = ''; }, 700);
         const tira = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-        const k = ops().findIndex((op, j) => j !== 0 && tira(op.textContent).startsWith(tira(busca)));
+        const k = ops().findIndex((op, j) => j >= prim() && !op.hidden && tira(op.textContent).startsWith(tira(busca)));
         if (k >= 0) marca(k);
       }
     });
     // preventDefault: dentro de um <label>, o clique numa opção seria repassado ao botão e reabriria a lista
-    lista.addEventListener('click', (e) => { e.preventDefault(); const li = e.target.closest('.seletor__op'); if (li) escolhe($$('.seletor__op', lista).indexOf(li)); });
-    lista.addEventListener('mousemove', (e) => { const li = e.target.closest('.seletor__op'); if (li) { const k = $$('.seletor__op', lista).indexOf(li); if (k !== ativa) marca(k); } });
+    lista.addEventListener('click', (e) => { e.preventDefault(); const li = e.target.closest('.seletor__op'); if (li) escolhe(Number(li.dataset.i)); });
+    lista.addEventListener('mousemove', (e) => { const li = e.target.closest('.seletor__op'); if (li) { const k = Number(li.dataset.i); if (k !== ativa) marca(k); } });
     document.addEventListener('pointerdown', (e) => { if (!caixa.contains(e.target)) fecha(false); });
     lista.addEventListener('focusout', (e) => { if (!caixa.contains(e.relatedTarget)) fecha(false); });
     sel.addEventListener('change', desenha);
@@ -482,17 +485,17 @@
     const hoje = new Date(); hoje.setMinutes(hoje.getMinutes() - hoje.getTimezoneOffset());
     data.min = hoje.toISOString().slice(0, 10);
     let n = Number(out.textContent) || 6;
-    // Lancha escolhida: se o grupo passar do limite dela, avisa e oferece a orientação da equipe.
+    // Lancha é obrigatória; se o grupo passar do limite dela, avisa para escolher outra.
     const sel = $('[data-lancha]', plan);
     const maxFrota = Math.max(1, ...[...sel.options].map((o) => Number(o.dataset.pax) || 0));
     const limite = $('[data-limite]', plan);
     const limiteTxt = $('[data-limite-txt]', plan);
     const confere = () => {
       const op = sel.selectedOptions[0];
-      const max = Number(op.dataset.pax);
+      const max = Number(op && op.dataset.pax);
       const passou = sel.value && n > max;
       limite.hidden = !passou;
-      if (passou) limiteTxt.textContent = T('A {lancha} leva até {max} pessoas, e o seu grupo tem {n}. Escolha outra lancha ou peça uma indicação para a nossa equipe.', { lancha: sel.value, max, n });
+      if (passou) limiteTxt.textContent = T('A {lancha} leva até {max} pessoas, e o seu grupo tem {n}. Escolha uma lancha maior.', { lancha: sel.value, max, n });
     };
     const poe = (v) => { n = Math.min(maxFrota, Math.max(1, v)); out.textContent = n; confere(); };
     $('[data-menos]', plan).addEventListener('click', () => poe(n - 1));
@@ -506,10 +509,11 @@
     };
     $$('input[name="roteiro"], input[name="desloc"]', plan).forEach((r) => r.addEventListener('change', mostraPers));
     mostraPers();
-    $('[data-limite-ajuda]', plan).addEventListener('click', () => { sel.value = ''; sel.dispatchEvent(new Event('change', { bubbles: true })); const b = $('.seletor__botao', plan); (b || sel).focus(); });
     plan.addEventListener('submit', (e) => {
       e.preventDefault();
-      if (!limite.hidden) { limite.classList.remove('is-chamando'); void limite.offsetWidth; limite.classList.add('is-chamando'); return; }
+      const chama = () => { limite.hidden = false; limite.classList.remove('is-chamando'); void limite.offsetWidth; limite.classList.add('is-chamando'); };
+      if (!sel.value) { limiteTxt.textContent = T('Escolha a lancha para consultar datas e valores.'); chama(); const b = $('.seletor__botao', plan); (b || sel).focus(); return; }
+      if (!limite.hidden) { chama(); return; }
       const roteiro = plan.roteiro.value;
       const dia = data.value ? dataLonga(data.value) : null;
       const pessoas = n === 1 ? T('1 pessoa') : T('{n} pessoas', { n });
@@ -521,10 +525,10 @@
           + ' ' + (ondeBuscar ? T('Preciso que a lancha busque o grupo em outro lugar: {local}.', { local: ondeBuscar }) : T('Podemos embarcar no ponto de vocês.'))
           + (pedido ? ' ' + T('Como quero o passeio: {pedido}', { pedido }) + (/[.!?。！？]$/.test(pedido) ? '' : '.') : '');
       } else trecho = T('Quero consultar um passeio para a {roteiro}.', { roteiro: roteiro === 'Costa da Lagoa' ? 'Costa da Lagoa' : 'Ilha do Campeche' });
-      const barco = sel.value ? T('Lancha: {lancha}.', { lancha: sel.value }) : T('Quero ajuda da equipe para escolher a lancha.');
+      const barco = T('Lancha: {lancha}.', { lancha: sel.value });
       let texto = [T('Olá! Vim pelo site da Barra Boat.'), trecho, barco, T('Data: {data}.', { data: dia || T('ainda a definir') }), T('Somos {pessoas}.', { pessoas })].join(' ');
       // site em outro idioma: a equipe recebe também um resumo em português
-      if (!EM_PT) texto += '\n\n' + resumoPt([['Roteiro', roteiro], ['Lancha', sel.value || 'quer ajuda para escolher'], ['Data', data.value ? data.value.split('-').reverse().join('/') : 'a definir'], ['Pessoas', String(n)], ['Buscar o grupo em', ondeBuscar]]);
+      if (!EM_PT) texto += '\n\n' + resumoPt([['Roteiro', roteiro], ['Lancha', sel.value], ['Data', data.value ? data.value.split('-').reverse().join('/') : 'a definir'], ['Pessoas', String(n)], ['Buscar o grupo em', ondeBuscar]]);
       (window.dataLayer = window.dataLayer || []).push({ event: 'clique_whatsapp', origem, pagina: location.pathname, formulario: plan.classList.contains('planejar--popup') ? 'popup' : 'planejar' });
       window.open(linkWa(texto), '_blank', 'noopener');
     });

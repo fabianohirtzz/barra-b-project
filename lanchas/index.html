@@ -25,8 +25,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,300..800;1,62..125,500..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../assets/css/site.css?v=19">
-  <link rel="stylesheet" href="../assets/css/paginas.css?v=19">
+  <link rel="stylesheet" href="../assets/css/site.css?v=20">
+  <link rel="stylesheet" href="../assets/css/paginas.css?v=20">
   <script type="application/ld+json">
   {
    "@context": "https://schema.org",
@@ -457,22 +457,13 @@
       <div class="duas-colunas">
         <div>
           <h2 id="como-escolher" class="titulo">Como escolher a lancha</h2>
-          <p class="secao__intro">Três perguntas resolvem quase tudo. Se ficar em dúvida, a nossa equipe indica a melhor opção para a sua data.</p>
+          <p class="secao__intro">Três perguntas resolvem quase tudo.</p>
         </div>
         <ol class="lista-passos">
           <li><b>Quantas pessoas vão?</b><span>Conte todo mundo, inclusive crianças e bebês. A lancha nunca leva mais gente do que a capacidade permite.</span></li>
           <li><b>Precisa de cabine e banheiro?</b><span>Para grupos com crianças ou para quem passa o dia inteiro a bordo, prefira lanchas cabinadas com banheiro.</span></li>
           <li><b>Qual roteiro?</b><span>A Ilha do Campeche é em mar aberto, com 30 a 40 minutos de navegação por trajeto. A Costa da Lagoa é em águas calmas, dentro da Lagoa da Conceição.</span></li>
         </ol>
-      </div>
-    </section>
-    <section class="secao">
-      <div class="chamada">
-        <div>
-          <h2 class="chamada__titulo">Não sabe qual lancha escolher?</h2>
-          <p>Diga a data e quantas pessoas vão. A nossa equipe responde pelo WhatsApp com as lanchas livres e os valores.</p>
-        </div>
-        <a class="botao botao--claro botao--grande" data-wa data-wa-texto="Olá! Vim pelo site da Barra Boat. Quero ajuda para escolher a lancha. Data: . Somos  pessoas." href="https://wa.me/5548991153172" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-wa"/></svg><span>Pedir uma indicação</span></a>
       </div>
     </section>
 
@@ -599,7 +590,7 @@
           <span>Lancha</span>
           <span class="planejar__select">
             <select name="lancha" data-lancha>
-              <option value="" data-pax="13">Quero ajuda da equipe para escolher</option>
+              <option value="" disabled selected hidden>Escolha a lancha</option>
               <option value="Phantom 36" data-pax="13">Phantom 36, até 13 pessoas</option>
               <option value="Phantom 30 BB" data-pax="12">Phantom 30 BB, até 12 pessoas</option>
               <option value="Phantom 36 C" data-pax="11">Phantom 36 C, até 11 pessoas</option>
@@ -636,7 +627,6 @@
         </div>
         <div class="planejar__aviso" data-limite hidden>
           <p data-limite-txt></p>
-          <button type="button" class="planejar__ajuda" data-limite-ajuda>Quero orientação da equipe para escolher</button>
         </div>
         <button class="botao botao--mar botao--cheio planejar__enviar" type="submit">
           <svg aria-hidden="true"><use href="#i-wa"/></svg><span>Consultar datas e valores</span>
@@ -646,6 +636,6 @@
     </div>
   </div>
 
-    <script src="../assets/js/site.js?v=13" defer></script>
+    <script src="../assets/js/site.js?v=14" defer></script>
 </body>
 </html>

@@ -14,7 +14,7 @@ WA = '5548991153172'
 INDEX = open(os.path.join(PROJ, 'index.html'), encoding='utf-8').read()
 L_JSON = {l['slug']: l for l in json.load(open(os.path.join(PROJ, 'docs/conteudo-site-atual/lanchas.json'), encoding='utf-8'))}
 IMGS = json.load(open(os.path.join(PROJ, 'tools/imagens.json'), encoding='utf-8'))
-V_CSS, V_JS = '19', '13'
+V_CSS, V_JS = '20', '14'
 e = html.escape
 
 
@@ -285,7 +285,7 @@ corpo = capa_faixa('Aluguel de lancha em Florianópolis: escolha a sua',
       <div class="duas-colunas">
         <div>
           <h2 id="como-escolher" class="titulo">Como escolher a lancha</h2>
-          <p class="secao__intro">Três perguntas resolvem quase tudo. Se ficar em dúvida, a nossa equipe indica a melhor opção para a sua data.</p>
+          <p class="secao__intro">Três perguntas resolvem quase tudo.</p>
         </div>
         <ol class="lista-passos">
           <li><b>Quantas pessoas vão?</b><span>Conte todo mundo, inclusive crianças e bebês. A lancha nunca leva mais gente do que a capacidade permite.</span></li>
@@ -294,8 +294,7 @@ corpo = capa_faixa('Aluguel de lancha em Florianópolis: escolha a sua',
         </ol>
       </div>
     </section>
-''' + chamada('Não sabe qual lancha escolher?', 'Diga a data e quantas pessoas vão. A nossa equipe responde pelo WhatsApp com as lanchas livres e os valores.',
-              'Pedir uma indicação', 'Olá! Vim pelo site da Barra Boat. Quero ajuda para escolher a lancha. Data: . Somos  pessoas.')
+'''
 ld = [ld_m, {'@type': 'ItemList', 'name': 'Lanchas para aluguel em Florianópolis', 'numberOfItems': 17,
              'itemListElement': [{'@type': 'ListItem', 'position': i + 1, 'url': f'{DOM}lanchas/{s}/', 'name': CARDS[s]['nome']} for i, s in enumerate(ORDEM)]}]
 gerados.append(pagina('lanchas/', 'Lanchas para alugar em Florianópolis | Barra Boat Floripa',

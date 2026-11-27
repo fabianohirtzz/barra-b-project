@@ -124,9 +124,7 @@ function bb_link_frota($lanchas, $pre = '')
 
 function bb_opcoes($lanchas)
 {
-    $max = 0;
-    foreach ($lanchas as $l) $max = max($max, (int) $l['passageiros']);
-    $o = '              <option value="" data-pax="' . $max . '">Quero ajuda da equipe para escolher</option>';
+    $o = '              <option value="" disabled selected hidden>Escolha a lancha</option>';
     foreach ($lanchas as $l) {
         $o .= "\n" . '              <option value="' . bb_e($l['nome']) . '" data-pax="' . (int) $l['passageiros'] . '">' . bb_e($l['nome']) . ', até ' . (int) $l['passageiros'] . ' pessoas</option>';
     }
