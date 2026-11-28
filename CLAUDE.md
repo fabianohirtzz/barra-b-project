@@ -466,6 +466,12 @@ dá 301 para /roteiros/. O site tira emojis e converte nome todo em maiúsculas 
 o texto da capa é o primeiro parágrafo do resumo que não é título. Sem banco, vale o molde (só Campeche e Costa). Teste local:
 roteador em `rot-teste/` no scratchpad, com os roteiros do banco em JSON.
 
+**Painel como aplicativo (PWA, 27/11):** `painel/manifest.webmanifest` (escopo `/painel/`, abre em `#hoje`), ícones em `painel/icones/`
+(192, 512, maskable e apple-touch 180, gerados do `icone-branco.png` sobre o gradiente da marca) e `painel/sw.js`: rede primeiro para os
+arquivos do painel, com cópia para abrir sem internet; Supabase, `/api/` e fotos nunca passam pelo cache. `.htaccess` serve o `sw.js` com
+`no-cache`. Sua conta mostra "Instalar o aplicativo" quando o Chrome/Edge permite; no iPhone, o passo a passo do Safari. **Subiu a versão
+do `app.js` ou do `painel.css`? Atualize também a lista `CASCA` do `sw.js`** (não quebra se esquecer, só não guarda a nova para offline).
+
 **Quando o Google aprovar o app (verificação enviada em 26/11):** regravar a cena 4 do vídeo dos donos sem o aviso de "app não
 verificado", tirar a frase do aviso da narração (cena 4), trocar `assets/video/conectar-agenda.mp4`, tirar o passo 2 (aviso) do
 `conectar.php` e apagar a agenda de teste "Boat bookings" (e o evento de 7/12) da conta freelainhome, com o ok do Fabiano.
