@@ -51,6 +51,12 @@ RewriteRule ^conectar-agenda/?$ conectar.php [L,QSA]
 RewriteCond %{REQUEST_URI} !^/(painel|api|assets)/
 RewriteRule ^((?:[a-z0-9-]+/){0,3})$ site.php?p=$1 [L,QSA]
 
+# Painel como aplicativo (PWA): o service worker nunca fica em cache, senão a atualização demora
+AddType application/manifest+json .webmanifest
+<FilesMatch "^sw\.js$">
+  Header set Cache-Control "no-cache"
+</FilesMatch>
+
 # Segredos do servidor nunca são servidos
 <FilesMatch "^(config\.local\.php|\.publicado\.json)$">
   Require all denied

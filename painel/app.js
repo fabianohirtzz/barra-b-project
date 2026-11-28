@@ -3768,6 +3768,22 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
   }
 
   /* ================= CONTA (todos) ================= */
+  /* PWA: o Chrome/Android avisa que dá para instalar (beforeinstallprompt); o iPhone não tem esse aviso,
+     então lá a tela explica o caminho pelo Compartilhar do Safari. */
+  let pedidoInstalar = null;
+  addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); pedidoInstalar = e; if (location.hash === '#conta') rota(); });
+  addEventListener('appinstalled', () => { pedidoInstalar = null; avisa('Aplicativo instalado. Ele já está na tela do celular.'); });
+  const instalado = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const ehIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  function textoInstalar() {
+    const p = (t) => `<p style="margin:0;color:var(--suave)">${t}</p>`;
+    if (instalado()) return p('Você já está usando o painel como aplicativo.');
+    if (pedidoInstalar) return `${p('Instale o painel no celular ou no computador: ele ganha o ícone da Barra Boat e abre em tela cheia, como um aplicativo.')}
+      <button class="botao botao--principal" type="button" data-instalar style="margin-top:12px">Instalar o aplicativo</button>`;
+    if (ehIOS()) return p('No iPhone: abra o painel no Safari, toque em Compartilhar (o quadrado com a seta para cima) e em "Adicionar à Tela de Início". O ícone da Barra Boat aparece na tela e o painel abre em tela cheia. Entre com o e-mail e a senha uma vez no aplicativo.');
+    return p('No Android: abra o painel no Chrome, toque nos três pontinhos e em "Instalar app" (ou "Adicionar à tela inicial"). No computador, o Chrome e o Edge mostram o botão de instalar na barra de endereço.');
+  }
+
   function telaConta() {
     const restr = restrito();
     tela.innerHTML = `<header class="cab"><div><h1>${restr ? 'Conta' : 'Sua conta'}</h1><p>${esc(S.nome || '')}${S.nome ? ' · ' : ''}${esc((S.user && S.user.email) || '')}</p></div></header>
@@ -3779,8 +3795,15 @@ Peça para o grupo chegar 15 minutos antes. Qualquer mudança, é só avisar aqu
         <p class="erro" data-erro hidden></p>
         <button class="botao botao--principal" type="button" data-trocar>Trocar a senha</button></section>
       <section class="bloco cartao"><h2 style="font-size:1.1rem;margin-bottom:8px">Usar como aplicativo no celular</h2>
-        <p style="margin:0;color:var(--suave)">No iPhone: abra no Safari, toque em Compartilhar e em "Adicionar à Tela de Início". No Android: abra no Chrome, toque nos três pontinhos e em "Instalar app".</p></section>
+        ${textoInstalar()}</section>
       <button class="botao botao--leve" type="button" data-sair style="margin-top:20px">Sair do painel</button>`;
+    const bi = tela.querySelector('[data-instalar]');
+    if (bi) bi.addEventListener('click', async () => {
+      const ev = pedidoInstalar; if (!ev) return;
+      pedidoInstalar = null; ev.prompt();
+      try { await ev.userChoice; } catch (e) { /* nada */ }
+      telaConta();
+    });
     aoSalvar(tela.querySelector('[data-trocar]'), async () => {
       const s1 = tela.querySelector('[data-s1]').value, s2 = tela.querySelector('[data-s2]').value;
       if (s1.length < 8) return erroCampo(tela, 'A senha precisa ter pelo menos 8 letras ou números.');
